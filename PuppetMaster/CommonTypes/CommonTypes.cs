@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.Remoting;
+using System.Runtime.Serialization;
 
 public class ConnectionPack {
 	private string url;
@@ -38,7 +40,7 @@ namespace PuppetMaster {
 			} else {
 				Console.WriteLine("A new client as been registered at: " + key);
 				lock (connectedDaemons) {
-					connectedDaemons.Add(nick, new ConnectionPack(url, port));
+					connectedDaemons.Add(key, new ConnectionPack(url, port));
 				}
 			}
 		}
@@ -47,18 +49,24 @@ namespace PuppetMaster {
 			string key = url+":"+port;
 			Console.WriteLine("Client at: " + key + " is leaving.");
 			lock (connectedDaemons) {
-				connectedDaemons.Remove(nick);
+				connectedDaemons.Remove(key);
 			}
 		}
 
 		public string list(){
 			string daemons = "";
 			lock (connectedDaemons) {
-				foreach (ConnectionPack element in connectedDaemons) {
+				foreach (KeyValuePair<string,ConnectionPack>  entry in connectedDaemons) {
+					ConnectionPack element = entry.Value;
 					string daemon = element.Url + " " + element.Port;
 					daemons = daemons + daemon + "\r\n";
 				}
 			}
+			return daemons ;
 		}
+	}
+	public class RegistryRemoteException : RemotingException, ISerializable
+	{
+		// ...
 	}
 }
