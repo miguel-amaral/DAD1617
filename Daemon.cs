@@ -9,11 +9,12 @@ namespace RemotingSample {
 
 		static void Main(string[] args) {
 
-			TcpChannel channel = new TcpChannel(10000);
-			ChannelServices.RegisterChannel(channel,false);
+			TcpChannel channel = new TcpChannel(10001);
+			//ChannelServices.RegisterChannel(channel,false);
 
 			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
-
+			PuppetClient pc = new PuppetMaster.PuppetClient();
+			pc.connect("localhost");
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}

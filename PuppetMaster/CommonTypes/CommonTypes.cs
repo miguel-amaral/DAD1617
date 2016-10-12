@@ -45,8 +45,8 @@ namespace PuppetMaster {
 			}
 		}
 
-		public void unregister(string url, int port)	{
-			string key = url+":"+port;
+		public void unregister(string key)	{
+			//string key = url+":"+port;
 			Console.WriteLine("Client at: " + key + " is leaving.");
 			lock (connectedDaemons) {
 				connectedDaemons.Remove(key);
