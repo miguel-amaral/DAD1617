@@ -13,11 +13,11 @@ namespace PuppetMaster {
 
 		private PuppetMasterRemoteServerObject remotePuppet = null;
 		private string key = "";
-		
-		public void connect(string puppetIp) {
+
+		public void connect(string puppetIp, string port = "10000") {
 			remotePuppet = (PuppetMasterRemoteServerObject)Activator.GetObject(
 				typeof(PuppetMasterRemoteServerObject),
-				"tcp://" + puppetIp + ":10000/PuppetMasterRemoteServerObject");
+				"tcp://" + puppetIp + ":" + port + "/PuppetMasterRemoteServerObject");
 			if (remotePuppet == null) throw new SocketException();
 
 			try {

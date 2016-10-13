@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Runtime.Serialization;
 
-public class ConnectionPack {
+public class ConnectionPack{
 	private string url;
 	private int port;
 
