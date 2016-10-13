@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.Remoting;
 
-namespace Process {
+namespace DADStormProcess {
 	public class ProcessRemoteServerObject : MarshalByRefObject {
 
 		public string ping() {

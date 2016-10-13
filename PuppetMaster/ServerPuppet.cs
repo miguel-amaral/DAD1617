@@ -3,7 +3,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 
 namespace PuppetMaster {
-	public class Server {
+	public class ServerPuppet {
 
 		private static int port = 10000;
 
@@ -12,13 +12,8 @@ namespace PuppetMaster {
 			ChannelServices.RegisterChannel(channel, false);
 			PuppetMasterRemoteServerObject myServerObj = new PuppetMasterRemoteServerObject();
 			RemotingServices.Marshal(myServerObj, "PuppetMasterRemoteServerObject",typeof(PuppetMasterRemoteServerObject));
-			/*RemotingConfiguration.RegisterWellKnownServiceType(
-			typeof(PuppetMasterRemoteServerObject),
-			"PuppetMasterRemoteServerObject",
-			WellKnownObjectMode.Singleton);
-			*/
-			//TODO ADDRESS RUNNING INFO?
-			System.Console.WriteLine("Server port is: " + port);
+
+			System.Console.WriteLine("PuppetMaster Server Online : port: " + port);
 			System.Console.WriteLine("<enter> to exit...");
 			System.Console.ReadLine();
 		}

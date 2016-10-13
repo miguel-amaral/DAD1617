@@ -9,7 +9,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 
 namespace PuppetMaster {
 
-	public class PuppetClient {
+	public class ClientPuppet {
 
 		private PuppetMasterRemoteServerObject remotePuppet = null;
 		private string key = "";
@@ -41,7 +41,7 @@ namespace PuppetMaster {
 			//ChannelServices.RegisterChannel(channel,false);
 
 			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
-			PuppetClient pc = new PuppetMaster.PuppetClient();
+			ClientPuppet pc = new PuppetMaster.ClientPuppet();
 			pc.connect();
 			System.Console.WriteLine(pc.ping());
 			System.Console.WriteLine("<enter> para sair...");

@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.Remoting;
+using System.Threading;
 
 namespace Daemon {
 	public class ClientDaemon{
@@ -25,9 +26,9 @@ namespace Daemon {
 		/**
 		  * Interface provided for the creation of a remote Thread
 		  */
-		public void newThread(string dllName, string className , string methodName , object[] args = null) {
+		public void newThread(string dllName, string className , string methodName, string processPort , object[] args = null) {
 			if (remoteDaemon != null) {
-				remoteDaemon.newThread(dllName, className , methodName , args);
+				remoteDaemon.newThread(dllName, className , methodName, processPort , args);
 			} else {
 				//TODO
 				System.Console.WriteLine("TODO: YOU DID NOT CONNECT YET;");
@@ -39,7 +40,6 @@ namespace Daemon {
 		  */
 		static void Main(string[] args) {
 
-			System.Console.WriteLine("<enter> if Daemon Server is ON...");
 			ClientDaemon cd = new ClientDaemon();
 			cd.connect();
 			System.Console.WriteLine(cd.ping());
@@ -47,7 +47,11 @@ namespace Daemon {
 			string arg2 = "mundo!";
 			string[] argumentos = { arg1 , arg2 };
 
-			cd.newThread("hello.dll","Hello","Hello2",argumentos);
+			cd.newThread("hello.dll","Hello","Hello2", "12345", argumentos);
+
+			Thread.Sleep(100);
+
+			cd.ping();
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}
