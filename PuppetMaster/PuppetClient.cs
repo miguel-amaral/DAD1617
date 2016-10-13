@@ -9,11 +9,11 @@ using System.Runtime.Remoting.Channels.Tcp;
 
 namespace PuppetMaster {
 
-	class PuppetClient {
+	public class PuppetClient {
 
 		private PuppetMasterRemoteServerObject remotePuppet = null;
 		private string key = "";
-
+		
 		public void connect(string puppetIp) {
 			remotePuppet = (PuppetMasterRemoteServerObject)Activator.GetObject(
 				typeof(PuppetMasterRemoteServerObject),

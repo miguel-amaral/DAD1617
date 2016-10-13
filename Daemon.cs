@@ -2,6 +2,8 @@ using System;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
+using PuppetMaster;
+
 
 namespace RemotingSample {
 
@@ -15,6 +17,7 @@ namespace RemotingSample {
 			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
 			PuppetClient pc = new PuppetMaster.PuppetClient();
 			pc.connect("localhost");
+			System.Console.WriteLine(pc.ping());
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}
