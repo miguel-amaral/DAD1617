@@ -6,7 +6,7 @@ namespace Daemon {
 
 		private DaemonRemoteServerObject remoteDaemon = null;
 
-		public void connect(string daemonIp = "localhost", string port = "10001") {
+		public void connect(string port = "10001",string daemonIp = "localhost") {
 			remoteDaemon = (DaemonRemoteServerObject)Activator.GetObject(
 				typeof(DaemonRemoteServerObject),
 				"tcp://" + daemonIp + ":" + port + "/DaemonRemoteServerObject");

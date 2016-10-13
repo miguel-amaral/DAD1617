@@ -7,42 +7,42 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 
 
-namespace PuppetMaster {
+namespace Process {
 
-	public class PuppetClient {
+	public class ProcessClient {
 
-		private PuppetMasterRemoteServerObject remotePuppet = null;
+		private ProcessRemoteServerObject remoteProcess = null;
 		private string key = "";
 
-		public void connect(string port = "10000",string puppetIp = "localhost") {
-			remotePuppet = (PuppetMasterRemoteServerObject)Activator.GetObject(
-				typeof(PuppetMasterRemoteServerObject),
-				"tcp://" + puppetIp + ":" + port + "/PuppetMasterRemoteServerObject");
+		public void connect(string port, string processIp = "localhost") {
+			remoteProcess = (ProcessRemoteServerObject)Activator.GetObject(
+				typeof(ProcessRemoteServerObject),
+				"tcp://" + processIp + ":" + port + "/ProcessRemoteServerObject");
 			//TODO Exceprion
-			//if (remotePuppet == null) throw new SocketException();
+			//if (remoteProcess == null) throw new SocketException();
 		}
 
 		public string ping() {
-			if (remotePuppet != null) {
+			if (remoteProcess != null) {
 				string res;
 				try {
-					res = remotePuppet.ping();
+					res = remoteProcess.ping();
 				} catch (SocketException e) {
 					return "Error: " + e.Message;
 				}
 				return res;
 			} else {
-				return "You did not connect to PuppetMaster yet";
+				return "You did not connect to Process yet";
 			}
 		}
 		static void Main(string[] args) {
 
-			TcpChannel channel = new TcpChannel(10001);
+			TcpChannel channel = new TcpChannel(44444);
 			//ChannelServices.RegisterChannel(channel,false);
 
 			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
-			PuppetClient pc = new PuppetMaster.PuppetClient();
-			pc.connect();
+			ProcessClient pc = new Process.ProcessClient();
+			pc.connect("44556");
 			System.Console.WriteLine(pc.ping());
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();

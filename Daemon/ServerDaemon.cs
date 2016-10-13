@@ -48,12 +48,6 @@ namespace Daemon {
 			DaemonRemoteServerObject myServerObj = new DaemonRemoteServerObject();
 			RemotingServices.Marshal(myServerObj, "DaemonRemoteServerObject",typeof(DaemonRemoteServerObject));
 
-			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
-
-//			System.Console.WriteLine("<enter> if PuppetMaster Server is ON...");
-//			System.Console.ReadLine();
-//			PuppetClient pc = new PuppetMaster.PuppetClient();
-//			pc.connect("localhost");
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}
