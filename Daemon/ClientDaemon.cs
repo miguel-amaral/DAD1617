@@ -22,9 +22,12 @@ namespace Daemon {
 			}
 		}
 
-		public void newThread() {
+		/**
+		  * Interface provided for the creation of a remote Thread
+		  */
+		public void newThread(string dllName, string className , string methodName , object[] args = null) {
 			if (remoteDaemon != null) {
-				remoteDaemon.newThread();
+				remoteDaemon.newThread(dllName, className , methodName , args);
 			} else {
 				//TODO
 				System.Console.WriteLine("TODO: YOU DID NOT CONNECT YET;");
@@ -36,11 +39,15 @@ namespace Daemon {
 		  */
 		static void Main(string[] args) {
 
-			ClientDaemon cd = new ClientDaemon();
 			System.Console.WriteLine("<enter> if Daemon Server is ON...");
+			ClientDaemon cd = new ClientDaemon();
 			cd.connect();
 			System.Console.WriteLine(cd.ping());
-			cd.newThread();
+			string arg1 = "olá";
+			string arg2 = "mundo!";
+			string[] argumentos = { arg1 , arg2 };
+
+			cd.newThread("hello.dll","Hello","Hello2",argumentos);
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}

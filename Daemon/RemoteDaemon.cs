@@ -7,8 +7,8 @@ using System.Runtime.Remoting;
 namespace Daemon {
 	public class DaemonRemoteServerObject : MarshalByRefObject {
 
-		public void newThread(){
-			ServerDaemon.Instance.newThread();
+		public void newThread(string dllName, string className , string methodName , object[] args = null){
+			ServerDaemon.Instance.newThread(dllName, className , methodName , args);
 		}
 
 		public string ping() {

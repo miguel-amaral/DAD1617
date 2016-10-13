@@ -14,22 +14,12 @@ namespace PuppetMaster {
 		private PuppetMasterRemoteServerObject remotePuppet = null;
 		private string key = "";
 
-		public void connect(string puppetIp, string port = "10000") {
+		public void connect(string puppetIp = "localhost", string port = "10000") {
 			remotePuppet = (PuppetMasterRemoteServerObject)Activator.GetObject(
 				typeof(PuppetMasterRemoteServerObject),
 				"tcp://" + puppetIp + ":" + port + "/PuppetMasterRemoteServerObject");
-			if (remotePuppet == null) throw new SocketException();
-
-			try {
-				int daemon_Port = 10001;
-				key = "tcp://localhost:" + daemon_Port;
-				remotePuppet.register(key, daemon_Port);
-			} catch(RegistryRemoteException e) {
-				System.Console.WriteLine("service already exists.\r\nError: " + e.Message);
-				remotePuppet = null;
-				key = "";
-				return;
-			}
+			//TODO Exceprion
+			//if (remotePuppet == null) throw new SocketException();
 		}
 
 		public string ping() {
@@ -45,15 +35,17 @@ namespace PuppetMaster {
 				return "You did not connect to PuppetMaster yet";
 			}
 		}
+		static void Main(string[] args) {
 
-		public string unregister() {
-			try {
-				if (remotePuppet != null)
-					remotePuppet.unregister(key);
-			} catch(SocketException e)	{
-				return "Failed to unregister service; error: " + e.Message;
-			}
-			return "Successfully unregistered";
+			TcpChannel channel = new TcpChannel(10001);
+			//ChannelServices.RegisterChannel(channel,false);
+
+			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
+			PuppetClient pc = new PuppetMaster.PuppetClient();
+			pc.connect();
+			System.Console.WriteLine(pc.ping());
+			System.Console.WriteLine("<enter> para sair...");
+			System.Console.ReadLine();
 		}
 	}
 }

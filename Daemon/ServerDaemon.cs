@@ -2,7 +2,9 @@ using System;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
-using PuppetMaster;
+//using PuppetMaster;
+using System.Reflection;
+using System.Threading;
 
 namespace Daemon {
 	public class ServerDaemon {
@@ -20,8 +22,22 @@ namespace Daemon {
 			}
 		}
 
-		public void newThread(){
-			System.Console.WriteLine("Another Thread bites the dust\r\n");
+		public void newThread(string dllName, string className, string methodName, object[] args = null){
+
+
+			Assembly assembly = Assembly.LoadFile(@dllName);
+			Type     type     = assembly.GetType(className);
+			var      obj      = Activator.CreateInstance(type);
+
+			Thread task0 = new Thread(() => {
+				//do something
+				type.InvokeMember(methodName,
+					BindingFlags.Default | BindingFlags.InvokeMethod,
+					null, obj, args);
+
+				System.Console.WriteLine("Another Thread bites the dust\r\n");
+			});
+			task0.Start();
 		}
 
 		static void Main(string[] args) {
@@ -34,10 +50,10 @@ namespace Daemon {
 
 			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
 
-			System.Console.ReadLine();
-			System.Console.WriteLine("<enter> if PuppetMaster Server is ON...");
-			PuppetClient pc = new PuppetMaster.PuppetClient();
-			pc.connect("localhost");
+//			System.Console.WriteLine("<enter> if PuppetMaster Server is ON...");
+//			System.Console.ReadLine();
+//			PuppetClient pc = new PuppetMaster.PuppetClient();
+//			pc.connect("localhost");
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}
