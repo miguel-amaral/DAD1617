@@ -8,7 +8,7 @@ using System.Runtime.Remoting.Channels.Tcp;
 
 
 namespace DADStormProcess {
-	public class ProcessClient {
+	public class ClientProcess {
 
 		private ProcessRemoteServerObject remoteProcess = null;
 		private string key = "";
@@ -40,7 +40,7 @@ namespace DADStormProcess {
 			//ChannelServices.RegisterChannel(channel,false);
 
 			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
-			ProcessClient pc = new ProcessClient();
+			ClientProcess pc = new ClientProcess();
 			pc.connect("44556");
 			System.Console.WriteLine(pc.ping());
 			System.Console.WriteLine("<enter> para sair...");

@@ -11,7 +11,6 @@ namespace Daemon {
 			remoteDaemon = (DaemonRemoteServerObject)Activator.GetObject(
 				typeof(DaemonRemoteServerObject),
 				"tcp://" + daemonIp + ":" + port + "/DaemonRemoteServerObject");
-
 			//TODO if (remoteDaemon == null) throw new SocketException();
 		}
 

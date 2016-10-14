@@ -45,6 +45,8 @@ namespace Daemon {
 
 		static void Main(string[] args) {
 
+			ServerDaemon sd = ServerDaemon.Instance;
+
 			channel = new TcpChannel(port);
 			ChannelServices.RegisterChannel(channel,false);
 

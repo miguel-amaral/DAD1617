@@ -1,7 +1,8 @@
-all: common puppet process daemon
+all: common puppet process daemon controller
 
-common: 
+common:
 	gmcs -t:library hello.cs
+	gmcs hello.cs
 	gmcs -t:library ./CommonTypes/CommonTypes.cs -r:System.Runtime.Remoting.dll
 
 puppet:
@@ -23,10 +24,13 @@ process:
 daemon: process ./Daemon/ServerDaemon.cs
 	#Daemon
 	gmcs ./Daemon/ServerDaemon.cs -r:Process/ServerProcess.dll,System.Runtime.Remoting.dll ./Daemon/RemoteDaemon.cs
-	gmcs -t:library ./Daemon/ServerDaemon.cs -r:Process/ServerProcess.dll,System.Runtime.Remoting.dll,mscorlib.dll ./Daemon/RemoteDaemon.cs
+	gmcs -t:library ./Daemon/ServerDaemon.cs -r:Process/ServerProcess.dll,System.Runtime.Remoting.dll ./Daemon/RemoteDaemon.cs
 	gmcs -t:library ./Daemon/RemoteDaemon.cs -r:System.Runtime.Remoting.dll,Daemon/ServerDaemon.dll
 	gmcs -t:library ./Daemon/ClientDaemon.cs -r:System.Runtime.Remoting.dll,Daemon/RemoteDaemon.dll
 	gmcs ./Daemon/ClientDaemon.cs -r:System.Runtime.Remoting.dll,Daemon/RemoteDaemon.dll
+
+controller: daemon process
+	gmcs ./Controller.cs -r:Process/ClientProcess.dll,Daemon/ClientDaemon.dll
 
 clean:
 	bash deleteFiles

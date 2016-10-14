@@ -1,13 +1,16 @@
 using System;
 using System.Runtime.Remoting;
-//using Daemon.ServerDaemon;
-
 
 
 namespace Daemon {
 	public class DaemonRemoteServerObject : MarshalByRefObject {
 
-		public void newThread(string dllName, string className , string methodName , string processPort ,object[] args = null){
+
+		//FIXME this method is giving nullPTR exception
+		public void newThread(string dllName, string className , string methodName , string processPort){
+			ServerDaemon.Instance.newThread(dllName, className , methodName, processPort , null);
+		}
+		public void newThread(string dllName, string className , string methodName , string processPort,object[] args){
 			ServerDaemon.Instance.newThread(dllName, className , methodName, processPort , args);
 		}
 

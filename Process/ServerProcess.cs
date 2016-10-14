@@ -73,7 +73,7 @@ namespace DADStormProcess {
 					RemotingServices.Marshal(myServerObj, "ProcessRemoteServerObject",typeof(ProcessRemoteServerObject));
 					System.Console.WriteLine("ProcessServer is ONLINE: port is: " + port);
 
-					executeProcess();
+					//executeProcess();
 
 					System.Console.WriteLine("<enter> to exit...");
 					System.Console.ReadLine();
