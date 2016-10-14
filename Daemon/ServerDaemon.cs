@@ -3,9 +3,10 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 //using PuppetMaster;
-using System.Reflection;
-using System.Threading;
+//using System.Threading;
 using DADStormProcess;
+using System.Diagnostics;
+
 
 namespace Daemon {
 	public class ServerDaemon {
@@ -25,26 +26,21 @@ namespace Daemon {
 		}
 
 		public void newThread(string dllName, string className, string methodName, string processPort, object[] args = null){
+			Process process = new Process();
+			// Configure the process using the StartInfo properties.
+			System.Console.WriteLine("Before Start");
+			process.StartInfo.FileName = "Process/ServerProcess.exe";
 
-			Assembly assembly = Assembly.LoadFile(@dllName);
-			Type     type     = assembly.GetType(className);
-			var      obj      = Activator.CreateInstance(type);
+			string processArguments = processPort + " " + dllName + " " + className + " " + methodName;
+			foreach (string str in args){
+				processArguments += " " + str;
+			}
+			process.StartInfo.Arguments = processArguments;
+			System.Console.WriteLine(processArguments);
 
-			//If using threads TCP channel will already be active and when we create a ServerProcess it will complain and FAIL
-			Thread task0 = new Thread(() => {
-				//do something
-				//Lauching proccessServer
-				DADStormProcess.ServerProcess sp = new DADStormProcess.ServerProcess(processPort);
-				sp.executeProcess();
-
-				//Perhaps this will happen inside Process
-				type.InvokeMember(methodName,
-					BindingFlags.Default | BindingFlags.InvokeMethod,
-					null, obj, args);
-
-				System.Console.WriteLine("Another Thread bites the dust\r\n");
-			});
-			task0.Start();
+			//process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
+			process.Start();
+			System.Console.WriteLine("AFter Start");
 		}
 
 		static void Main(string[] args) {

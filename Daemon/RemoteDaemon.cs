@@ -12,7 +12,7 @@ namespace Daemon {
 		}
 
 		public string ping() {
-			Console.WriteLine("Ping");
+			Console.WriteLine("Ping from DaemonRemote");
 			return "Pong";
 		}
 	}

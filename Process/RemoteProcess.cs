@@ -5,7 +5,7 @@ namespace DADStormProcess {
 	public class ProcessRemoteServerObject : MarshalByRefObject {
 
 		public string ping() {
-			Console.WriteLine("Ping");
+			Console.WriteLine("Ping from ProcessRemote");
 			return "Pong";
 		}
 	}
