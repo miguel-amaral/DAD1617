@@ -44,13 +44,10 @@ namespace DADStormProcess {
 			System.Console.WriteLine("Another Process bites the dust\r\n");
 		}
 
-		/**
-		  * Debug method Servers are launched by Daemon exclusively
-		  */
 		public static void Main(string[] args) {
-			foreach (string str in args){
-				System.Console.WriteLine("ServerProcess Argument: " + str);
-			}
+			//foreach (string str in args){
+			//	System.Console.WriteLine("ServerProcess Argument: " + str);
+			//}
 			int argsSize = args.Length;
 			if (argsSize > 3) {
 				string strPort = args[0];
