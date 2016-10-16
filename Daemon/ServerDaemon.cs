@@ -28,7 +28,6 @@ namespace Daemon {
 		public void newThread(string dllName, string className, string methodName, string processPort, object[] args = null){
 			Process process = new Process();
 			// Configure the process using the StartInfo properties.
-			System.Console.WriteLine("Before Start");
 			process.StartInfo.FileName = "Process/ServerProcess.exe";
 
 			string processArguments = processPort + " " + dllName + " " + className + " " + methodName;
@@ -36,11 +35,9 @@ namespace Daemon {
 				processArguments += " " + str;
 			}
 			process.StartInfo.Arguments = processArguments;
-			System.Console.WriteLine(processArguments);
 
 			//process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
 			process.Start();
-			System.Console.WriteLine("AFter Start");
 		}
 
 		static void Main(string[] args) {
@@ -56,6 +53,9 @@ namespace Daemon {
 			System.Console.WriteLine("Daemon Server Online : port: " + port);
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
+			Console.ForegroundColor = ConsoleColor.Red;
+			System.Console.WriteLine("Daemon Server is going OFFLINE" );
+			Console.ResetColor();
 		}
 	}
 }

@@ -30,7 +30,7 @@ daemon: process ./Daemon/ServerDaemon.cs
 	gmcs ./Daemon/ClientDaemon.cs -r:System.Runtime.Remoting.dll,Daemon/RemoteDaemon.dll
 
 controller: daemon process
-	gmcs ./Controller.cs -r:Process/ClientProcess.dll,Daemon/ClientDaemon.dll
+	gmcs ./Controller.cs -r:Process/ClientProcess.dll,Daemon/ClientDaemon.dll,System.Runtime.Remoting.dll
 
 clean:
 	bash deleteFiles
