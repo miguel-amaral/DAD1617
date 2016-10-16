@@ -34,6 +34,10 @@ namespace DADStormProcess {
 				return "You did not connect to Process yet";
 			}
 		}
+
+		public void addTuple(string[] tuple){
+			remoteProcess.addTuple(tuple);
+		}
 		static void Main(string[] args) {
 
 			TcpChannel channel = new TcpChannel(44444);

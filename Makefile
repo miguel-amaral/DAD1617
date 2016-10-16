@@ -14,7 +14,7 @@ puppet:
 
 process:
 	#Process
-	gmcs -t:library ./Process/RemoteProcess.cs -r:System.Runtime.Remoting.dll
+	gmcs -t:library ./Process/RemoteProcess.cs -r:System.Runtime.Remoting.dll ./Process/ServerProcess.cs
 	gmcs -t:library ./Process/ClientProcess.cs -r:Process/RemoteProcess.dll,System.Runtime.Remoting.dll
 	gmcs ./Process/ClientProcess.cs -r:Process/RemoteProcess.dll,System.Runtime.Remoting.dll
 	gmcs ./Process/ServerProcess.cs -r:Process/RemoteProcess.dll,System.Runtime.Remoting.dll

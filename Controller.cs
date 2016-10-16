@@ -29,23 +29,41 @@ public class Controller {
 			argumentos = new string[2];
 			argumentos[0] = arg2 ;
 			argumentos[1] = arg1 ;
-			daemon2.newThread( "hello.dll" , "Hello" , "Hello2", port1, argumentos);
+//			daemon2.newThread( "hello.dll" , "Hello" , "Hello2", port1, argumentos);
 			//		daemon2.newThread( "hello.dll" , "Hello" , "Main", port1, argumentos);
 
+
+			//Allow for the creation of services
 			Thread.Sleep(1000);
 
 
 			//	DADStormProcess.ClientProcess process1 = new DADStormProcess.ClientProcess();
 			DADStormProcess.ClientProcess process2 = new DADStormProcess.ClientProcess();
-			DADStormProcess.ClientProcess process3 = new DADStormProcess.ClientProcess();
+			//DADStormProcess.ClientProcess process3 = new DADStormProcess.ClientProcess();
 
 			//	process1.connect(port1,pc1);
-			process2.connect(port1,pc2);
-			process3.connect(port2,pc2);
+			process2.connect(port2,pc2);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+			Thread.Sleep(500);
+			process2.addTuple(argumentos);
+//			process3.connect(port2,pc2);
 
 			//	System.Console.WriteLine("process 1: "+process1.ping());
 			System.Console.WriteLine("process 2: "+process2.ping());
-			System.Console.WriteLine("process 3: "+process3.ping());
+//			System.Console.WriteLine("process 3: "+process3.ping());
 		} catch (RemotingException e) {
 			Console.ForegroundColor = ConsoleColor.Red;
 			System.Console.WriteLine("Connection failed, you sure Daemon Server is online at ip: " + pc2 + " ? ");

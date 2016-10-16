@@ -51,7 +51,10 @@ namespace Daemon {
 			RemotingServices.Marshal(myServerObj, "DaemonRemoteServerObject",typeof(DaemonRemoteServerObject));
 
 			System.Console.WriteLine("Daemon Server Online : port: " + port);
-			System.Console.WriteLine("<enter> para sair...");
+//			System.Console.WriteLine("<enter> para sair...");
+			System.Console.WriteLine("<ctrl+c> para sair...");
+
+			//Change this to a pulse monitor situation
 			while (true){
 				/*XXX!XXX!XXX!*/ Thread.Sleep(100); /*XXX!XXX!XXX!*/ //TODO
 			}
