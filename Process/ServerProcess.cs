@@ -3,7 +3,7 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Reflection;
-
+using System.Threading;
 
 namespace DADStormProcess {
 	public class ServerProcess {
@@ -70,6 +70,9 @@ namespace DADStormProcess {
 			Console.ResetColor();
 
 			executeProcess();
+			while (true){
+				/*XXX!XXX!XXX!*/ Thread.Sleep(100); /*XXX!XXX!XXX!*/ //TODO
+			}
 		}
 
 		public static void Main(string[] args) {

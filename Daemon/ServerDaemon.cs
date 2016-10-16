@@ -3,7 +3,7 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 //using PuppetMaster;
-//using System.Threading;
+using System.Threading;
 using DADStormProcess;
 using System.Diagnostics;
 
@@ -52,7 +52,9 @@ namespace Daemon {
 
 			System.Console.WriteLine("Daemon Server Online : port: " + port);
 			System.Console.WriteLine("<enter> para sair...");
-			System.Console.ReadLine();
+			while (true){
+				/*XXX!XXX!XXX!*/ Thread.Sleep(100); /*XXX!XXX!XXX!*/ //TODO
+			}
 			Console.ForegroundColor = ConsoleColor.Red;
 			System.Console.WriteLine("Daemon Server is going OFFLINE" );
 			Console.ResetColor();
