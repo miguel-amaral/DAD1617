@@ -18,6 +18,7 @@ namespace DADStormProcess {
 		private string   methodName;
 		private string[] processStaticArgs;
 		private Queue<string[]> dllArgs = new Queue<string[]>();
+		private ProcessRemoteServerObject myServerObj;
 
 		public int Port {
 			get	{ return port; }
@@ -43,6 +44,7 @@ namespace DADStormProcess {
 		public static ServerProcess Instance {
 			get {
 				if (instance == null) {
+					System.Console.WriteLine("New instance created");
 					instance = new ServerProcess();
 				}
 				return instance;
@@ -71,10 +73,12 @@ namespace DADStormProcess {
 			this.frozen = true;
 		}
 		public void defreeze() {
+			System.Console.WriteLine("defreeze beg");
 			this.frozen = false;
 			lock(dllArgs) {
 				Monitor.Pulse(dllArgs);
 			}
+			System.Console.WriteLine("defreeze end");
 		}
 
 		/**
@@ -132,9 +136,10 @@ namespace DADStormProcess {
 		  * Method that will be in loop (passively) and will be processing input
 		  */
 		public void createAndProcess() {
+
 			TcpChannel channel = new TcpChannel(port);
 			ChannelServices.RegisterChannel(channel, false);
-			ProcessRemoteServerObject myServerObj = new ProcessRemoteServerObject();
+			myServerObj = new ProcessRemoteServerObject();
 			RemotingServices.Marshal(myServerObj, "ProcessRemoteServerObject",typeof(ProcessRemoteServerObject));
 
 			Console.ForegroundColor = ConsoleColor.Green;
@@ -142,9 +147,7 @@ namespace DADStormProcess {
 			Console.ResetColor();
 
 			while(true){
-				Thread t1 = new Thread(() => {	executeProcess();	});
-				t1.Start();
-				t1.Join();
+				executeProcess();
 			}
 		}
 
@@ -167,10 +170,10 @@ namespace DADStormProcess {
 					if(parsedPort < 10002 || parsedPort > 65535) {
 						throw new FormatException("Port out of possible range");
 					}
-					sp.Port       = parsedPort;
-					sp.DllName    = dllNameInputMain;
-					sp.ClassName  = classNameInputMain;
-					sp.MethodName = methodNameInputMain;
+					sp.Port       		= parsedPort;
+					sp.DllName    		= dllNameInputMain;
+					sp.ClassName  		= classNameInputMain;
+					sp.MethodName 		= methodNameInputMain;
 					sp.ProcessStaticArgs= dllArgsInputMain;
 
 					sp.createAndProcess();

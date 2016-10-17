@@ -59,6 +59,7 @@ public class Controller {
 			process2.addTuple(argumentos);
 			Thread.Sleep(500);
 			process2.addTuple(argumentos);
+			process2.defreeze();
 //			process3.connect(port2,pc2);
 
 			//	System.Console.WriteLine("process 1: "+process1.ping());

@@ -11,7 +11,6 @@ namespace DADStormProcess {
 	public class ClientProcess {
 
 		private ProcessRemoteServerObject remoteProcess = null;
-		private string key = "";
 
 		public void connect(string port, string processIp = "localhost") {
 			remoteProcess = (ProcessRemoteServerObject)Activator.GetObject(
@@ -35,9 +34,18 @@ namespace DADStormProcess {
 			}
 		}
 
+		public void defreeze() {
+			remoteProcess.defreeze();
+		}
+		public void freeze() {
+			remoteProcess.freeze();
+		}
+
 		public void addTuple(string[] tuple){
 			remoteProcess.addTuple(tuple);
 		}
+
+
 		static void Main(string[] args) {
 
 			TcpChannel channel = new TcpChannel(44444);
