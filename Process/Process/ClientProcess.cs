@@ -1,7 +1,4 @@
 using System;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -23,11 +20,11 @@ namespace DADStormProcess {
 		public string ping() {
 			if (remoteProcess != null) {
 				string res;
-				try {
+//				try {
 					res = remoteProcess.ping();
-				} catch (SocketException e) {
-					return "Error: " + e.Message;
-				}
+//				} catch (SocketException e) {
+//					return "Error: " + e.Message;
+//				}
 				return res;
 			} else {
 				return "You did not connect to Process yet";
@@ -45,7 +42,10 @@ namespace DADStormProcess {
 			remoteProcess.addTuple(tuple);
 		}
 
-
+		/**
+		  * Debug method
+		  */
+/*
 		static void Main(string[] args) {
 
 			TcpChannel channel = new TcpChannel(44444);
@@ -58,5 +58,6 @@ namespace DADStormProcess {
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}
+*/
 	}
 }

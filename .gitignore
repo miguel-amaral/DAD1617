@@ -1,2 +1,5 @@
 *.exe
 *.dll
+*.csproj
+*.sln
+*.userprefs

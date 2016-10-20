@@ -12,7 +12,6 @@ namespace PuppetMaster {
 	public class ClientPuppet {
 
 		private PuppetMasterRemoteServerObject remotePuppet = null;
-		private string key = "";
 
 		public void connect(string port = "10000",string puppetIp = "localhost") {
 			remotePuppet = (PuppetMasterRemoteServerObject)Activator.GetObject(
@@ -35,6 +34,12 @@ namespace PuppetMaster {
 				return "You did not connect to PuppetMaster yet";
 			}
 		}
+
+
+		/**
+		  * Debug method
+		  */
+/*
 		static void Main(string[] args) {
 
 			TcpChannel channel = new TcpChannel(10001);
@@ -47,5 +52,6 @@ namespace PuppetMaster {
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}
+*/
 	}
 }

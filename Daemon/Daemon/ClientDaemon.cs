@@ -37,6 +37,7 @@ namespace Daemon {
 		/**
 		  * ClientDaemon Debug Method
 		  */
+/*
 		static void Main(string[] args) {
 
 			ClientDaemon cd = new ClientDaemon();
@@ -54,5 +55,6 @@ namespace Daemon {
 			System.Console.WriteLine("<enter> para sair...");
 			System.Console.ReadLine();
 		}
+*/
 	}
 }

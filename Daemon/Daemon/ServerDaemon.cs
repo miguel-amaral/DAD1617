@@ -2,7 +2,6 @@ using System;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
-//using PuppetMaster;
 using System.Threading;
 using DADStormProcess;
 using System.Diagnostics;
@@ -28,7 +27,7 @@ namespace Daemon {
 		public void newThread(string dllName, string className, string methodName, string processPort, object[] args = null){
 			Process process = new Process();
 			// Configure the process using the StartInfo properties.
-			process.StartInfo.FileName = "Process/ServerProcess.exe";
+			process.StartInfo.FileName = "Process.exe";
 
 			string processArguments = processPort + " " + dllName + " " + className + " " + methodName;
 			foreach (string str in args){
