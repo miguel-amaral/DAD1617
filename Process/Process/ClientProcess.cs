@@ -17,6 +17,10 @@ namespace DADStormProcess {
 			//if (remoteProcess == null) throw new SocketException();
 		}
 
+		public void addDownStreamOperator(string ip, string port){
+			remoteProcess.addDownStreamOperator(ip, port);
+		}
+
 		public string ping() {
 			if (remoteProcess != null) {
 				string res;
@@ -31,9 +35,14 @@ namespace DADStormProcess {
 			}
 		}
 
+		public void start() {
+			remoteProcess.start();
+		}
+
 		public void defreeze() {
 			remoteProcess.defreeze();
 		}
+
 		public void freeze() {
 			remoteProcess.freeze();
 		}

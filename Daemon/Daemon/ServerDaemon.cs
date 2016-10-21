@@ -13,6 +13,7 @@ namespace Daemon {
 		private static int port = 10001;
 		private static ServerDaemon instance = null;
 		private static TcpChannel channel;
+		private bool   fullLog = false;
 		private ServerDaemon() {}
 
 		public static ServerDaemon Instance {
@@ -24,13 +25,18 @@ namespace Daemon {
 			}
 		}
 
+		public bool FullLog {
+			get	{ return  fullLog; }
+			set	{ fullLog = value; }
+		}
+
 		public void newThread(string dllName, string className, string methodName, string processPort, object[] args = null){
 			Process process = new Process();
 			// Configure the process using the StartInfo properties.
 			process.StartInfo.FileName = "Process.exe";
 
-			string processArguments = processPort + " " + dllName + " " + className + " " + methodName;
-			foreach (string str in args){
+			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + fullLog.ToString();
+			foreach (string str in args) {
 				processArguments += " " + str;
 			}
 			process.StartInfo.Arguments = processArguments;

@@ -10,18 +10,24 @@ namespace DADStormProcess {
 	public class ServerProcess {
 
 		private static ServerProcess instance = null;
-		private int port;
-		private bool     frozen = false;
+		private int      port;
+		private bool     frozen = true;
+		private bool     fullLog= false;
 		private string   dllName;
 		private string   className;
 		private string   methodName;
 		private string[] processStaticArgs;
 		private Queue<string[]> dllArgs = new Queue<string[]>();
 		private ProcessRemoteServerObject myServerObj;
+		private List<string[]> downStreamNodes = new List<string[]>();
 
 		public int Port {
 			get	{ return port; }
 			set	{ port = value;}
+		}
+		public bool FullLog {
+			get	{ return  fullLog; }
+			set	{ fullLog = value; }
 		}
 		public string ClassName {
 			get	{ return className; }
@@ -40,6 +46,7 @@ namespace DADStormProcess {
 			set	{ processStaticArgs = value;}
 		}
 
+
 		public static ServerProcess Instance {
 			get {
 				if (instance == null) {
@@ -48,6 +55,11 @@ namespace DADStormProcess {
 				}
 				return instance;
 			}
+		}
+
+		public void addDownStreamOperator(string ip, string port){
+			string[] url = { ip, port };
+			downStreamNodes.Add ( url );
 		}
 
 		private ServerProcess(){}
@@ -85,7 +97,7 @@ namespace DADStormProcess {
 			lock (dllArgs) {
 				while (dllArgs.Count == 0 || frozen ) {
 					if(frozen) {
-						System.Console.WriteLine("frozen: " + dllArgs.Count);
+						System.Console.WriteLine("frozen: " + dllArgs.Count + " tuples are waiting");
 					}
 					else {
 						System.Console.WriteLine("no tuples");
@@ -114,21 +126,69 @@ namespace DADStormProcess {
 		  * our server object and system will fail categoricly!!
 		  * !!TODO!!DANGER!!TODO!!
 		  */
-		private void executeProcess ()
-		{
+		private void executeProcess () {
 			Assembly assembly = Assembly.LoadFile (@dllName);
 			Type type = assembly.GetType (className);
 			var obj = Activator.CreateInstance (type);
 
-			System.Console.WriteLine ("dllName: " + dllName + " className: " + className + " methodName: " + methodName);
+			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName);
 			while (true) {
+				Object[] methodArgs = { this.nextTuple () };
 
-				string[] tuple = this.nextTuple ();
+				//returnValue object is assumed to be a string[] in DADStorm context
+				object returnValue = type.InvokeMember (methodName,	BindingFlags.Default | BindingFlags.InvokeMethod, null, obj, methodArgs);
 
-				type.InvokeMember (methodName,
-					BindingFlags.Default | BindingFlags.InvokeMethod,
-					null, obj, tuple);
-				System.Console.WriteLine ("Another tuple bites the dust\r\n");
+				if(returnValue.GetType () == typeof(string[])) {
+					emitTuple ((string[])returnValue);
+				} else {
+					throw new Exception ("dll method did not return a string[]");
+				}
+			}
+		}
+
+		/**
+		  * After processing tuple this method emits it to downStream and puppet master
+		  */  
+		private void emitTuple(string[] tuple){
+			if(fullLog == true) {
+				logToPuppetMaster (tuple);
+			}
+			sendToNextOperator(tuple);
+			System.Console.WriteLine("Another tuple bites the dust, result: " + tuple + "\r\n");
+		}
+
+		/**
+		  * In the full logging mode, all tuple emissions need to be reported to Puppetmaster
+		  */ 
+		private void logToPuppetMaster (string[] tuple) {
+			System.Console.WriteLine("Puppet Master informed");
+		}
+
+		/**
+		  * Method that sends a tuple to downstream operator
+		  */
+		private void sendToNextOperator(string[] tuple) {
+			String[] nextOperatorUrl = findTupleReceiver();
+			if (nextOperatorUrl != null) {
+				DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess();
+				nextProcess.connect(nextOperatorUrl[1], nextOperatorUrl[0]);
+				nextProcess.addTuple(tuple);
+				System.Console.WriteLine("Port: " + Port + " Next Operator has received damn tuple");
+
+			} else {
+				System.Console.WriteLine("Port: " + Port + " No one to send tuple to :(");
+				//Case where there is no one to receive..
+				//Maybe its last operator
+			}
+		}
+
+		private string[] findTupleReceiver(){
+			if(downStreamNodes.Count > 0){
+				// primary routing 
+				return downStreamNodes[0];
+			} else {
+			//	return new string[]{ "" };
+				return null;
 			}
 		}
 
@@ -153,27 +213,31 @@ namespace DADStormProcess {
 
 			int argsSize = args.Length;
 			try {
-				if (argsSize > 3) {
+				//Configuring Process
+				if (argsSize > 4) {
 					string strPort = args[0];
 					string dllNameInputMain    = args[1];
 					string classNameInputMain  = args[2];
 					string methodNameInputMain = args[3];
+					//Bool that indicates whether full logging or not
+					bool   fullLogging         = Convert.ToBoolean(args[4]);
 					string[] dllArgsInputMain = null;
-					if (argsSize > 4) {
+					int numberOfParameters = 5;
+					if (argsSize > numberOfParameters) {
 						dllArgsInputMain = new string[argsSize - 4 ];
-						Array.Copy(args, 3, dllArgsInputMain, 0, argsSize - 4 );
+						Array.Copy(args, numberOfParameters-1, dllArgsInputMain, 0, numberOfParameters - 4 );
 					}
 					ServerProcess sp = ServerProcess.Instance;
 					int parsedPort = Int32.Parse(strPort);
 					if(parsedPort < 10002 || parsedPort > 65535) {
 						throw new FormatException("Port out of possible range");
 					}
-					sp.Port       		= parsedPort;
-					sp.DllName    		= dllNameInputMain;
-					sp.ClassName  		= classNameInputMain;
-					sp.MethodName 		= methodNameInputMain;
-					sp.ProcessStaticArgs= dllArgsInputMain;
-
+					sp.Port       		 = parsedPort;
+					sp.DllName    		 = dllNameInputMain;
+					sp.ClassName  		 = classNameInputMain;
+					sp.MethodName 		 = methodNameInputMain;
+					sp.ProcessStaticArgs = dllArgsInputMain;
+					sp.FullLog			 = fullLogging;
 					sp.createAndProcess();
 
 					Console.ForegroundColor = ConsoleColor.Red;

@@ -7,10 +7,11 @@ namespace Daemon {
 
 		private DaemonRemoteServerObject remoteDaemon = null;
 
-		public void connect(string port = "10001",string daemonIp = "localhost") {
+		public void connect(string port = "10001",string daemonIp = "localhost", bool fullLog = false) {
 			remoteDaemon = (DaemonRemoteServerObject)Activator.GetObject(
 				typeof(DaemonRemoteServerObject),
 				"tcp://" + daemonIp + ":" + port + "/DaemonRemoteServerObject");
+			remoteDaemon.fullLog(fullLog);
 			//TODO if (remoteDaemon == null) throw new SocketException();
 		}
 
@@ -30,7 +31,7 @@ namespace Daemon {
 				remoteDaemon.newThread(dllName, className , methodName, processPort , args);
 			} else {
 				//TODO
-				System.Console.WriteLine("TODO: YOU DID NOT CONNECT YET;");
+				System.Console.WriteLine("TODO: YOU DID NOT CONNECT YET to DAEMON;");
 			}
 		}
 
