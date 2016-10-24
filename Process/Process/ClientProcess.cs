@@ -9,16 +9,16 @@ namespace DADStormProcess {
 
 		private ProcessRemoteServerObject remoteProcess = null;
 
-		public void connect(string port, string processIp = "localhost") {
+		public void connect(ConnectionPack cp) {
 			remoteProcess = (ProcessRemoteServerObject)Activator.GetObject(
 				typeof(ProcessRemoteServerObject),
-				"tcp://" + processIp + ":" + port + "/ProcessRemoteServerObject");
+				"tcp://" + cp.Ip + ":" + cp.Port + "/op");
 			//TODO Exceprion
 			//if (remoteProcess == null) throw new SocketException();
 		}
 
-		public void addDownStreamOperator(string ip, string port){
-			remoteProcess.addDownStreamOperator(ip, port);
+		public void addDownStreamOperator(ConnectionPack cp){
+			remoteProcess.addDownStreamOperator(cp);
 		}
 
 		public string ping() {

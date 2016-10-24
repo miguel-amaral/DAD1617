@@ -1,8 +1,13 @@
 // Hello1.cs
+
+using System;
+
 public class Hello
 {
 	public string[] retornaInt(string[] args){
+		Console.ForegroundColor = ConsoleColor.Red;
 		System.Console.WriteLine("retorna int invoked with success\r\n");
+		Console.ResetColor();
 		string[] retorno = new string[1];
 		retorno[0] = args.Length.ToString();	
 		return retorno ;

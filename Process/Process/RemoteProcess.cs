@@ -13,8 +13,8 @@ namespace DADStormProcess {
 			return "Pong";
 		}
 
-		public void addDownStreamOperator(string ip, string port){
-			ServerProcess.Instance.addDownStreamOperator(ip, port);
+		public void addDownStreamOperator(ConnectionPack cp){
+			ServerProcess.Instance.addDownStreamOperator(cp);
 		}
 
 		public void start()    { this.defreeze(); }

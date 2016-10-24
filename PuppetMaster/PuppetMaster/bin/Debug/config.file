@@ -1,0 +1,1 @@
+OP1 input ops tweeters.data rep fact 2 routing hashing(1) address tcp://localhost:11000/op, tcp://localhost:11001/op operator spec CUSTOM hello.dll Hello retornaInt

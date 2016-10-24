@@ -13,13 +13,14 @@ namespace DADStormProcess {
 		private int      port;
 		private bool     frozen = true;
 		private bool     fullLog= false;
+		private string   file = "";
 		private string   dllName;
 		private string   className;
 		private string   methodName;
 		private string[] processStaticArgs;
 		private Queue<string[]> dllArgs = new Queue<string[]>();
 		private ProcessRemoteServerObject myServerObj;
-		private List<string[]> downStreamNodes = new List<string[]>();
+		private List<ConnectionPack> downStreamNodes = new List<ConnectionPack>();
 
 		public int Port {
 			get	{ return port; }
@@ -57,9 +58,8 @@ namespace DADStormProcess {
 			}
 		}
 
-		public void addDownStreamOperator(string ip, string port){
-			string[] url = { ip, port };
-			downStreamNodes.Add ( url );
+		public void addDownStreamOperator(ConnectionPack cp){
+			downStreamNodes.Add ( cp );
 		}
 
 		private ServerProcess(){}
@@ -107,6 +107,10 @@ namespace DADStormProcess {
 				string[] nextArg = dllArgs.Dequeue();
 				return nextArg;
 			}
+		}
+
+		private void loadFile(string file) {
+			
 		}
 
 		/**
@@ -168,10 +172,10 @@ namespace DADStormProcess {
 		  * Method that sends a tuple to downstream operator
 		  */
 		private void sendToNextOperator(string[] tuple) {
-			String[] nextOperatorUrl = findTupleReceiver();
-			if (nextOperatorUrl != null) {
+			ConnectionPack nextOperatorCp = findTupleReceiver();
+			if (nextOperatorCp != null) {
 				DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess();
-				nextProcess.connect(nextOperatorUrl[1], nextOperatorUrl[0]);
+				nextProcess.connect(nextOperatorCp);
 				nextProcess.addTuple(tuple);
 				System.Console.WriteLine("Port: " + Port + " Next Operator has received damn tuple");
 
@@ -182,7 +186,7 @@ namespace DADStormProcess {
 			}
 		}
 
-		private string[] findTupleReceiver(){
+		private ConnectionPack findTupleReceiver(){
 			if(downStreamNodes.Count > 0){
 				// primary routing 
 				return downStreamNodes[0];
@@ -200,7 +204,7 @@ namespace DADStormProcess {
 			TcpChannel channel = new TcpChannel(port);
 			ChannelServices.RegisterChannel(channel, false);
 			myServerObj = new ProcessRemoteServerObject();
-			RemotingServices.Marshal(myServerObj, "ProcessRemoteServerObject",typeof(ProcessRemoteServerObject));
+			RemotingServices.Marshal(myServerObj, "op",typeof(ProcessRemoteServerObject));
 
 			Console.ForegroundColor = ConsoleColor.Green;
 			System.Console.WriteLine("ProcessServer is ONLINE: port is: " + port);

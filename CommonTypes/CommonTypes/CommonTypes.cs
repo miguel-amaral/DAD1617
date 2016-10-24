@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Runtime.Serialization;
 
+[Serializable]
 public class ConnectionPack{
-	private string url;
+	private string ip;
 	private int port;
 
-	public ConnectionPack(string url, int port) {
-		this.url = url;
+	public ConnectionPack(string ip, int port) {
+		this.ip = ip;
 		this.port = port;
 	}
 
@@ -17,9 +18,9 @@ public class ConnectionPack{
 		get { return port;	}
 		set { port = value;	}
 	}
-	public string Url {
-		get { return url;	}
-		set { url = value;	}
+	public string Ip {
+		get { return ip;  }
+		set { ip = value; }
 	}
 }
 
@@ -29,3 +30,9 @@ namespace PuppetMaster {
 		// ...
 	}
 }
+
+public class MainClass{
+	public static void Main(string[] args) {}
+}
+
+
