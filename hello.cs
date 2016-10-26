@@ -4,12 +4,27 @@ using System;
 
 public class Hello
 {
+	private string[] plusString(string[] old){
+			string[] neW = new string[old.Length+1];
+			string print = "beg:";
+			int i = 0;
+			while(i < old.Length){
+				neW [i] = old [i];
+				print += " " + neW[i];
+				i++;
+			}
+			neW [i] = i.ToString ();
+			print += " " + neW[i];
+			System.Console.WriteLine(print);
+
+			return neW;
+	}
 	public string[] retornaInt(string[] args){
 		Console.ForegroundColor = ConsoleColor.Red;
 		System.Console.WriteLine("retorna int invoked with success\r\n");
 		Console.ResetColor();
 		string[] retorno = new string[1];
-		retorno[0] = args.Length.ToString();	
+		retorno[0] = args.Length.ToString();
 		return retorno ;
 	}
 	public void Hello0(){

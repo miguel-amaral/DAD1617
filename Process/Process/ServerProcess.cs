@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -11,8 +12,10 @@ namespace DADStormProcess {
 
 		private static ServerProcess instance = null;
 		private int      port;
-		private bool     frozen = true;
-		private bool     fullLog= false;
+		private int      milliseconds =0;
+		private bool     frozen  = true;
+		private bool     fullLog = false;
+		private bool     primmary= true;
 		private string   file = "";
 		private string   dllName;
 		private string   className;
@@ -21,15 +24,26 @@ namespace DADStormProcess {
 		private Queue<string[]> dllArgs = new Queue<string[]>();
 		private ProcessRemoteServerObject myServerObj;
 		private List<ConnectionPack> downStreamNodes = new List<ConnectionPack>();
+		private List<string> filesLocation = new List<string>();
+		private Dictionary<string, string[]> filesContent = new Dictionary<string, string[]>(); 
+		private Dictionary<string, int> filesIndex = new Dictionary<string, int> ();
 
 		public int Port {
 			get	{ return port; }
 			set	{ port = value;}
 		}
+		public int Milliseconds {
+			get	{ return milliseconds; }
+			set	{ milliseconds = value;}
+		}
 		public bool FullLog {
 			get	{ return  fullLog; }
 			set	{ fullLog = value; }
-		}
+		}		
+		//public bool Primmary {
+		//	get	{ return  primmary; }
+		//	set	{ primmary = value; }
+		//}
 		public string ClassName {
 			get	{ return className; }
 			set	{ className = value;}
@@ -47,6 +61,7 @@ namespace DADStormProcess {
 			set	{ processStaticArgs = value;}
 		}
 
+		private ServerProcess(){}
 
 		public static ServerProcess Instance {
 			get {
@@ -58,11 +73,7 @@ namespace DADStormProcess {
 			}
 		}
 
-		public void addDownStreamOperator(ConnectionPack cp){
-			downStreamNodes.Add ( cp );
-		}
 
-		private ServerProcess(){}
 //		public ServerProcess(string strPort, string dllName, string className, string methodName, string[] processArgs){
 //
 //			try {
@@ -79,16 +90,7 @@ namespace DADStormProcess {
 //				Console.WriteLine(e.Message);
 //			}
 //		}
-
-		public void freeze() {
-			this.frozen = true;
-		}
-		public void defreeze() {
-			this.frozen = false;
-			lock(dllArgs) {
-				Monitor.Pulse(dllArgs);
-			}
-		}
+		
 
 		/**
 		  * method that returns the next tuple to be processed
@@ -98,9 +100,13 @@ namespace DADStormProcess {
 				while (dllArgs.Count == 0 || frozen ) {
 					if(frozen) {
 						System.Console.WriteLine("frozen: " + dllArgs.Count + " tuples are waiting");
-					}
-					else {
-						System.Console.WriteLine("no tuples");
+					} else {
+						//Read 1 tuple from each file?
+						foreach(string fileLocation in filesLocation){
+							System.Console.WriteLine("will read one from " + fileLocation);
+							readTuple (fileLocation);
+						}
+
 					}
 					Monitor.Wait(dllArgs);
 				}
@@ -109,18 +115,48 @@ namespace DADStormProcess {
 			}
 		}
 
-		private void loadFile(string file) {
-			
+		/**
+		  * method that reads from the file all the tuples in it
+		  * might need to become process and avoiding reading same tuple two times.. :(
+		  */
+		private void readTuple (string fileLocation) {
+			string[] content;
+			if (!filesContent.TryGetValue (fileLocation, out content)) {
+				//Not found -> File not yet read
+				content = File.ReadAllLines (fileLocation);
+				filesContent.Add (fileLocation, content);
+			}
+			//getIndex
+			int index = this.nextIndex (fileLocation);
+			System.Console.WriteLine ("index: " + index);
+			if (index >= 0) {
+				if (index < content.Length) {
+					string line = content [index];
+					String[] tuple = line.Split (new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
+
+					if (!tuple [0].StartsWith ("%")) {
+						//Only adds non commentaries
+						this.addTuple (tuple);
+					}
+
+				} else {
+					System.Console.WriteLine ("file: " + fileLocation + " has been read completly");
+					//File has been read totally, removing from known files
+					filesLocation.Remove (fileLocation); // TODO;
+				}
+
+			} else {
+				System.Console.WriteLine ("Index returned negative, someone acessed it without primmary permission");
+			}
 		}
 
-		/**
-		  * method that adds a tuple to be processed
-		  */
-		public void addTuple(string[] nextArg) {
-			lock (dllArgs) {
-				dllArgs.Enqueue( nextArg );
-				Monitor.Pulse(dllArgs);
-			}
+		private ProcessRemoteServerObject getPrimmary() {
+			//TODO XXX
+			return myServerObj;
+		}
+
+		private int nextIndex(string file){
+			return this.getPrimmary().getIndexFromPrimmary (file);
 		}
 
 		/**
@@ -147,6 +183,9 @@ namespace DADStormProcess {
 				} else {
 					throw new Exception ("dll method did not return a string[]");
 				}
+
+				//By default milliseconds is zero, but puppet master may want to slow things down..
+				Thread.Sleep (milliseconds);
 			}
 		}
 
@@ -165,7 +204,7 @@ namespace DADStormProcess {
 		  * In the full logging mode, all tuple emissions need to be reported to Puppetmaster
 		  */ 
 		private void logToPuppetMaster (string[] tuple) {
-			System.Console.WriteLine("Puppet Master informed");
+			System.Console.WriteLine("Puppet Master must be informed.. TODO");
 		}
 
 		/**
@@ -193,6 +232,62 @@ namespace DADStormProcess {
 			} else {
 			//	return new string[]{ "" };
 				return null;
+			}
+		}
+
+		/* -------------------------------------------------------------------- */
+		/* -------------------------------------------------------------------- */
+		/* --------------------------- Public Methods ------------------------- */
+		/* -------------------------------------------------------------------- */
+		/* -------------------------------------------------------------------- */
+
+		public void addDownStreamOperator(ConnectionPack cp){
+			downStreamNodes.Add ( cp );
+		}
+
+		public void crash() {
+			Environment.Exit (1);
+		}
+
+		public void freeze() {
+			this.frozen = true;
+		}
+
+		public void defreeze() {
+			this.frozen = false;
+			lock(dllArgs) {
+				Monitor.Pulse(dllArgs);
+			}
+		}
+
+		//Public that must be called by 
+		public int getIndexFromPrimmary (string file) {
+			if (primmary) {
+				lock (filesIndex) {
+					int counter;
+					if (!filesIndex.TryGetValue (file, out counter)) {
+						counter = 0;
+						filesIndex.Add (file, counter);
+					} 
+					filesIndex [file] = counter + 1;
+					return counter;
+				}
+			}
+			return -1;
+		}
+
+		//Method that adds a file that this replica will read 
+		public void addFile(string file){
+			filesLocation.Add (file);
+		}
+
+		/**
+		  * method that adds a tuple to be processed
+		  */
+		public void addTuple(string[] nextArg) {
+			lock (dllArgs) {
+				dllArgs.Enqueue( nextArg );
+				Monitor.Pulse(dllArgs);
 			}
 		}
 
@@ -248,7 +343,7 @@ namespace DADStormProcess {
 					System.Console.WriteLine("ProcessServer is going OFFLINE" );
 					Console.ResetColor();
 				} else {
-					System.Console.WriteLine("ERROR: No port specifiend" );
+					System.Console.WriteLine("ERROR: No port specified" );
 				}
 			} catch (FormatException e) {
 				Console.WriteLine(e.Message);

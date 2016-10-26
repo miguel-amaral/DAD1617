@@ -12,8 +12,13 @@ namespace PuppetMaster {
 
 		private static int port = 10000;
 		private bool fullLog = false;
+		private bool firstStart = true;
 		private static ServerPuppet instance = null;
+		// key is the operator that emits the tuple
+		// value is List of operators that will receive said tuples
 		private Dictionary<string, List<string>> downStreamOperators = new Dictionary<string, List<string>>();
+		// key is operator name
+		// value is List of connections packs off said operator
 		private Dictionary<string, List<ConnectionPack>> operatorsConPacks = new Dictionary<string, List<ConnectionPack>>();
 		public static ServerPuppet Instance {
 			get {
@@ -25,7 +30,129 @@ namespace PuppetMaster {
 			}
 		}
 
-		private void readCommandsFromFile (string fileLocation){
+
+
+		private void doFirstStartConnections ()
+		{
+			if (firstStart) {
+				//Make sure everything is created
+				Thread.Sleep (500);
+				//doFirstStart ();
+				foreach (KeyValuePair<string, List<string>> item in downStreamOperators) {
+					List<ConnectionPack> outputingReplicas;
+					List<ConnectionPack> receivingReplicas;
+
+					//Getting list of Outputing replicas
+					if (operatorsConPacks.TryGetValue (item.Key, out outputingReplicas)) {
+						//Then it is an operator
+						//foreach output replica in outputOPerator
+						foreach (ConnectionPack outPack in outputingReplicas) {
+							//create processClient
+							DADStormProcess.ClientProcess outReplica = new DADStormProcess.ClientProcess ();
+							outReplica.connect (outPack);
+							//foreach receivingOperator
+							foreach (string receiving_operator in item.Value) {
+								//Getting list of receiving replicas of operator
+								if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
+									//for each replica in the receivingOperator
+									foreach (ConnectionPack receivingPack in outputingReplicas) {
+										outReplica.addDownStreamOperator (receivingPack);
+									}								
+								}
+							}
+						}
+					} else {
+						//else it must be a file
+						//foreach receivingOperator
+						foreach (string receiving_operator in item.Value) {
+							//Getting list of receiving replicas of operator
+							if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
+								//for each replica in the receivingOperator
+								System.Console.WriteLine ("will crash: " + receiving_operator);
+								foreach (ConnectionPack receivingPack in receivingReplicas) {
+									DADStormProcess.ClientProcess receivingReplica = new DADStormProcess.ClientProcess ();
+									receivingReplica.connect (receivingPack);
+									receivingReplica.addFile (item.Key);
+								}								
+							}
+						}
+					}
+				}
+				this.firstStart = false;
+			} else {
+				//we already started everything..
+				return;
+			}
+		}
+
+		/**
+		  * Method that from a string[] does a command in a single replica
+		  */
+		private void  replicaTargetOperations (string[] splitStr) {	
+			if(splitStr.Length < 3) {
+				operatorTargetOperations (splitStr);
+				return;
+			}
+			string command     = splitStr[0];
+			string operator_id = splitStr[1];
+
+			//Must be an integer
+			int process_number = Int32.Parse(splitStr[2]);
+			List<ConnectionPack> operatorList;
+			if(operatorsConPacks.TryGetValue(operator_id,out operatorList)){
+				ConnectionPack conPack = operatorList [process_number];
+				DADStormProcess.ClientProcess cprocess = new DADStormProcess.ClientProcess ();
+				cprocess.connect (conPack);
+
+				if(command.Equals("freeze", StringComparison.OrdinalIgnoreCase)){
+					cprocess.freeze();
+				} else if(command.Equals("unfreeze", StringComparison.OrdinalIgnoreCase)){
+					cprocess.unfreeze();
+				} else if(command.Equals("crash", StringComparison.OrdinalIgnoreCase)){
+					cprocess.crash();
+				} else if(command.Equals("start", StringComparison.OrdinalIgnoreCase)){
+					if(firstStart){
+						doFirstStartConnections ();
+					}
+					cprocess.start();
+				}
+
+			} else {
+				System.Console.WriteLine("Operator: " + operator_id + " not in list");
+			}
+		}
+
+		/**
+		  * Method that from a string[] does a command in a whole operator, i.e., all its replicas
+		  */
+		private void operatorTargetOperations (string[] splitStr) {
+			string command     = splitStr[0];
+			string operator_id = splitStr[1];
+
+			//Must be an integer
+			List<ConnectionPack> operatorList;
+			if(operatorsConPacks.TryGetValue(operator_id,out operatorList)){
+				foreach(ConnectionPack conPack in operatorList){
+					DADStormProcess.ClientProcess cprocess = new DADStormProcess.ClientProcess ();
+					cprocess.connect (conPack);
+
+					if(command.Equals("start", StringComparison.OrdinalIgnoreCase)){
+						if(firstStart){
+							doFirstStartConnections ();
+						}
+						cprocess.start();
+					} else if(command.Equals("interval", StringComparison.OrdinalIgnoreCase)){
+						cprocess.interval(Int32.Parse(splitStr[2]));
+					} /*else if(command.Equals("crash", StringComparison.OrdinalIgnoreCase)){
+						cprocess.crash();
+					}*/
+				}
+			} else {
+				System.Console.WriteLine("Operator: " + operator_id + " not in list");
+			}
+		}
+
+		void readCommandsFromFile (string fileLocation){
 			String line;
 			// Read the file and display it line by line.
 			System.IO.StreamReader file =new System.IO.StreamReader(fileLocation);
@@ -36,17 +163,29 @@ namespace PuppetMaster {
 				}
 
 
-				String[] splitStr = line.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries);
-				if((splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase)) || splitStr[1].Equals("input_ops", StringComparison.OrdinalIgnoreCase)){
-					this.createNewOperator (splitStr);
+				String[] splitStr = line.Split(new[] { ',', ' ','"' }, StringSplitOptions.RemoveEmptyEntries);
+				if(splitStr.Length == 0){
+					continue;
 				}
+				if((splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase))
+				   || splitStr[1].Equals("input_ops", StringComparison.OrdinalIgnoreCase)){
+					this.createNewOperator (splitStr);
+					//Process files TODO this.
+				} else if(splitStr[0].Equals("freeze", StringComparison.OrdinalIgnoreCase)
+					||splitStr[0].Equals("unfree", StringComparison.OrdinalIgnoreCase)
+					||splitStr[0].Equals("crash", StringComparison.OrdinalIgnoreCase)
+					||splitStr[0].Equals("start", StringComparison.OrdinalIgnoreCase)
+				){
+					this.replicaTargetOperations (splitStr);
+				} else if(splitStr[0].Equals("interval", StringComparison.OrdinalIgnoreCase)) {
+					this.operatorTargetOperations(splitStr);
+				}
+				//Status TODO
 			}
-
 			file.Close();
 		}
 
-		private void createNewOperator (String[] splitStr)
-		{
+		private void createNewOperator (String[] splitStr){
 			//foreach(string str in splitStr){
 			//	System.Console.WriteLine (str);
 			//}
@@ -112,7 +251,7 @@ namespace PuppetMaster {
 				currentConnectionPacks.Add (cp);
 				counter++;
 			}
-
+			System.Console.WriteLine("current: " + current_operator_id + " : " + currentConnectionPacks.Count + " replicas");
 			operatorsConPacks.Add (current_operator_id, currentConnectionPacks);
 
 			if (splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase)) {

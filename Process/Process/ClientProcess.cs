@@ -39,18 +39,29 @@ namespace DADStormProcess {
 			remoteProcess.start();
 		}
 
-		public void defreeze() {
+		public void unfreeze() {
 			remoteProcess.defreeze();
 		}
-
+		
 		public void freeze() {
 			remoteProcess.freeze();
+		}
+		
+		public void crash() {
+			remoteProcess.crash();
+		}
+
+		public void interval(int milli) {
+			remoteProcess.interval(milli);
 		}
 
 		public void addTuple(string[] tuple){
 			remoteProcess.addTuple(tuple);
 		}
 
+		public void addFile(string file) {
+			remoteProcess.addFile (file);
+		}
 		/**
 		  * Debug method
 		  */
