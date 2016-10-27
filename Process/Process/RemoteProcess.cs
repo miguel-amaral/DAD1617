@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.Remoting;
+using System.Collections.Generic;
 
 namespace DADStormProcess {
 	public class ProcessRemoteServerObject : MarshalByRefObject {
@@ -13,7 +14,7 @@ namespace DADStormProcess {
 			return "Pong";
 		}
 
-		public void addDownStreamOperator(ConnectionPack cp) {
+		public void addDownStreamOperator(List<ConnectionPack> cp) {
 			ServerProcess.Instance.addDownStreamOperator(cp);
 		}
 		

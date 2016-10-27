@@ -30,10 +30,10 @@ namespace PuppetMaster {
 			}
 		}
 
-
-
-		private void doFirstStartConnections ()
-		{
+		/// <summary>
+		/// Dos the first start connections.
+		/// </summary>
+		private void doFirstStartConnections ()	{
 			if (firstStart) {
 				//Make sure everything is created
 				Thread.Sleep (500);
@@ -41,23 +41,23 @@ namespace PuppetMaster {
 				foreach (KeyValuePair<string, List<string>> item in downStreamOperators) {
 					List<ConnectionPack> outputingReplicas;
 					List<ConnectionPack> receivingReplicas;
-
+					string emitingOperator = item.Key;
 					//Getting list of Outputing replicas
-					if (operatorsConPacks.TryGetValue (item.Key, out outputingReplicas)) {
+					if (operatorsConPacks.TryGetValue (emitingOperator, out outputingReplicas)) {
 						//Then it is an operator
 						//foreach output replica in outputOPerator
 						foreach (ConnectionPack outPack in outputingReplicas) {
 							//create processClient
-							DADStormProcess.ClientProcess outReplica = new DADStormProcess.ClientProcess ();
-							outReplica.connect (outPack);
+							DADStormProcess.ClientProcess outReplica = new DADStormProcess.ClientProcess (outPack);
 							//foreach receivingOperator
 							foreach (string receiving_operator in item.Value) {
 								//Getting list of receiving replicas of operator
 								if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
 									//for each replica in the receivingOperator
-									foreach (ConnectionPack receivingPack in outputingReplicas) {
-										outReplica.addDownStreamOperator (receivingPack);
-									}								
+									//foreach (ConnectionPack receivingPack in receivingReplicas) {
+									System.Console.WriteLine ("Added Connection\nOutOperator: " + outPack + " Receiver: " + receiving_operator);
+									outReplica.addDownStreamOperator (receivingReplicas);
+									//}								
 								}
 							}
 						}
@@ -68,10 +68,9 @@ namespace PuppetMaster {
 							//Getting list of receiving replicas of operator
 							if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
 								//for each replica in the receivingOperator
-								System.Console.WriteLine ("will crash: " + receiving_operator);
+								System.Console.WriteLine ("adding file: " + item.Key + " to: " + receiving_operator);
 								foreach (ConnectionPack receivingPack in receivingReplicas) {
-									DADStormProcess.ClientProcess receivingReplica = new DADStormProcess.ClientProcess ();
-									receivingReplica.connect (receivingPack);
+									DADStormProcess.ClientProcess receivingReplica = new DADStormProcess.ClientProcess (receivingPack);
 									receivingReplica.addFile (item.Key);
 								}								
 							}
@@ -85,9 +84,9 @@ namespace PuppetMaster {
 			}
 		}
 
-		/**
-		  * Method that from a string[] does a command in a single replica
-		  */
+		/// <summary>
+		/// Method that from a string[] does a command in a single replica
+		/// </summary>
 		private void  replicaTargetOperations (string[] splitStr) {	
 			if(splitStr.Length < 3) {
 				operatorTargetOperations (splitStr);
@@ -101,8 +100,7 @@ namespace PuppetMaster {
 			List<ConnectionPack> operatorList;
 			if(operatorsConPacks.TryGetValue(operator_id,out operatorList)){
 				ConnectionPack conPack = operatorList [process_number];
-				DADStormProcess.ClientProcess cprocess = new DADStormProcess.ClientProcess ();
-				cprocess.connect (conPack);
+				DADStormProcess.ClientProcess cprocess = new DADStormProcess.ClientProcess (conPack);
 
 				if(command.Equals("freeze", StringComparison.OrdinalIgnoreCase)){
 					cprocess.freeze();
@@ -133,8 +131,7 @@ namespace PuppetMaster {
 			List<ConnectionPack> operatorList;
 			if(operatorsConPacks.TryGetValue(operator_id,out operatorList)){
 				foreach(ConnectionPack conPack in operatorList){
-					DADStormProcess.ClientProcess cprocess = new DADStormProcess.ClientProcess ();
-					cprocess.connect (conPack);
+					DADStormProcess.ClientProcess cprocess = new DADStormProcess.ClientProcess (conPack);
 
 					if(command.Equals("start", StringComparison.OrdinalIgnoreCase)){
 						if(firstStart){
@@ -152,35 +149,48 @@ namespace PuppetMaster {
 			}
 		}
 
+		/// <summary>
+		/// From a line does a command, needs to be complete
+		/// </summary>
+		/// <param name="line">Line.</param>
+		void doCommand (string line) {
+			//Ignoring comments
+			if (line.StartsWith ("%")) {
+				return;
+			}
+
+			String[] splitStr = line.Split (new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
+			if (splitStr.Length == 0) {
+				return;
+			}
+			if ((splitStr [1].Equals ("input", StringComparison.OrdinalIgnoreCase) && splitStr [2].Equals ("ops", StringComparison.OrdinalIgnoreCase))
+			    || splitStr [1].Equals ("input_ops", StringComparison.OrdinalIgnoreCase)) {
+				this.createNewOperator (splitStr);
+				//Process files TODO this.
+			} else if (splitStr [0].Equals ("freeze", StringComparison.OrdinalIgnoreCase)
+			           || splitStr [0].Equals ("unfree", StringComparison.OrdinalIgnoreCase)
+			           || splitStr [0].Equals ("crash", StringComparison.OrdinalIgnoreCase)
+			           || splitStr [0].Equals ("start", StringComparison.OrdinalIgnoreCase)) {
+				this.replicaTargetOperations (splitStr);
+			} else if (splitStr [0].Equals ("interval", StringComparison.OrdinalIgnoreCase)) {
+				this.operatorTargetOperations (splitStr);
+			} else if (splitStr [0].Equals ("wait", StringComparison.OrdinalIgnoreCase)) {
+				Thread.Sleep (Int32.Parse (splitStr [1]));
+			} else if (splitStr [0].Equals ("LoggingLevel", StringComparison.OrdinalIgnoreCase)) {
+				this.fullLog = splitStr [1].Equals ("full", StringComparison.OrdinalIgnoreCase);
+			} else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
+				//TODO
+				//this.fullLog = splitStr [1].Equals ("full", StringComparison.OrdinalIgnoreCase);
+			}
+			//Status TODO
+		}
+
 		void readCommandsFromFile (string fileLocation){
 			String line;
 			// Read the file and display it line by line.
 			System.IO.StreamReader file =new System.IO.StreamReader(fileLocation);
 			while((line = file.ReadLine()) != null) {
-				//Ignoring comments
-				if(line.StartsWith("%")){
-					continue;
-				}
-
-
-				String[] splitStr = line.Split(new[] { ',', ' ','"' }, StringSplitOptions.RemoveEmptyEntries);
-				if(splitStr.Length == 0){
-					continue;
-				}
-				if((splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase))
-				   || splitStr[1].Equals("input_ops", StringComparison.OrdinalIgnoreCase)){
-					this.createNewOperator (splitStr);
-					//Process files TODO this.
-				} else if(splitStr[0].Equals("freeze", StringComparison.OrdinalIgnoreCase)
-					||splitStr[0].Equals("unfree", StringComparison.OrdinalIgnoreCase)
-					||splitStr[0].Equals("crash", StringComparison.OrdinalIgnoreCase)
-					||splitStr[0].Equals("start", StringComparison.OrdinalIgnoreCase)
-				){
-					this.replicaTargetOperations (splitStr);
-				} else if(splitStr[0].Equals("interval", StringComparison.OrdinalIgnoreCase)) {
-					this.operatorTargetOperations(splitStr);
-				}
-				//Status TODO
+				doCommand (line);
 			}
 			file.Close();
 		}
@@ -206,15 +216,15 @@ namespace PuppetMaster {
 			       && !splitStr [counter].Equals ("rep_fact", StringComparison.OrdinalIgnoreCase)) {
 
 				List<String> existingOperators;
-				String inputOperator = splitStr [counter];
-				if (downStreamOperators.TryGetValue (inputOperator, out existingOperators)) {
+				String emitingOperator = splitStr [counter];
+				if (downStreamOperators.TryGetValue (emitingOperator, out existingOperators)) {
 					//found something
 					//Add current operator to downStreamOperators of inputOperator
 					existingOperators.Add (current_operator_id);
 				} else {
 					//was not initialized yet
 					existingOperators = new List<String> ();
-					downStreamOperators.Add (inputOperator, existingOperators);
+					downStreamOperators.Add (emitingOperator, existingOperators);
 					//Add current operator to downStreamOperators of inputOperator
 					existingOperators.Add (current_operator_id);
 				}
@@ -246,7 +256,7 @@ namespace PuppetMaster {
 
 				string url = splitStr [counter];
 				string[] parsedUrl = url.Split (new[] { '/', ':' }, StringSplitOptions.RemoveEmptyEntries);
-				System.Console.WriteLine ("Connection Pack: " + parsedUrl [1] + " : " + parsedUrl [2]);
+
 				ConnectionPack cp = new ConnectionPack (parsedUrl [1], Int32.Parse (parsedUrl [2]));
 				currentConnectionPacks.Add (cp);
 				counter++;
@@ -266,6 +276,7 @@ namespace PuppetMaster {
 			string dll       = null;
 			string className = null;
 			string methodName= null;
+
 			if (operatorType.Equals ("CUSTOM", StringComparison.OrdinalIgnoreCase)) {
 				dll        = splitStr [counter++];
 				className  = splitStr [counter++];
@@ -283,14 +294,14 @@ namespace PuppetMaster {
 			}
 		
 
+			//XXX TODO
 			string arg1 = "olá";
 			string arg2 = "mundo!";
-			string[] argumentos = { arg1, arg2 };
+			string[] staticAsrguments = { arg1, arg2 };
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
-				Daemon.ClientDaemon cd = new Daemon.ClientDaemon ();
-				cd.connect (new ConnectionPack (cp.Ip, 10001));
-				cd.newThread (dll, className, methodName, cp.Port.ToString(),argumentos);
+				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, 10001),fullLog);
+				cd.newThread (dll, className, methodName, cp.Port.ToString(),staticAsrguments);
 			}
 
 
@@ -327,10 +338,9 @@ namespace PuppetMaster {
 				//		daemon1.connect("10001",pc1);
 				//		System.Console.WriteLine("daemon 1: "+daemon1.ping());
 
-				Daemon.ClientDaemon daemon2 = new Daemon.ClientDaemon ();
 				try {
 					ConnectionPack cp_daemon = new ConnectionPack (pc2, 10001);
-					daemon2.connect (cp_daemon, false);
+					Daemon.ClientDaemon daemon2 = new Daemon.ClientDaemon (cp_daemon, false);
 					System.Console.WriteLine ("daemon 2: " + daemon2.ping ());
 
 					//	daemon1.newThread( "hello.dll" , "Hello" , "Hello0", port1);
@@ -347,18 +357,17 @@ namespace PuppetMaster {
 					// Kinda of start method
 					Thread.Sleep (1000);
 
-
+					ConnectionPack cp_process1 = new ConnectionPack (pc2, port2);
+					ConnectionPack cp_process2 = new ConnectionPack (pc2, port1);
 					//	DADStormProcess.ClientProcess process1 = new DADStormProcess.ClientProcess();
-					DADStormProcess.ClientProcess process2 = new DADStormProcess.ClientProcess ();
-					DADStormProcess.ClientProcess process3 = new DADStormProcess.ClientProcess ();
+					DADStormProcess.ClientProcess process2 = new DADStormProcess.ClientProcess (cp_process1);
+					DADStormProcess.ClientProcess process3 = new DADStormProcess.ClientProcess (cp_process2);
 
 					//DADStormProcess.ClientProcess process3 = new DADStormProcess.ClientProcess();
 
 					//	process1.connect(port1,pc1);
-					ConnectionPack cp_process1 = new ConnectionPack (pc2, port2);
-					ConnectionPack cp_process2 = new ConnectionPack (pc2, port1);
 
-					process2.connect (cp_process1);
+
 					//process2.addDownStreamOperator(cp_process2);
 					process2.addTuple (argumentos);
 					process2.addTuple (argumentos);
@@ -369,10 +378,10 @@ namespace PuppetMaster {
 					process2.addTuple (argumentos);
 					process2.addTuple (argumentos);
 
+					List<ConnectionPack> replicas = new List<ConnectionPack>();
+					replicas.Add(cp_process2);
+					process2.addDownStreamOperator (replicas);
 
-					process2.addDownStreamOperator (cp_process2);
-
-					process3.connect (cp_process2);
 					Thread.Sleep (1000);
 
 					process2.start ();

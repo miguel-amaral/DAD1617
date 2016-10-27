@@ -39,6 +39,10 @@ namespace Daemon {
 			foreach (string str in args) {
 				processArguments += " " + str;
 			}
+
+			if(DEBUG.DAEMON){
+				System.Console.WriteLine ("Launching Process.exe with arguments: " + processArguments);
+			}
 			process.StartInfo.Arguments = processArguments;
 
 			//process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;

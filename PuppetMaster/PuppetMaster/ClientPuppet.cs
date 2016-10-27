@@ -13,7 +13,7 @@ namespace PuppetMaster {
 
 		private PuppetMasterRemoteServerObject remotePuppet = null;
 
-		public void connect(ConnectionPack cp) {
+		public ClientPuppet(ConnectionPack cp) {
 			remotePuppet = (PuppetMasterRemoteServerObject)Activator.GetObject(
 				typeof(PuppetMasterRemoteServerObject),
 				"tcp://" + cp.Ip + ":" + cp.Port + "/PuppetMasterRemoteServerObject");

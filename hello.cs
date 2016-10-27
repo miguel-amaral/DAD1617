@@ -4,9 +4,9 @@ using System;
 
 public class Hello
 {
-	private string[] plusString(string[] old){
+	public string[] plusString(string[] old){
 			string[] neW = new string[old.Length+1];
-			string print = "beg:";
+			string print = "from hello.dll method plusString:";
 			int i = 0;
 			while(i < old.Length){
 				neW [i] = old [i];

@@ -2,14 +2,14 @@ using System;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
-
+using System.Collections.Generic;
 
 namespace DADStormProcess {
 	public class ClientProcess {
 
 		private ProcessRemoteServerObject remoteProcess = null;
 
-		public void connect(ConnectionPack cp) {
+		public ClientProcess(ConnectionPack cp) {
 			remoteProcess = (ProcessRemoteServerObject)Activator.GetObject(
 				typeof(ProcessRemoteServerObject),
 				"tcp://" + cp.Ip + ":" + cp.Port + "/op");
@@ -17,7 +17,7 @@ namespace DADStormProcess {
 			//if (remoteProcess == null) throw new SocketException();
 		}
 
-		public void addDownStreamOperator(ConnectionPack cp){
+		public void addDownStreamOperator(List<ConnectionPack> cp){
 			remoteProcess.addDownStreamOperator(cp);
 		}
 

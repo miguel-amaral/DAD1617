@@ -16,15 +16,15 @@ namespace DADStormProcess {
 		private bool     frozen  = true;
 		private bool     fullLog = false;
 		private bool     primmary= true;
-		private string   file = "";
 		private string   dllName;
 		private string   className;
 		private string   methodName;
 		private string[] processStaticArgs;
 		private Queue<string[]> dllArgs = new Queue<string[]>();
 		private ProcessRemoteServerObject myServerObj;
-		private List<ConnectionPack> downStreamNodes = new List<ConnectionPack>();
+		private List<List<ConnectionPack>> downStreamNodes = new List<List<ConnectionPack>>();
 		private List<string> filesLocation = new List<string>();
+		private List<string> filesToRemove = new List<string>();
 		private Dictionary<string, string[]> filesContent = new Dictionary<string, string[]>(); 
 		private Dictionary<string, int> filesIndex = new Dictionary<string, int> ();
 
@@ -95,20 +95,33 @@ namespace DADStormProcess {
 		/**
 		  * method that returns the next tuple to be processed
 		  */
-		private string[] nextTuple() {
+		private string[] nextTuple ()
+		{
 			lock (dllArgs) {
-				while (dllArgs.Count == 0 || frozen ) {
-					if(frozen) {
-						System.Console.WriteLine("frozen: " + dllArgs.Count + " tuples are waiting");
+				while (dllArgs.Count == 0 || frozen) {
+					if (frozen) {
+						System.Console.WriteLine ("frozen: " + dllArgs.Count + " tuples are waiting");
 					} else {
 						//Read 1 tuple from each file?
-						foreach(string fileLocation in filesLocation){
-							System.Console.WriteLine("will read one from " + fileLocation);
-							readTuple (fileLocation);
+						lock (filesLocation) {
+							if (filesLocation.Count > 0) {
+								foreach (string fileLocation in filesLocation) {
+									System.Console.WriteLine ("will read one from " + fileLocation);
+									readTuple (fileLocation);
+								}
+								lock (filesToRemove) {
+									if (filesToRemove.Count > 0) {
+										foreach (string file in filesToRemove) {
+											filesLocation.Remove (file);
+										}
+									}
+									filesToRemove = new List<string> ();
+								}
+								continue; // try again
+							}
 						}
-
 					}
-					Monitor.Wait(dllArgs);
+					Monitor.Wait (dllArgs);
 				}
 				string[] nextArg = dllArgs.Dequeue();
 				return nextArg;
@@ -119,7 +132,8 @@ namespace DADStormProcess {
 		  * method that reads from the file all the tuples in it
 		  * might need to become process and avoiding reading same tuple two times.. :(
 		  */
-		private void readTuple (string fileLocation) {
+		private void readTuple (string fileLocation)
+		{
 			string[] content;
 			if (!filesContent.TryGetValue (fileLocation, out content)) {
 				//Not found -> File not yet read
@@ -128,21 +142,22 @@ namespace DADStormProcess {
 			}
 			//getIndex
 			int index = this.nextIndex (fileLocation);
-			System.Console.WriteLine ("index: " + index);
 			if (index >= 0) {
 				if (index < content.Length) {
 					string line = content [index];
 					String[] tuple = line.Split (new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
 
 					if (!tuple [0].StartsWith ("%")) {
+						System.Console.WriteLine ("Read Tuple: " + line);
 						//Only adds non commentaries
 						this.addTuple (tuple);
 					}
-
 				} else {
 					System.Console.WriteLine ("file: " + fileLocation + " has been read completly");
 					//File has been read totally, removing from known files
-					filesLocation.Remove (fileLocation); // TODO;
+					lock (filesToRemove) {
+						filesToRemove.Add (fileLocation);
+					}
 				}
 
 			} else {
@@ -185,7 +200,9 @@ namespace DADStormProcess {
 				}
 
 				//By default milliseconds is zero, but puppet master may want to slow things down..
-				Thread.Sleep (milliseconds);
+				if(milliseconds > 0) {
+					Thread.Sleep (milliseconds);
+				}
 			}
 		}
 
@@ -210,29 +227,26 @@ namespace DADStormProcess {
 		/**
 		  * Method that sends a tuple to downstream operator
 		  */
-		private void sendToNextOperator(string[] tuple) {
-			ConnectionPack nextOperatorCp = findTupleReceiver();
-			if (nextOperatorCp != null) {
-				DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess();
-				nextProcess.connect(nextOperatorCp);
-				nextProcess.addTuple(tuple);
-				System.Console.WriteLine("Port: " + Port + " Next Operator has received damn tuple");
-
+		private void sendToNextOperator (string[] tuple)
+		{
+			if (downStreamNodes.Count > 0) {
+				foreach(List<ConnectionPack> receivingOperator in downStreamNodes){
+					ConnectionPack nextOperatorCp = findTupleReceiver (receivingOperator);
+					DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess (nextOperatorCp);
+					nextProcess.addTuple (tuple);
+					System.Console.WriteLine ("Port: " + Port + " Next Operator has received damn tuple");
+				}
 			} else {
-				System.Console.WriteLine("Port: " + Port + " No one to send tuple to :(");
+				System.Console.WriteLine ("Port: " + Port + " No one to send tuple to :(");
 				//Case where there is no one to receive..
-				//Maybe its last operator
+				//probably its last operator
 			}
 		}
 
-		private ConnectionPack findTupleReceiver(){
-			if(downStreamNodes.Count > 0){
-				// primary routing 
-				return downStreamNodes[0];
-			} else {
-			//	return new string[]{ "" };
-				return null;
-			}
+		private ConnectionPack findTupleReceiver(List<ConnectionPack> possibleReplicas){
+			//Check if more than one operator to send to
+			// primary routing 
+			return possibleReplicas[0];
 		}
 
 		/* -------------------------------------------------------------------- */
@@ -241,7 +255,8 @@ namespace DADStormProcess {
 		/* -------------------------------------------------------------------- */
 		/* -------------------------------------------------------------------- */
 
-		public void addDownStreamOperator(ConnectionPack cp){
+		public void addDownStreamOperator(List<ConnectionPack> cp){
+			System.Console.WriteLine ("Down Stream Op added: " + cp);
 			downStreamNodes.Add ( cp );
 		}
 
@@ -278,7 +293,12 @@ namespace DADStormProcess {
 
 		//Method that adds a file that this replica will read 
 		public void addFile(string file){
-			filesLocation.Add (file);
+			lock(filesLocation){
+				filesLocation.Add (file);
+			}
+			lock(dllArgs){
+				Monitor.Pulse (dllArgs);
+			}
 		}
 
 		/**
@@ -291,9 +311,9 @@ namespace DADStormProcess {
 			}
 		}
 
-		/**
-		  * Method that will be in loop (passively) and will be processing input
-		  */
+		/// <summary>
+		/// Method that will be in loop (passively) and will be processing input
+		/// </summary>
 		public void createAndProcess() {
 
 			TcpChannel channel = new TcpChannel(port);

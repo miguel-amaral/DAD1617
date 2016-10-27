@@ -4,6 +4,12 @@ using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Runtime.Serialization;
 
+public static class DEBUG{
+	public const bool DAEMON  = true;
+	public const bool PROCESS = true;
+	public const bool PUPPET  = true;
+}
+
 [Serializable]
 public class ConnectionPack{
 	private string ip;
@@ -21,6 +27,9 @@ public class ConnectionPack{
 	public string Ip {
 		get { return ip;  }
 		set { ip = value; }
+	}
+	public override string ToString(){
+		return "ip: " + this.Ip + " : " + this.Port;
 	}
 }
 

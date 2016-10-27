@@ -7,7 +7,7 @@ namespace Daemon {
 
 		private DaemonRemoteServerObject remoteDaemon = null;
 
-		public void connect(ConnectionPack cp, bool fullLog = false) {
+		public ClientDaemon(ConnectionPack cp, bool fullLog) {
 			remoteDaemon = (DaemonRemoteServerObject)Activator.GetObject(
 				typeof(DaemonRemoteServerObject),
 				"tcp://" + cp.Ip + ":" + cp.Port + "/DaemonRemoteServerObject");
