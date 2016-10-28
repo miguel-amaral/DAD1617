@@ -29,7 +29,18 @@ public class ConnectionPack{
 		set { ip = value; }
 	}
 	public override string ToString(){
-		return "ip: " + this.Ip + " : " + this.Port;
+		return "ip: " + this.Ip + ":" + this.Port;
+	}
+
+	public override bool Equals(object obj) {
+		if(obj.GetType () == typeof(ConnectionPack)){
+			ConnectionPack other = (ConnectionPack)obj;
+			return other.Port.Equals (this.Port) && other.Ip.Equals (this.Ip);
+		}
+		return false;
+	}
+	public override int GetHashCode() {
+		return this.Ip.GetHashCode();
 	}
 }
 

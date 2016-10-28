@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.IO;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
@@ -11,7 +12,6 @@ namespace DADStormProcess {
 	public class ServerProcess {
 
 		private static ServerProcess instance = null;
-		private int      port;
 		private int      milliseconds =0;
 		private bool     frozen  = true;
 		private bool     fullLog = false;
@@ -20,19 +20,31 @@ namespace DADStormProcess {
 		private string   className;
 		private string   methodName;
 		private string[] processStaticArgs;
-		private string   puppetMasterUrl= "tcp://localhost:10000/PuppetMasterRemoteServerObject";
+
+		private ConnectionPack myConPack;
+		private ConnectionPack puppetMasterConPack;
+
 		private DADStormRemoteTupleReceiver puppetRemote;
-		private Queue<string[]> dllArgs = new Queue<string[]>();
 		private ProcessRemoteServerObject myServerObj;
+		private Queue<string[]> dllArgs = new Queue<string[]>();
 		private List<List<ConnectionPack>> downStreamNodes = new List<List<ConnectionPack>>();
+		private List<ConnectionPack> operatorReplicas;
 		private List<string> filesLocation = new List<string>();
 		private List<string> filesToRemove = new List<string>();
 		private Dictionary<string, string[]> filesContent = new Dictionary<string, string[]>(); 
 		private Dictionary<string, int> filesIndex = new Dictionary<string, int> ();
 
-		public int Port {
-			get	{ return port; }
-			set	{ port = value;}
+		public ConnectionPack PuppetMasterConPack {
+			get	{ return puppetMasterConPack; }
+			set	{ puppetMasterConPack = value;}
+		}
+		public ConnectionPack MyConPack {
+			get	{ return myConPack; }
+			set	{ myConPack = value;}
+		}
+		public List<ConnectionPack> OperatorReplicas {
+			get	{ return operatorReplicas; }
+			set	{ operatorReplicas = value;}
 		}
 		public int Milliseconds {
 			get	{ return milliseconds; }
@@ -155,7 +167,7 @@ namespace DADStormProcess {
 						this.addTuple (tuple);
 					}
 				} else {
-					System.Console.WriteLine ("file: " + fileLocation + " has been read completly");
+					ProcessDebug ("file: " + fileLocation + " has been read completly");
 					//File has been read totally, removing from known files
 					lock (filesToRemove) {
 						filesToRemove.Add (fileLocation);
@@ -163,13 +175,18 @@ namespace DADStormProcess {
 				}
 
 			} else {
-				System.Console.WriteLine ("Index returned negative, someone acessed it without primmary permission");
+				ProcessDebug ("Index returned negative, someone acessed it without primmary permission");
 			}
 		}
 
 		private ProcessRemoteServerObject getPrimmary() {
-			//TODO XXX
-			return myServerObj;
+			ConnectionPack primmary = operatorReplicas [0];
+			if(primmary.Equals(myConPack)){
+				return myServerObj;
+			} else {
+				return (ProcessRemoteServerObject)Activator.GetObject(typeof(ProcessRemoteServerObject),"tcp://" + primmary.Ip + ":" + primmary.Port + "/op");
+			}
+
 		}
 
 		private int nextIndex(string file){
@@ -183,28 +200,36 @@ namespace DADStormProcess {
 		  * our server object and system will fail categoricly!!
 		  * !!TODO!!DANGER!!TODO!!
 		  */
-		private void executeProcess () {
+		private void executeProcess ()
+		{
 			Assembly assembly = Assembly.LoadFile (@dllName);
 			Type type = assembly.GetType (className);
 			var obj = Activator.CreateInstance (type);
 			string staticArgs = "<";
-			foreach(string str in processStaticArgs ){
-				staticArgs += " " + str;
+			if (processStaticArgs != null) {
+				foreach (string str in processStaticArgs) {
+					staticArgs += " " + str;
+				}
 			}
-			staticArgs = " >";
+			staticArgs += " >";
 			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName);
-			System.Console.WriteLine("Static Args: " + staticArgs);
+			System.Console.WriteLine ("Static Args: " + staticArgs);
 			while (true) {
 				string[] nextTuple = this.nextTuple ();
-				string[] finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
-				Array.Copy(processStaticArgs, finalTuple, processStaticArgs.Length);
-				Array.Copy(nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
+				string[] finalTuple;
+				if (processStaticArgs != null) {
+					finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
+					Array.Copy (processStaticArgs, finalTuple, processStaticArgs.Length);
+					Array.Copy (nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
 
-				string tuplePlusArgs = "";
-				foreach(string str in finalTuple ){
-					tuplePlusArgs += " " + str;
+				} else {
+					finalTuple = nextTuple;
 				}
 
+				string tuplePlusArgs = "";
+					foreach (string str in finalTuple) {
+					tuplePlusArgs += " " + str;
+				}
 				ProcessDebug ("Next Tuple:" + tuplePlusArgs);
 				Object[] methodArgs = { finalTuple };
 				//returnValue object is assumed to be a string[] in DADStorm context
@@ -225,7 +250,7 @@ namespace DADStormProcess {
 
 		/**
 		  * After processing tuple this method emits it to downStream and puppet master
-		  */  
+		  */
 		private void emitTuple(string[] tuple){
 			ProcessDebug("Another tuple generated: <" + String.Join(", ", tuple) + ">");
 			if(fullLog == true) {
@@ -240,10 +265,9 @@ namespace DADStormProcess {
 		private void logToPuppetMaster (string[] tuple) {
 			if(puppetRemote == null) {
 				puppetRemote = (DADStormRemoteTupleReceiver)Activator.GetObject(
-					typeof(DADStormRemoteTupleReceiver), puppetMasterUrl);
-				//"tcp://" + puppet.Ip + ":" + puppet.Port + "/op");
+					typeof(DADStormRemoteTupleReceiver), "tcp://" + puppetMasterConPack.Ip  + ":" + puppetMasterConPack.Port + "/PuppetMasterRemoteServerObject");
 			}
-			puppetRemote.addTuple ("TODO myUrl TODO", tuple);
+			puppetRemote.addTuple ("[ " + myConPack.Ip +":" +myConPack.Port+ " ]", tuple);
 			ProcessDebug("Puppet Master informed");
 		}
 
@@ -257,7 +281,7 @@ namespace DADStormProcess {
 					ConnectionPack nextOperatorCp = findTupleReceiver (receivingOperator);
 					DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess (nextOperatorCp);
 					nextProcess.addTuple (tuple);
-					ProcessDebug ("Next received tuple");
+					ProcessDebug (nextOperatorCp + " received tuple");
 				}
 			} else {
 				ProcessDebug ("No one to send tuple to :(");
@@ -339,21 +363,34 @@ namespace DADStormProcess {
 		/// </summary>
 		public void createAndProcess() {
 
-			TcpChannel channel = new TcpChannel(port);
+			TcpChannel channel = new TcpChannel(myConPack.Port);
 			ChannelServices.RegisterChannel(channel, false);
 			myServerObj = new ProcessRemoteServerObject();
 			RemotingServices.Marshal(myServerObj, "op",typeof(ProcessRemoteServerObject));
 
 			Console.ForegroundColor = ConsoleColor.Green;
-			System.Console.WriteLine("ProcessServer is ONLINE: port is: " + this.port);
+			System.Console.WriteLine("ProcessServer is ONLINE: port is: " + myConPack.Port);
 			Console.ResetColor();
 
 			executeProcess();
 		}
 
+		public string status ()
+		{
+			string status = "";
+			lock (dllArgs) {
+				status += "tuples waiting: " + dllArgs.Count;
+			}
+			lock (filesLocation) {
+				status += " | incomplete files: " + filesLocation.Count;
+			}
+			status += " | frozen: " + this.frozen;
+			return status;
+		}
+
 		private void ProcessDebug(string msg) {
 			if(DEBUG.PROCESS){
-				System.Console.WriteLine("[ Process : " +this.Port + " ] " + msg);
+				System.Console.WriteLine("[ Process : " +myConPack.Port + " ] " + msg);
 			}
 		}
 
@@ -375,17 +412,17 @@ namespace DADStormProcess {
 						dllArgsInputMain = new string[argsSize - numberOfParameters];
 						Array.Copy(args, numberOfParameters, dllArgsInputMain, 0, argsSize - numberOfParameters );
 					}
-					string argumentos = "";
-					foreach(string str in dllArgsInputMain){
-						argumentos += str + " ";
-					}
 
 					ServerProcess sp = ServerProcess.Instance;
 					int parsedPort = Int32.Parse(strPort);
 					if(parsedPort < 10002 || parsedPort > 65535) {
 						throw new FormatException("Port out of possible range");
 					}
-					sp.Port       		 = parsedPort;
+					IPHostEntry host = Dns.GetHostEntry (Dns.GetHostName ());
+					string ip= host.AddressList [0].ToString();
+					ConnectionPack myCp = new ConnectionPack(ip,parsedPort);
+
+					sp.MyConPack 		 = myCp;
 					sp.DllName    		 = dllNameInputMain;
 					sp.ClassName  		 = classNameInputMain;
 					sp.MethodName 		 = methodNameInputMain;

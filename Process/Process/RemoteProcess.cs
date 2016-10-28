@@ -33,5 +33,17 @@ namespace DADStormProcess {
 		public int getIndexFromPrimmary (string file){
 			return ServerProcess.Instance.getIndexFromPrimmary (file);
 		}
+
+		public void assignPuppetConPack(ConnectionPack puppetCp) {
+			ServerProcess.Instance.PuppetMasterConPack = puppetCp;
+		}
+
+		public void assignReplicaList (List<ConnectionPack> replicaList){
+			ServerProcess.Instance.OperatorReplicas = replicaList;
+		}
+
+		public string status () {
+			return ServerProcess.Instance.status ();
+		}
 	}
 }

@@ -62,6 +62,23 @@ namespace DADStormProcess {
 		public void addFile(string file) {
 			remoteProcess.addFile (file);
 		}
+
+		public void assignPuppetConPack (ConnectionPack puppetCp) {
+			remoteProcess.assignPuppetConPack (puppetCp);
+		}
+
+		public void assignReplicaList (List<ConnectionPack> replicaList) {
+			remoteProcess.assignReplicaList (replicaList);
+		}
+
+		public string status() {
+			try {
+				return remoteProcess.status ();
+			} catch (Exception e) {
+				return "Machine Failed";
+			}
+		}
+
 		/**
 		  * Debug method
 		  */

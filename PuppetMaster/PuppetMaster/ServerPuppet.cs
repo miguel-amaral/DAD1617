@@ -11,6 +11,7 @@ using System.Collections.Generic;
 namespace PuppetMaster {
 	public class ServerPuppet {
 
+		
 		private static int port = 10000;
 		private bool fullLog = false;
 		private bool firstStart = true;
@@ -31,12 +32,41 @@ namespace PuppetMaster {
 			}
 		}
 
+		private void doStatus (string opID)
+		{
+			List<ConnectionPack> listConPacks;
+			if (operatorsConPacks.TryGetValue (opID, out listConPacks)) {
+				Console.ForegroundColor = ConsoleColor.DarkCyan;
+				System.Console.WriteLine ("Operator: " + opID + " status");
+				Console.ResetColor();
+				foreach (ConnectionPack cp in listConPacks) {
+					DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess (cp);
+					string status = process.status ();
+					if (status.Equals ("Machine Failed")) {
+						Console.ForegroundColor = ConsoleColor.Red;
+					} else  {
+						Console.ForegroundColor = ConsoleColor.Green;
+					}
+					System.Console.WriteLine (cp + " " + status);
+					Console.ResetColor();
+				}
+			}
+
+
+		}
+
+		private void doStatus() {
+			foreach( string op in operatorsConPacks.Keys) {
+				doStatus (op);
+			}
+		}
+
 		/// <summary>
 		/// Dos the first start connections.
 		/// </summary>
 		private void doFirstStartConnections ()	{
 			if (firstStart) {
-				//doFirstStart ();
+				//Creating the network betwen all operators
 				foreach (KeyValuePair<string, List<string>> item in downStreamOperators) {
 					List<ConnectionPack> outputingReplicas;
 					List<ConnectionPack> receivingReplicas;
@@ -74,6 +104,18 @@ namespace PuppetMaster {
 								}								
 							}
 						}
+					}
+				}
+				IPHostEntry host = Dns.GetHostEntry (Dns.GetHostName ());
+				string ip = host.AddressList [0].ToString();
+				ConnectionPack myConPack = new ConnectionPack (ip,port);
+				foreach(List<ConnectionPack> list in operatorsConPacks.Values) {
+					foreach(ConnectionPack cp in list){
+						DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess (cp);
+						//Telling every operator's replica all its replicas
+						process.assignReplicaList (list);
+						//Telling every operator's replica where puppetMaster is
+						process.assignPuppetConPack (myConPack);
 					}
 				}
 				this.firstStart = false;
@@ -152,7 +194,7 @@ namespace PuppetMaster {
 		/// From a line does a command, needs to be complete
 		/// </summary>
 		/// <param name="line">Line.</param>
-		private void doCommand (string line) {
+		public void doCommand (string line) {
 			//Ignoring comments
 			if (line.StartsWith ("%")) {
 				return;
@@ -161,8 +203,13 @@ namespace PuppetMaster {
 			String[] splitStr = line.Split (new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
 			if (splitStr.Length == 0) {
 				return;
-			}
-			if ((splitStr [1].Equals ("input", StringComparison.OrdinalIgnoreCase) && splitStr [2].Equals ("ops", StringComparison.OrdinalIgnoreCase))
+			} else if (splitStr [0].Equals ("status", StringComparison.OrdinalIgnoreCase)) {
+				if(splitStr.Length > 1) {
+					doStatus (splitStr [1]);
+				} else {
+					doStatus ();
+				}
+			} else if ((splitStr [1].Equals ("input", StringComparison.OrdinalIgnoreCase) && splitStr [2].Equals ("ops", StringComparison.OrdinalIgnoreCase))
 			    || splitStr [1].Equals ("input_ops", StringComparison.OrdinalIgnoreCase)) {
 				this.createNewOperator (splitStr);
 				//Process files TODO this.
@@ -180,14 +227,13 @@ namespace PuppetMaster {
 			} else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
 				//TODO
 				//this.fullLog = splitStr [1].Equals ("full", StringComparison.OrdinalIgnoreCase);
-			}
-			//Status TODO
+			} 
 		}
 
 		private void readCommandsFromFile (string fileLocation){
 			String line;
 			// Read the file and display it line by line.
-			System.IO.StreamReader file =new System.IO.StreamReader(fileLocation);
+			System.IO.StreamReader file = new System.IO.StreamReader(fileLocation);
 			while((line = file.ReadLine()) != null) {
 				doCommand (line);
 			}
@@ -259,7 +305,7 @@ namespace PuppetMaster {
 				string ip = parsedUrl [1];
 				if (ip.Equals ("localhost", StringComparison.OrdinalIgnoreCase)) {
 					IPHostEntry host = Dns.GetHostEntry (Dns.GetHostName ());
-					ip= host.AddressList [0].ToString();
+					ip = host.AddressList [0].ToString();
 				}
 				ConnectionPack cp = new ConnectionPack (ip, Int32.Parse (parsedUrl [2]));
 				currentConnectionPacks.Add (cp);
@@ -290,7 +336,9 @@ namespace PuppetMaster {
 			} else if (operatorType.Equals ("COUNT", StringComparison.OrdinalIgnoreCase)) {
 				//;
 			} else if (operatorType.Equals ("DUP", StringComparison.OrdinalIgnoreCase)) {
-				//;
+				dll = "Default.dll";
+				className = "Default";
+				methodName = "Dup";
 			} else if (operatorType.Equals ("FILTER", StringComparison.OrdinalIgnoreCase)) {
 				// field_number;
 				// condition;
@@ -302,6 +350,8 @@ namespace PuppetMaster {
 			string arg1 = "olá";
 			string arg2 = "mundo!";
 			string[] staticAsrguments = { arg1, arg2 };
+			staticAsrguments = null;
+			//staticAsrguments = null;
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
 				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, 10001),fullLog);
@@ -350,6 +400,7 @@ namespace PuppetMaster {
 				string arg1 = "olá";
 				string arg2 = "mundo!";
 				string[] argumentos = { arg1, arg2 };
+				argumentos = null;
 
 				//		Daemon.ClientDaemon daemon1 = new Daemon.ClientDaemon();
 				//		daemon1.connect("10001",pc1);
