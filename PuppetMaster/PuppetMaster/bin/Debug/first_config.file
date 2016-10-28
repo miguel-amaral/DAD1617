@@ -1,14 +1,20 @@
-OP1 input ops tuples.data tuples4.data tuples2.data tuples3.data rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec CUSTOM hello.dll Hello plusString
+logginglevel full
+%%
+%%
+OP1 input ops tuples.data rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec CUSTOM hello.dll Hello plusString
 OP2 input ops OP1 rep fact 1 routing hashing(1) address tcp://localhost:11001/op operator spec CUSTOM hello.dll Hello plusString
-OP3 input ops OP2 rep fact 1 routing hashing(1) address tcp://localhost:11002/op operator spec CUSTOM hello.dll Hello plusString
-OP4 input ops OP3 rep fact 2 routing hashing(1) address tcp://localhost:11003/op tcp://localhost:11004/op operator spec CUSTOM hello.dll Hello plusString
-OP5 input ops OP4 rep fact 1 routing hashing(1) address tcp://localhost:11005/op operator spec CUSTOM hello.dll Hello plusString
+OP3 input ops OP1 rep fact 1 routing hashing(1) address tcp://localhost:11002/op operator spec CUSTOM hello.dll Hello plusString
+%OP4 input ops OP3 rep fact 2 routing hashing(1) address tcp://localhost:11003/op tcp://localhost:11004/op operator spec CUSTOM hello.dll Hello plusString
+%OP5 input ops OP4 rep fact 1 routing hashing(1) address tcp://localhost:11005/op operator spec CUSTOM hello.dll Hello plusString
 %
+interval OP1 0
+interval OP2 3000
 start OP1
+wait 5000
 start OP2
-start OP3
-start OP4
-start OP5
+%start OP3
+%start OP4
+%start OP5
 %
 %crash OP1 0
 %crash OP2 0

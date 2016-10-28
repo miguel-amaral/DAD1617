@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
@@ -35,8 +36,6 @@ namespace PuppetMaster {
 		/// </summary>
 		private void doFirstStartConnections ()	{
 			if (firstStart) {
-				//Make sure everything is created
-				Thread.Sleep (500);
 				//doFirstStart ();
 				foreach (KeyValuePair<string, List<string>> item in downStreamOperators) {
 					List<ConnectionPack> outputingReplicas;
@@ -153,7 +152,7 @@ namespace PuppetMaster {
 		/// From a line does a command, needs to be complete
 		/// </summary>
 		/// <param name="line">Line.</param>
-		void doCommand (string line) {
+		private void doCommand (string line) {
 			//Ignoring comments
 			if (line.StartsWith ("%")) {
 				return;
@@ -185,7 +184,7 @@ namespace PuppetMaster {
 			//Status TODO
 		}
 
-		void readCommandsFromFile (string fileLocation){
+		private void readCommandsFromFile (string fileLocation){
 			String line;
 			// Read the file and display it line by line.
 			System.IO.StreamReader file =new System.IO.StreamReader(fileLocation);
@@ -195,7 +194,8 @@ namespace PuppetMaster {
 			file.Close();
 		}
 
-		private void createNewOperator (String[] splitStr){
+		private void createNewOperator (String[] splitStr)
+		{
 			//foreach(string str in splitStr){
 			//	System.Console.WriteLine (str);
 			//}
@@ -249,7 +249,6 @@ namespace PuppetMaster {
 
 			//reading word address 
 			counter++;
-
 			List<ConnectionPack> currentConnectionPacks = new List<ConnectionPack> ();
 			while (!(splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase))
 			       && !splitStr [counter].Equals ("operator_spec", StringComparison.OrdinalIgnoreCase)) {
@@ -257,11 +256,16 @@ namespace PuppetMaster {
 				string url = splitStr [counter];
 				string[] parsedUrl = url.Split (new[] { '/', ':' }, StringSplitOptions.RemoveEmptyEntries);
 
-				ConnectionPack cp = new ConnectionPack (parsedUrl [1], Int32.Parse (parsedUrl [2]));
+				string ip = parsedUrl [1];
+				if (ip.Equals ("localhost", StringComparison.OrdinalIgnoreCase)) {
+					IPHostEntry host = Dns.GetHostEntry (Dns.GetHostName ());
+					ip= host.AddressList [0].ToString();
+				}
+				ConnectionPack cp = new ConnectionPack (ip, Int32.Parse (parsedUrl [2]));
 				currentConnectionPacks.Add (cp);
 				counter++;
 			}
-			System.Console.WriteLine("current: " + current_operator_id + " : " + currentConnectionPacks.Count + " replicas");
+			System.Console.WriteLine("Operator: " + current_operator_id + " has " + currentConnectionPacks.Count + " replicas");
 			operatorsConPacks.Add (current_operator_id, currentConnectionPacks);
 
 			if (splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase)) {
@@ -303,8 +307,21 @@ namespace PuppetMaster {
 				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, 10001),fullLog);
 				cd.newThread (dll, className, methodName, cp.Port.ToString(),staticAsrguments);
 			}
+			//Make sure everything is created
+			Thread.Sleep (100);
 
 
+
+		}
+
+		public void logTupple(string senderUrl, string[] tuple){
+			//tuple replica URL, < list − of − tuple − f ields >
+			string toPrint = "tuple url: " + senderUrl + " <";
+			foreach(string str in tuple){
+				toPrint += " " + str;
+			}
+			toPrint += " >";
+			System.Console.WriteLine(toPrint);
 		}
 
 		public static void Main (string[] args)

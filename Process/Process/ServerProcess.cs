@@ -20,6 +20,8 @@ namespace DADStormProcess {
 		private string   className;
 		private string   methodName;
 		private string[] processStaticArgs;
+		private string   puppetMasterUrl= "tcp://localhost:10000/PuppetMasterRemoteServerObject";
+		private DADStormRemoteTupleReceiver puppetRemote;
 		private Queue<string[]> dllArgs = new Queue<string[]>();
 		private ProcessRemoteServerObject myServerObj;
 		private List<List<ConnectionPack>> downStreamNodes = new List<List<ConnectionPack>>();
@@ -100,13 +102,13 @@ namespace DADStormProcess {
 			lock (dllArgs) {
 				while (dllArgs.Count == 0 || frozen) {
 					if (frozen) {
-						System.Console.WriteLine ("frozen: " + dllArgs.Count + " tuples are waiting");
+						ProcessDebug ("frozen: " + dllArgs.Count + " tuples are waiting");
 					} else {
 						//Read 1 tuple from each file?
 						lock (filesLocation) {
 							if (filesLocation.Count > 0) {
 								foreach (string fileLocation in filesLocation) {
-									System.Console.WriteLine ("will read one from " + fileLocation);
+									ProcessDebug ("reading one tuple from " + fileLocation);
 									readTuple (fileLocation);
 								}
 								lock (filesToRemove) {
@@ -148,7 +150,7 @@ namespace DADStormProcess {
 					String[] tuple = line.Split (new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
 
 					if (!tuple [0].StartsWith ("%")) {
-						System.Console.WriteLine ("Read Tuple: " + line);
+						ProcessDebug ("Read Tuple: " + line);
 						//Only adds non commentaries
 						this.addTuple (tuple);
 					}
@@ -185,11 +187,26 @@ namespace DADStormProcess {
 			Assembly assembly = Assembly.LoadFile (@dllName);
 			Type type = assembly.GetType (className);
 			var obj = Activator.CreateInstance (type);
-
+			string staticArgs = "<";
+			foreach(string str in processStaticArgs ){
+				staticArgs += " " + str;
+			}
+			staticArgs = " >";
 			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName);
+			System.Console.WriteLine("Static Args: " + staticArgs);
 			while (true) {
-				Object[] methodArgs = { this.nextTuple () };
+				string[] nextTuple = this.nextTuple ();
+				string[] finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
+				Array.Copy(processStaticArgs, finalTuple, processStaticArgs.Length);
+				Array.Copy(nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
 
+				string tuplePlusArgs = "";
+				foreach(string str in finalTuple ){
+					tuplePlusArgs += " " + str;
+				}
+
+				ProcessDebug ("Next Tuple:" + tuplePlusArgs);
+				Object[] methodArgs = { finalTuple };
 				//returnValue object is assumed to be a string[] in DADStorm context
 				object returnValue = type.InvokeMember (methodName,	BindingFlags.Default | BindingFlags.InvokeMethod, null, obj, methodArgs);
 
@@ -210,34 +227,40 @@ namespace DADStormProcess {
 		  * After processing tuple this method emits it to downStream and puppet master
 		  */  
 		private void emitTuple(string[] tuple){
+			ProcessDebug("Another tuple generated: <" + String.Join(", ", tuple) + ">");
 			if(fullLog == true) {
 				logToPuppetMaster (tuple);
 			}
-			sendToNextOperator(tuple);
-			System.Console.WriteLine("Another tuple bites the dust, result: " + tuple + "\r\n");
+			sendToNextOperators(tuple);
 		}
 
 		/**
 		  * In the full logging mode, all tuple emissions need to be reported to Puppetmaster
 		  */ 
 		private void logToPuppetMaster (string[] tuple) {
-			System.Console.WriteLine("Puppet Master must be informed.. TODO");
+			if(puppetRemote == null) {
+				puppetRemote = (DADStormRemoteTupleReceiver)Activator.GetObject(
+					typeof(DADStormRemoteTupleReceiver), puppetMasterUrl);
+				//"tcp://" + puppet.Ip + ":" + puppet.Port + "/op");
+			}
+			puppetRemote.addTuple ("TODO myUrl TODO", tuple);
+			ProcessDebug("Puppet Master informed");
 		}
 
 		/**
 		  * Method that sends a tuple to downstream operator
 		  */
-		private void sendToNextOperator (string[] tuple)
+		private void sendToNextOperators (string[] tuple)
 		{
 			if (downStreamNodes.Count > 0) {
 				foreach(List<ConnectionPack> receivingOperator in downStreamNodes){
 					ConnectionPack nextOperatorCp = findTupleReceiver (receivingOperator);
 					DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess (nextOperatorCp);
 					nextProcess.addTuple (tuple);
-					System.Console.WriteLine ("Port: " + Port + " Next Operator has received damn tuple");
+					ProcessDebug ("Next received tuple");
 				}
 			} else {
-				System.Console.WriteLine ("Port: " + Port + " No one to send tuple to :(");
+				ProcessDebug ("No one to send tuple to :(");
 				//Case where there is no one to receive..
 				//probably its last operator
 			}
@@ -256,7 +279,7 @@ namespace DADStormProcess {
 		/* -------------------------------------------------------------------- */
 
 		public void addDownStreamOperator(List<ConnectionPack> cp){
-			System.Console.WriteLine ("Down Stream Op added: " + cp);
+			ProcessDebug ("Down Stream Op added: " + cp);
 			downStreamNodes.Add ( cp );
 		}
 
@@ -322,10 +345,16 @@ namespace DADStormProcess {
 			RemotingServices.Marshal(myServerObj, "op",typeof(ProcessRemoteServerObject));
 
 			Console.ForegroundColor = ConsoleColor.Green;
-			System.Console.WriteLine("ProcessServer is ONLINE: port is: " + port);
+			System.Console.WriteLine("ProcessServer is ONLINE: port is: " + this.port);
 			Console.ResetColor();
 
 			executeProcess();
+		}
+
+		private void ProcessDebug(string msg) {
+			if(DEBUG.PROCESS){
+				System.Console.WriteLine("[ Process : " +this.Port + " ] " + msg);
+			}
 		}
 
 		public static void Main(string[] args) {
@@ -343,9 +372,14 @@ namespace DADStormProcess {
 					string[] dllArgsInputMain = null;
 					int numberOfParameters = 5;
 					if (argsSize > numberOfParameters) {
-						dllArgsInputMain = new string[argsSize - 4 ];
-						Array.Copy(args, numberOfParameters-1, dllArgsInputMain, 0, numberOfParameters - 4 );
+						dllArgsInputMain = new string[argsSize - numberOfParameters];
+						Array.Copy(args, numberOfParameters, dllArgsInputMain, 0, argsSize - numberOfParameters );
 					}
+					string argumentos = "";
+					foreach(string str in dllArgsInputMain){
+						argumentos += str + " ";
+					}
+
 					ServerProcess sp = ServerProcess.Instance;
 					int parsedPort = Int32.Parse(strPort);
 					if(parsedPort < 10002 || parsedPort > 65535) {
