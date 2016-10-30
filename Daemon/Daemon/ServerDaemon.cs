@@ -30,12 +30,12 @@ namespace Daemon {
 			set	{ fullLog = value; }
 		}
 
-		public void newThread (string dllName, string className, string methodName, string processPort, object[] args = null) {
+		public void newThread (string dllName, string className, string methodName, string processPort, string routing, object[] args = null) {
 			Process process = new Process ();
 			// Configure the process using the StartInfo properties.
 			process.StartInfo.FileName = "Process.exe";
 
-			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + fullLog.ToString ();
+			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + routing + " " + fullLog.ToString ();
 			if (args != null) {
 				foreach (string str in args) {
 					processArguments += " " + str;

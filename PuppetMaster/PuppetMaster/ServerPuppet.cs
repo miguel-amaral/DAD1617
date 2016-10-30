@@ -32,8 +32,7 @@ namespace PuppetMaster {
 			}
 		}
 
-		private void doStatus (string opID)
-		{
+		private void doStatus (string opID)	{
 			List<ConnectionPack> listConPacks;
 			if (operatorsConPacks.TryGetValue (opID, out listConPacks)) {
 				Console.ForegroundColor = ConsoleColor.DarkCyan;
@@ -289,11 +288,11 @@ namespace PuppetMaster {
 			}
 			string rep_factor = splitStr [counter++];
 
-			//reading word routing 
+			//ignoring word routing 
 			counter++;
 			string routing = splitStr [counter++];
 
-			//reading word address 
+			//ignoring word address 
 			counter++;
 			List<ConnectionPack> currentConnectionPacks = new List<ConnectionPack> ();
 			while (!(splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase))
@@ -355,7 +354,7 @@ namespace PuppetMaster {
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
 				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, 10001),fullLog);
-				cd.newThread (dll, className, methodName, cp.Port.ToString(),staticAsrguments);
+				cd.newThread (dll, className, methodName, cp.Port.ToString(), routing,staticAsrguments);
 			}
 			//Make sure everything is created
 			Thread.Sleep (100);
@@ -391,8 +390,9 @@ namespace PuppetMaster {
 			if (args.Length > 0) {
 				configFileLocation = args [0];
 				sp.readCommandsFromFile (configFileLocation);
-			} else {
 
+			} 
+			/*
 				//string pc1   = "lab7p2";
 				string pc2 = "localhost";
 				int port1 = 42154;
@@ -412,8 +412,8 @@ namespace PuppetMaster {
 					System.Console.WriteLine ("daemon 2: " + daemon2.ping ());
 
 					//	daemon1.newThread( "hello.dll" , "Hello" , "Hello0", port1);
-					daemon2.newThread ("hello.dll", "Hello", "retornaInt", port2.ToString (), argumentos);
-					daemon2.newThread ("hello.dll", "Hello", "retornaInt", port1.ToString (), argumentos);
+					daemon2.newThread ("hello.dll", "Hello", "retornaInt", port2.ToString (),"", argumentos);
+					daemon2.newThread ("hello.dll", "Hello", "retornaInt", port1.ToString (),"", argumentos);
 					argumentos = new string[2];
 					argumentos [0] = arg2;
 					argumentos [1] = arg1;
@@ -470,6 +470,12 @@ namespace PuppetMaster {
 					System.Console.WriteLine ("Reason: " + e.Message);
 					Console.ResetColor ();
 				}
+				*/
+			System.Console.WriteLine("we are now in manual writing commands, write EXIT to stop");
+			string line = System.Console.ReadLine ();
+			while(!line.Equals("exit", StringComparison.OrdinalIgnoreCase )) {
+				sp.doCommand (line);
+				line = System.Console.ReadLine ();
 			}
 
 			System.Console.WriteLine("Goodbye World! It was a pleasure to serve you today");

@@ -9,6 +9,7 @@ using System.Threading;
 using System.Collections.Generic;
 
 namespace DADStormProcess {
+
 	public class ServerProcess {
 
 		private static ServerProcess instance = null;
@@ -20,6 +21,7 @@ namespace DADStormProcess {
 		private string   className;
 		private string   methodName;
 		private string[] processStaticArgs;
+		private RoutingTechinic routTechnic;
 
 		private ConnectionPack myConPack;
 		private ConnectionPack puppetMasterConPack;
@@ -73,6 +75,10 @@ namespace DADStormProcess {
 		public string[] ProcessStaticArgs {
 			get	{ return processStaticArgs; }
 			set	{ processStaticArgs = value;}
+		}
+		public RoutingTechinic RoutTechnic {
+			get	{ return routTechnic; }
+			set	{ routTechnic = value;}
 		}
 
 		private ServerProcess(){}
@@ -193,6 +199,30 @@ namespace DADStormProcess {
 			return this.getPrimmary().getIndexFromPrimmary (file);
 		}
 
+		/// <summary>
+		/// Method that adds the static args to the beggining of a tuple
+		/// </summary>
+		/// <param name="tuple">Tuple.</param>
+		private string[] addStaticArgs (string[] nextTuple)	{
+			string[] finalTuple;
+			if (processStaticArgs != null) {
+				finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
+				Array.Copy (processStaticArgs, finalTuple, processStaticArgs.Length);
+				Array.Copy (nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
+
+			} else {
+				finalTuple = nextTuple;
+			}
+
+			string tuplePlusArgs = "";
+			foreach (string str in finalTuple) {
+				tuplePlusArgs += " " + str;
+			}
+			ProcessDebug ("Next Tuple:" + tuplePlusArgs);
+			return finalTuple;
+
+		}
+
 		/**
 		  * !!TODO!!DANGER!!TODO!!
 		  * Please read the information below carefully
@@ -200,8 +230,7 @@ namespace DADStormProcess {
 		  * our server object and system will fail categoricly!!
 		  * !!TODO!!DANGER!!TODO!!
 		  */
-		private void executeProcess ()
-		{
+		private void executeProcess () {
 			Assembly assembly = Assembly.LoadFile (@dllName);
 			Type type = assembly.GetType (className);
 			var obj = Activator.CreateInstance (type);
@@ -212,29 +241,15 @@ namespace DADStormProcess {
 				}
 			}
 			staticArgs += " >";
-			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName);
+			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName + "\r\nrouting: " + RoutTechnic.methodName());
 			System.Console.WriteLine ("Static Args: " + staticArgs);
 			while (true) {
 				string[] nextTuple = this.nextTuple ();
-				string[] finalTuple;
-				if (processStaticArgs != null) {
-					finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
-					Array.Copy (processStaticArgs, finalTuple, processStaticArgs.Length);
-					Array.Copy (nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
-
-				} else {
-					finalTuple = nextTuple;
-				}
-
-				string tuplePlusArgs = "";
-					foreach (string str in finalTuple) {
-					tuplePlusArgs += " " + str;
-				}
-				ProcessDebug ("Next Tuple:" + tuplePlusArgs);
+				string[] finalTuple = addStaticArgs(nextTuple);
 				Object[] methodArgs = { finalTuple };
-				//returnValue object is assumed to be a string[] in DADStorm context
 				object returnValue = type.InvokeMember (methodName,	BindingFlags.Default | BindingFlags.InvokeMethod, null, obj, methodArgs);
 
+				//returnValue object is assumed to be a string[] in DADStorm context
 				if(returnValue.GetType () == typeof(string[])) {
 					emitTuple ((string[])returnValue);
 				} else {
@@ -272,13 +287,14 @@ namespace DADStormProcess {
 		}
 
 		/**
-		  * Method that sends a tuple to downstream operator
+		  * Method that sends a tuple to every downstream operator
 		  */
 		private void sendToNextOperators (string[] tuple)
 		{
 			if (downStreamNodes.Count > 0) {
+				//Foreach operator
 				foreach(List<ConnectionPack> receivingOperator in downStreamNodes){
-					ConnectionPack nextOperatorCp = findTupleReceiver (receivingOperator);
+					ConnectionPack nextOperatorCp = this.RoutTechnic.nextDestination(receivingOperator, tuple);
 					DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess (nextOperatorCp);
 					nextProcess.addTuple (tuple);
 					ProcessDebug (nextOperatorCp + " received tuple");
@@ -288,12 +304,6 @@ namespace DADStormProcess {
 				//Case where there is no one to receive..
 				//probably its last operator
 			}
-		}
-
-		private ConnectionPack findTupleReceiver(List<ConnectionPack> possibleReplicas){
-			//Check if more than one operator to send to
-			// primary routing 
-			return possibleReplicas[0];
 		}
 
 		/* -------------------------------------------------------------------- */
@@ -375,8 +385,7 @@ namespace DADStormProcess {
 			executeProcess();
 		}
 
-		public string status ()
-		{
+		public string status ()	{
 			string status = "";
 			lock (dllArgs) {
 				status += "tuples waiting: " + dllArgs.Count;
@@ -398,16 +407,18 @@ namespace DADStormProcess {
 
 			int argsSize = args.Length;
 			try {
+				int numberOfParameters = 6;
 				//Configuring Process
-				if (argsSize > 4) {
+				if (argsSize >= numberOfParameters) {
 					string strPort = args[0];
 					string dllNameInputMain    = args[1];
 					string classNameInputMain  = args[2];
 					string methodNameInputMain = args[3];
+					string routingTechnic      = args[4];
 					//Bool that indicates whether full logging or not
-					bool   fullLogging         = Convert.ToBoolean(args[4]);
+					bool   fullLogging         = Convert.ToBoolean(args[5]);
+
 					string[] dllArgsInputMain = null;
-					int numberOfParameters = 5;
 					if (argsSize > numberOfParameters) {
 						dllArgsInputMain = new string[argsSize - numberOfParameters];
 						Array.Copy(args, numberOfParameters, dllArgsInputMain, 0, argsSize - numberOfParameters );
@@ -428,13 +439,26 @@ namespace DADStormProcess {
 					sp.MethodName 		 = methodNameInputMain;
 					sp.ProcessStaticArgs = dllArgsInputMain;
 					sp.FullLog			 = fullLogging;
+
+					RoutingTechinic technic = null;
+					if ( routingTechnic.Equals("random", StringComparison.OrdinalIgnoreCase) ) {
+						technic = new DADStormProcess.RandomRouting();
+					} else if ( routingTechnic.StartsWith("hashing", StringComparison.OrdinalIgnoreCase) ) {
+						String[] splitStr = routingTechnic.Split (new[] { '(', ')'}, StringSplitOptions.RemoveEmptyEntries);
+						int hashingNumber = Int32.Parse(splitStr[1]);
+						technic = new DADStormProcess.Hashing(hashingNumber);
+					// BY default lets use Primmary routing
+					} else {
+						technic = new DADStormProcess.Primmary();
+					}
+					sp.RoutTechnic	 = technic;
 					sp.createAndProcess();
 
 					Console.ForegroundColor = ConsoleColor.Red;
 					System.Console.WriteLine("ProcessServer is going OFFLINE" );
 					Console.ResetColor();
 				} else {
-					System.Console.WriteLine("ERROR: No port specified" );
+					System.Console.WriteLine("Not everything was specified.." );
 				}
 			} catch (FormatException e) {
 				Console.WriteLine(e.Message);

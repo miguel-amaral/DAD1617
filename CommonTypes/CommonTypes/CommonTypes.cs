@@ -33,11 +33,8 @@ public class ConnectionPack{
 	}
 
 	public override bool Equals(object obj) {
-		if(obj.GetType () == typeof(ConnectionPack)){
-			ConnectionPack other = (ConnectionPack)obj;
-			return other.Port.Equals (this.Port) && other.Ip.Equals (this.Ip);
-		}
-		return false;
+		ConnectionPack other = obj as ConnectionPack;
+		return other.Port.Equals (this.Port) && other.Ip.Equals (this.Ip);
 	}
 	public override int GetHashCode() {
 		return this.Ip.GetHashCode();

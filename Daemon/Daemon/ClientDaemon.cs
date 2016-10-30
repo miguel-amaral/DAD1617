@@ -26,9 +26,9 @@ namespace Daemon {
 		/**
 		  * Interface provided for the creation of a remote Thread
 		  */
-		public void newThread(string dllName, string className , string methodName, string processPort , object[] args = null) {
+		public void newThread(string dllName, string className , string methodName, string processPort , string routing, object[] args = null) {
 			if (remoteDaemon != null) {
-				remoteDaemon.newThread(dllName, className , methodName, processPort , args);
+				remoteDaemon.newThread(dllName, className , methodName, processPort, routing , args);
 			} else {
 				//TODO
 				System.Console.WriteLine("TODO: YOU DID NOT CONNECT YET to DAEMON;");
