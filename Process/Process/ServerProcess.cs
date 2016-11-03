@@ -20,7 +20,7 @@ namespace DADStormProcess {
 		private string   dllName;
 		private string   className;
 		private string   methodName;
-		private string[] processStaticArgs;
+		private IList<string> processStaticArgs;
 		private RoutingTechinic routTechnic;
 
 		private ConnectionPack myConPack;
@@ -28,7 +28,7 @@ namespace DADStormProcess {
 
 		private DADStormRemoteTupleReceiver puppetRemote;
 		private ProcessRemoteServerObject myServerObj;
-		private Queue<string[]> dllArgs = new Queue<string[]>();
+		private Queue<IList<string>> dllArgs = new Queue<IList<string>>();
 		private List<List<ConnectionPack>> downStreamNodes = new List<List<ConnectionPack>>();
 		private List<ConnectionPack> operatorReplicas;
 		private List<string> filesLocation = new List<string>();
@@ -72,7 +72,7 @@ namespace DADStormProcess {
 			get	{ return methodName; }
 			set	{ methodName = value;}
 		}
-		public string[] ProcessStaticArgs {
+		public IList<string> ProcessStaticArgs {
 			get	{ return processStaticArgs; }
 			set	{ processStaticArgs = value;}
 		}
@@ -115,7 +115,7 @@ namespace DADStormProcess {
 		/**
 		  * method that returns the next tuple to be processed
 		  */
-		private string[] nextTuple ()
+		private IList<string> nextTuple ()
 		{
 			lock (dllArgs) {
 				while (dllArgs.Count == 0 || frozen) {
@@ -143,7 +143,7 @@ namespace DADStormProcess {
 					}
 					Monitor.Wait (dllArgs);
 				}
-				string[] nextArg = dllArgs.Dequeue();
+				IList<string> nextArg = dllArgs.Dequeue();
 				return nextArg;
 			}
 		}
@@ -170,7 +170,11 @@ namespace DADStormProcess {
 					if (!tuple [0].StartsWith ("%")) {
 						ProcessDebug ("Read Tuple: " + line);
 						//Only adds non commentaries
-						this.addTuple (tuple);
+						IList<string> toAdd = new List<string> ();
+						foreach(string str in tuple) {
+							toAdd.Add (str);
+						}
+						this.addTuple (toAdd);
 					}
 				} else {
 					ProcessDebug ("file: " + fileLocation + " has been read completly");
@@ -203,12 +207,16 @@ namespace DADStormProcess {
 		/// Method that adds the static args to the beggining of a tuple
 		/// </summary>
 		/// <param name="tuple">Tuple.</param>
-		private string[] addStaticArgs (string[] nextTuple)	{
-			string[] finalTuple;
+		private IList<string> addStaticArgs (IList<string> nextTuple)	{
+			IList<string> finalTuple;
 			if (processStaticArgs != null) {
-				finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
-				Array.Copy (processStaticArgs, finalTuple, processStaticArgs.Length);
-				Array.Copy (nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
+				finalTuple = processStaticArgs;
+				foreach(string str in nextTuple){
+					finalTuple.Add (str);
+				}
+//										finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
+//				Array.Copy (processStaticArgs, finalTuple, processStaticArgs.Length);
+//				Array.Copy (nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
 
 			} else {
 				finalTuple = nextTuple;
@@ -244,16 +252,18 @@ namespace DADStormProcess {
 			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName + "\r\nrouting: " + RoutTechnic.methodName());
 			System.Console.WriteLine ("Static Args: " + staticArgs);
 			while (true) {
-				string[] nextTuple = this.nextTuple ();
-				string[] finalTuple = addStaticArgs(nextTuple);
+				IList<string> nextTuple = this.nextTuple ();
+				IList<string> finalTuple = addStaticArgs(nextTuple);
 				Object[] methodArgs = { finalTuple };
 				object returnValue = type.InvokeMember (methodName,	BindingFlags.Default | BindingFlags.InvokeMethod, null, obj, methodArgs);
 
 				//returnValue object is assumed to be a string[] in DADStorm context
-				if(returnValue.GetType () == typeof(string[])) {
-					emitTuple ((string[])returnValue);
+				if(returnValue.GetType () == typeof(List<string>)) {
+					emitTuple ((IList<string>)returnValue);
 				} else {
-					throw new Exception ("dll method did not return a string[]");
+					
+					ProcessDebug ("error: returned " + returnValue.GetType ().ToString());
+					throw new Exception ("dll method did not return a List<string>");
 				}
 
 				//By default milliseconds is zero, but puppet master may want to slow things down..
@@ -266,7 +276,7 @@ namespace DADStormProcess {
 		/**
 		  * After processing tuple this method emits it to downStream and puppet master
 		  */
-		private void emitTuple(string[] tuple){
+		private void emitTuple(IList<string> tuple){
 			ProcessDebug("Another tuple generated: <" + String.Join(", ", tuple) + ">");
 			if(fullLog == true) {
 				logToPuppetMaster (tuple);
@@ -277,7 +287,7 @@ namespace DADStormProcess {
 		/**
 		  * In the full logging mode, all tuple emissions need to be reported to Puppetmaster
 		  */ 
-		private void logToPuppetMaster (string[] tuple) {
+		private void logToPuppetMaster (IList<string> tuple) {
 			if(puppetRemote == null) {
 				puppetRemote = (DADStormRemoteTupleReceiver)Activator.GetObject(
 					typeof(DADStormRemoteTupleReceiver), "tcp://" + puppetMasterConPack.Ip  + ":" + puppetMasterConPack.Port + "/PuppetMasterRemoteServerObject");
@@ -289,7 +299,7 @@ namespace DADStormProcess {
 		/**
 		  * Method that sends a tuple to every downstream operator
 		  */
-		private void sendToNextOperators (string[] tuple)
+		private void sendToNextOperators (IList<string> tuple)
 		{
 			if (downStreamNodes.Count > 0) {
 				//Foreach operator
@@ -361,7 +371,7 @@ namespace DADStormProcess {
 		/**
 		  * method that adds a tuple to be processed
 		  */
-		public void addTuple(string[] nextArg) {
+		public void addTuple(IList<string> nextArg) {
 			lock (dllArgs) {
 				dllArgs.Enqueue( nextArg );
 				Monitor.Pulse(dllArgs);
@@ -387,13 +397,15 @@ namespace DADStormProcess {
 
 		public string status ()	{
 			string status = "";
+			if(this.frozen) {
+				status += "FROZEN | ";
+			}
 			lock (dllArgs) {
 				status += "tuples waiting: " + dllArgs.Count;
 			}
 			lock (filesLocation) {
 				status += " | incomplete files: " + filesLocation.Count;
 			}
-			status += " | frozen: " + this.frozen;
 			return status;
 		}
 

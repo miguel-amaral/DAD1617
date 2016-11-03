@@ -55,7 +55,7 @@ namespace DADStormProcess {
 			remoteProcess.interval(milli);
 		}
 
-		public void addTuple(string[] tuple){
+		public void addTuple(IList<string> tuple){
 			remoteProcess.addTuple(tuple);
 		}
 

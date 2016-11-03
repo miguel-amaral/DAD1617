@@ -363,7 +363,7 @@ namespace PuppetMaster {
 
 		}
 
-		public void logTupple(string senderUrl, string[] tuple){
+		public void logTupple(string senderUrl, IList<string> tuple){
 			//tuple replica URL, < list − of − tuple − f ields >
 			string toPrint = "tuple url: " + senderUrl + " <";
 			foreach(string str in tuple){
@@ -479,7 +479,6 @@ namespace PuppetMaster {
 			}
 
 			System.Console.WriteLine("Goodbye World! It was a pleasure to serve you today");
-			System.Console.ReadLine();
 		}
 	}
 }

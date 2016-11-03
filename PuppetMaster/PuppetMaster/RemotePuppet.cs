@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.Remoting;
+using System.Collections.Generic;
 
 namespace PuppetMaster {
 	public class PuppetMasterRemoteServerObject : MarshalByRefObject, DADStormRemoteTupleReceiver {
@@ -9,7 +10,7 @@ namespace PuppetMaster {
 			return "Pong";
 		}
 
-		public void addTuple (string senderUrl, string[] tuple){
+		public void addTuple (string senderUrl, IList<string> tuple){
 			ServerPuppet.Instance.logTupple(senderUrl,tuple);
 		}
 	}

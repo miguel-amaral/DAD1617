@@ -6,12 +6,12 @@ namespace DADStormProcess {
 	public abstract class RoutingTechinic {
 		protected List<ConnectionPack> possibleDestinations;
 
-		public abstract ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, string[] tuple);
+		public abstract ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, IList<string> tuple);
 		public abstract string methodName();
 	}
 
 	public class Primmary : RoutingTechinic {
-		public override ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, string[] tuple) {
+		public override ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, IList<string> tuple) {
 			return possibleDestinations [0];
 		}
 		public override string methodName() {
@@ -22,7 +22,7 @@ namespace DADStormProcess {
 
 	public class RandomRouting : RoutingTechinic {
 		private static readonly Random rnd = new Random();
-		public override ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, string[] tuple) {
+		public override ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, IList<string> tuple) {
 			int index = rnd.Next (0, possibleDestinations.Count);
 			return possibleDestinations [index];
 		}
@@ -36,7 +36,7 @@ namespace DADStormProcess {
 			this.tuplePosition = tuplePosition;
 		}
 
-		public override ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, string[] tuple) {
+		public override ConnectionPack nextDestination(List<ConnectionPack> possibleDestinations, IList<string> tuple) {
 			string tupleValue = tuple [tuplePosition];
 			int maxIndex = possibleDestinations.Count;
 			int index = tupleValue.GetHashCode () % maxIndex;

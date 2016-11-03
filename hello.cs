@@ -1,20 +1,15 @@
 // Hello1.cs
 
 using System;
+using System.Collections.Generic;
 
 public class Hello
 {
-	public string[] plusString(string[] old){
-			string[] neW = new string[old.Length+1];
-			string print = "from hello.dll method plusString:";
-			int i = 0;
-			while(i < old.Length){
-				neW [i] = old [i];
-				print += " " + neW[i];
-				i++;
-			}
-			neW [i] = i.ToString ();
-			print += " " + neW[i];
+	public IList<string> plusString(IList<string> old){
+			IList<string> neW = old;
+			int i = old.Count;
+			string print = "from hello.dll method plusString:" + i;
+			neW.Add(i.ToString ());
 			System.Console.WriteLine(print);
 
 			return neW;

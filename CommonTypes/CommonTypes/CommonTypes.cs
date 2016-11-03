@@ -49,7 +49,7 @@ namespace PuppetMaster {
 }
 
 public interface DADStormRemoteTupleReceiver {
-	void addTuple (string senderUrl, string[] tuple);
+	void addTuple (string senderUrl, IList<string> tuple);
 }
 
 public class MainClass{

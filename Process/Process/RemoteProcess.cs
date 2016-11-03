@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace DADStormProcess {
 	public class ProcessRemoteServerObject : MarshalByRefObject {
 
-		public void addTuple(string[] tuple) {
+		public void addTuple(IList<string> tuple) {
 			ServerProcess.Instance.addTuple(tuple);
 		}
 
