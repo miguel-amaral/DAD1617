@@ -1,6 +1,4 @@
 *.exe
 *.dll
-*.csproj
-*.sln
 *.userprefs
 *.mdb
