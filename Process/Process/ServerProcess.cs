@@ -10,6 +10,26 @@ using System.Collections.Generic;
 
 namespace DADStormProcess {
 
+	public abstract class GenerateStrategy{
+		public abstract object generateTuple(IList<string> finalTuple);
+	}
+	public class CustomDll : GenerateStrategy {
+		private Assembly assembly;
+		private string   methodName;
+		private Type     type;
+		private var      obj;
+
+		public CustomDll(string dllName, string className, string methodName){
+			this.assembly = Assembly.LoadFile (@dllName);
+			this.type = assembly.GetType (className);
+			this.obj = Activator.CreateInstance (type);
+		}
+		public override obj generateTuple(IList<string> finalTuple) {
+			Object[] methodArgs = { finalTuple };
+			return type.InvokeMember (methodName, BindingFlags.Default | BindingFlags.InvokeMethod, null, obj, methodArgs);
+		}
+
+	}
 	public class ServerProcess {
 
 		private static ServerProcess instance = null;
@@ -17,11 +37,9 @@ namespace DADStormProcess {
 		private bool     frozen  = true;
 		private bool     fullLog = false;
 		private bool     primmary= true;
-		private string   dllName;
-		private string   className;
-		private string   methodName;
 		private IList<string> processStaticArgs;
 		private RoutingTechinic routTechnic;
+		private GenerateStrategy generateStrategy;
 
 		private ConnectionPack myConPack;
 		private ConnectionPack puppetMasterConPack;
@@ -33,7 +51,7 @@ namespace DADStormProcess {
 		private List<ConnectionPack> operatorReplicas;
 		private List<string> filesLocation = new List<string>();
 		private List<string> filesToRemove = new List<string>();
-		private Dictionary<string, string[]> filesContent = new Dictionary<string, string[]>(); 
+		private Dictionary<string, string[]> filesContent = new Dictionary<string, string[]>();
 		private Dictionary<string, int> filesIndex = new Dictionary<string, int> ();
 
 		public ConnectionPack PuppetMasterConPack {
@@ -55,23 +73,12 @@ namespace DADStormProcess {
 		public bool FullLog {
 			get	{ return  fullLog; }
 			set	{ fullLog = value; }
-		}		
+		}
 		//public bool Primmary {
 		//	get	{ return  primmary; }
 		//	set	{ primmary = value; }
 		//}
-		public string ClassName {
-			get	{ return className; }
-			set	{ className = value;}
-		}
-		public string DllName {
-			get	{ return dllName; }
-			set	{ dllName = value;}
-		}
-		public string MethodName {
-			get	{ return methodName; }
-			set	{ methodName = value;}
-		}
+
 		public IList<string> ProcessStaticArgs {
 			get	{ return processStaticArgs; }
 			set	{ processStaticArgs = value;}
@@ -80,7 +87,6 @@ namespace DADStormProcess {
 			get	{ return routTechnic; }
 			set	{ routTechnic = value;}
 		}
-
 		private ServerProcess(){}
 
 		public static ServerProcess Instance {
@@ -93,24 +99,46 @@ namespace DADStormProcess {
 			}
 		}
 
+		/// <summary>
+		/// Method
+		/// </summary>
+		public buildServer(ConnectionPack cp,string dllName,string className,string methodName,string routingTechnic,bool   fullLogging ){
+			this.MyConPack 		 = myCp;
+			this.ProcessStaticArgs = dllArgsInputMain;
+			this.FullLog			 = fullLogging;
 
-//		public ServerProcess(string strPort, string dllName, string className, string methodName, string[] processArgs){
-//
-//			try {
-//				int parsedPort = Int32.Parse(strPort);
-//				if(parsedPort < 10002 || parsedPort > 65535) {
-//					throw new FormatException("Port out of possible");
-//				}
-//				port = parsedPort;
-//				this.dllName    = dllName;
-//				this.className  = className;
-//				this.methodName = methodName;
-//				this.processArgs= processArgs;
-//			} catch (FormatException e) {
-//				Console.WriteLine(e.Message);
-//			}
-//		}
-		
+			RoutingTechinic technic = null;
+			if ( routingTechnic.Equals("random", StringComparison.OrdinalIgnoreCase) ) {
+				technic = new DADStormProcess.RandomRouting();
+			} else if ( routingTechnic.StartsWith("hashing", StringComparison.OrdinalIgnoreCase) ) {
+				String[] splitStr = routingTechnic.Split (new[] { '(', ')'}, StringSplitOptions.RemoveEmptyEntries);
+				int hashingNumber = Int32.Parse(splitStr[1]);
+				technic = new DADStormProcess.Hashing(hashingNumber);
+			// BY default lets use Primmary routing
+			} else {
+				technic = new DADStormProcess.Primmary();
+			}
+			this.RoutTechnic	 = technic;
+			this.generateStrategy = new CustomDll(dllName, className, methodName);
+		}
+
+		//		public ServerProcess(string strPort, string dllName, string className, string methodName, string[] processArgs){
+		//
+		//			try {
+		//				int parsedPort = Int32.Parse(strPort);
+		//				if(parsedPort < 10002 || parsedPort > 65535) {
+		//					throw new FormatException("Port out of possible");
+		//				}
+		//				port = parsedPort;
+		//				this.dllName    = dllName;
+		//				this.className  = className;
+		//				this.methodName = methodName;
+		//				this.processArgs= processArgs;
+		//			} catch (FormatException e) {
+		//				Console.WriteLine(e.Message);
+		//			}
+		//		}
+
 
 		/**
 		  * method that returns the next tuple to be processed
@@ -214,10 +242,6 @@ namespace DADStormProcess {
 				foreach(string str in nextTuple){
 					finalTuple.Add (str);
 				}
-//										finalTuple = new string[processStaticArgs.Length + nextTuple.Length];
-//				Array.Copy (processStaticArgs, finalTuple, processStaticArgs.Length);
-//				Array.Copy (nextTuple, 0, finalTuple, processStaticArgs.Length, nextTuple.Length);
-
 			} else {
 				finalTuple = nextTuple;
 			}
@@ -228,7 +252,6 @@ namespace DADStormProcess {
 			}
 			ProcessDebug ("Next Tuple:" + tuplePlusArgs);
 			return finalTuple;
-
 		}
 
 		/**
@@ -239,9 +262,6 @@ namespace DADStormProcess {
 		  * !!TODO!!DANGER!!TODO!!
 		  */
 		private void executeProcess () {
-			Assembly assembly = Assembly.LoadFile (@dllName);
-			Type type = assembly.GetType (className);
-			var obj = Activator.CreateInstance (type);
 			string staticArgs = "<";
 			if (processStaticArgs != null) {
 				foreach (string str in processStaticArgs) {
@@ -254,16 +274,18 @@ namespace DADStormProcess {
 			while (true) {
 				IList<string> nextTuple = this.nextTuple ();
 				IList<string> finalTuple = addStaticArgs(nextTuple);
-				Object[] methodArgs = { finalTuple };
-				object returnValue = type.InvokeMember (methodName,	BindingFlags.Default | BindingFlags.InvokeMethod, null, obj, methodArgs);
 
-				//returnValue object is assumed to be a string[] in DADStorm context
-				if(returnValue.GetType () == typeof(List<string>)) {
-					emitTuple ((IList<string>)returnValue);
+				object resultObject = this.generateStrategy.generateTuple(finalTuple);
+
+				IList<IList<string>> result = resultObject as IList<IList<string>>;
+				if(result != null){
+					//Successful cast
+					foreach(IList<string> tuple in result){
+						emitTuple (tuple);
+					}
 				} else {
-					
 					ProcessDebug ("error: returned " + returnValue.GetType ().ToString());
-					throw new Exception ("dll method did not return a List<string>");
+					throw new Exception ("dll method did not return a List<List<string>>");
 				}
 
 				//By default milliseconds is zero, but puppet master may want to slow things down..
@@ -286,7 +308,7 @@ namespace DADStormProcess {
 
 		/**
 		  * In the full logging mode, all tuple emissions need to be reported to Puppetmaster
-		  */ 
+		  */
 		private void logToPuppetMaster (IList<string> tuple) {
 			if(puppetRemote == null) {
 				puppetRemote = (DADStormRemoteTupleReceiver)Activator.GetObject(
@@ -342,7 +364,7 @@ namespace DADStormProcess {
 			}
 		}
 
-		//Public that must be called by 
+		//Public that must be called by
 		public int getIndexFromPrimmary (string file) {
 			if (primmary) {
 				lock (filesIndex) {
@@ -350,7 +372,7 @@ namespace DADStormProcess {
 					if (!filesIndex.TryGetValue (file, out counter)) {
 						counter = 0;
 						filesIndex.Add (file, counter);
-					} 
+					}
 					filesIndex [file] = counter + 1;
 					return counter;
 				}
@@ -358,7 +380,7 @@ namespace DADStormProcess {
 			return -1;
 		}
 
-		//Method that adds a file that this replica will read 
+		//Method that adds a file that this replica will read
 		public void addFile(string file){
 			lock(filesLocation){
 				filesLocation.Add (file);
@@ -445,25 +467,8 @@ namespace DADStormProcess {
 					string ip= host.AddressList [0].ToString();
 					ConnectionPack myCp = new ConnectionPack(ip,parsedPort);
 
-					sp.MyConPack 		 = myCp;
-					sp.DllName    		 = dllNameInputMain;
-					sp.ClassName  		 = classNameInputMain;
-					sp.MethodName 		 = methodNameInputMain;
-					sp.ProcessStaticArgs = dllArgsInputMain;
-					sp.FullLog			 = fullLogging;
+					sp.buildServer(myCp, dllNameInputMain, classNameInputMain, methodNameInputMain, routingTechnic, fullLogging );
 
-					RoutingTechinic technic = null;
-					if ( routingTechnic.Equals("random", StringComparison.OrdinalIgnoreCase) ) {
-						technic = new DADStormProcess.RandomRouting();
-					} else if ( routingTechnic.StartsWith("hashing", StringComparison.OrdinalIgnoreCase) ) {
-						String[] splitStr = routingTechnic.Split (new[] { '(', ')'}, StringSplitOptions.RemoveEmptyEntries);
-						int hashingNumber = Int32.Parse(splitStr[1]);
-						technic = new DADStormProcess.Hashing(hashingNumber);
-					// BY default lets use Primmary routing
-					} else {
-						technic = new DADStormProcess.Primmary();
-					}
-					sp.RoutTechnic	 = technic;
 					sp.createAndProcess();
 
 					Console.ForegroundColor = ConsoleColor.Red;

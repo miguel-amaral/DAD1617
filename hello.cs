@@ -5,22 +5,14 @@ using System.Collections.Generic;
 
 public class Hello
 {
-	public IList<string> plusString(IList<string> old){
-			IList<string> neW = old;
+	public IList<IList<string>> plusString(IList<string> old){
 			int i = old.Count;
 			string print = "from hello.dll method plusString:" + i;
-			neW.Add(i.ToString ());
+			old.Add(i.ToString ());
+			IList<IList<string>> neW = IList<IList<string>>(old);
 			System.Console.WriteLine(print);
 
 			return neW;
-	}
-	public string[] retornaInt(string[] args){
-		Console.ForegroundColor = ConsoleColor.Red;
-		System.Console.WriteLine("retorna int invoked with success\r\n");
-		Console.ResetColor();
-		string[] retorno = new string[1];
-		retorno[0] = args.Length.ToString();
-		return retorno ;
 	}
 	public void Hello0(){
 		System.Console.WriteLine("Hello, World!");
