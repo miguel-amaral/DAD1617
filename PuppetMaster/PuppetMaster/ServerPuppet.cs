@@ -11,7 +11,6 @@ using System.Collections.Generic;
 namespace PuppetMaster {
 	public class ServerPuppet {
 
-		
 		private static int port = 10000;
 		private bool fullLog = false;
 		private bool firstStart = true;
@@ -65,6 +64,9 @@ namespace PuppetMaster {
 		/// </summary>
 		private void doFirstStartConnections ()	{
 			if (firstStart) {
+				System.Console.WriteLine ();
+				System.Console.WriteLine ("Deploying Connections in network");
+				System.Console.WriteLine ();
 				//Creating the network betwen all operators
 				foreach (KeyValuePair<string, List<string>> item in downStreamOperators) {
 					List<ConnectionPack> outputingReplicas;

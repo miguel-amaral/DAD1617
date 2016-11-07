@@ -1,0 +1,11 @@
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/obj/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/PuppetMaster.exe.mdb
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/PuppetMaster.exe
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/obj/Debug/PuppetMaster.exe
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/obj/Debug/PuppetMaster.exe.mdb
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/Daemon.exe
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/Daemon.exe.mdb
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/Process.exe
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/Process.exe.mdb
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/CommonTypes.exe
+/home/miguel/sandbox/DADStorm/PuppetMaster/PuppetMaster/bin/Debug/CommonTypes.exe.mdb
