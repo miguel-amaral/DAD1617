@@ -34,6 +34,8 @@
     <Compile Include="RemoteProcess.cs" />
     <Compile Include="ServerProcess.cs" />
     <Compile Include="RoutingTechics.cs" />
+    <Compile Include="GenerateStrategy.cs" />
+    <Compile Include="CSF_IpInName.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net" />
