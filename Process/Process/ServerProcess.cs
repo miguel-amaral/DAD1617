@@ -402,8 +402,20 @@ namespace DADStormProcess {
 			executeProcess();
 		}
 
+		//CSF method
+		public void reportBack(){
+			this.generateStrategy.reportBack ();
+		}
+
+		//CSF method
+		public void reset(){
+			this.generateStrategy.reset ();
+		}
+
+
+
 		public string status ()	{
-			this.generateStrategy.reportBack (); //CSF easy way to force report
+			reportBack() //CSF easy way to force report
 			string status = "";
 			if(this.frozen) {
 				status += "FROZEN | ";

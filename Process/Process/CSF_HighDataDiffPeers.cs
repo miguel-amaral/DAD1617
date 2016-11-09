@@ -12,49 +12,63 @@ namespace DADStormProcess {
 		private const minimumDataConnection = 100*1000*1000; //100Mb
 
 		//String is source ip; hastable key -> destIp , value -> size of communications
-		private Dictionary<string,Hashtable> connections = new Dictionary<string,Hashtable>();
+		protected Dictionary<string,Hashtable> connections = new Dictionary<string,Hashtable>();
 
-		public override object generateTuple (IList<string> tuple) {
+		public override void processTuple (IList<string> tuple) {
 			string destIp   = tuple [destinIpIndex];
 			string sourceIp = tuple [sourceIpIndex];
 			int size = Int32.Parse(tuple[sizeOfPacketIndex]);
-			addTalk(destIp,sourceIp,size);
+			this.addTalk(destIp,sourceIp,size);
 		}
 
-		private void addTalk(ip1,ip2,size){
-			registerOneWayConnection(ip1,ip2,size);
-			registerOneWayConnection(ip2,ip1,size);
+		private void addTalk(string ip1,string ip2,int size){
+			this.registerOneWayConnection(ip1,ip2,size);
+			this.registerOneWayConnection(ip2,ip1,size);
 		}
 
-		private void registerOneWayConnection(sourceIp,destIp,size){
+		protected void registerOneWayConnection(string sourceIp,string destIp,int size){
 			Hashtable existingTalks;
 			//Check if source ip in dictionary
-			if (connections.TryGetValue (ip, out talks)) {
-				//check if it is the first time they talk
-				if (existingTalks.ContainsKey (destIp) {
-					existingTalks [destIp] = (int)existingTalks [destIp] + size;
+			lock(connections){
+				if (connections.TryGetValue (sourceIp, out existingTalks)) {
+					//check if it is the first time they talk
+					if (existingTalks.ContainsKey (destIp) {
+						existingTalks [destIp] = (int)existingTalks [destIp] + size;
+					} else {
+						existingTalks [destIp] = size;
+					}
 				} else {
+					//First time sourceIp is caught with hand in cookie jar
+					existingTalks = new Hashtable ();
 					existingTalks [destIp] = size;
+					this.connections [sourceIp] = existingTalks;
 				}
-			} else {
-				//First time sourceIp is caught with hand in cookie jar
-				existingTalks = new Hashtable ();
-				existingTalks [destIp] = size;
-				connections [sourceIp] = existingTalks;
 			}
 		}
 
 		public override void reportBack(){
-			foreach(KeyValuePair<string, Hashtable> sourceEntry in sinnerList) {
-				string ip = sourceEntry.Key;
-				Hashtable table = sourceEntry.Value;
-				int bigConnectionsCount = 0;
-				foreach (DictionaryEntry pair in table) {
-					bigConnectionsCount += pair.Value;
+			lock(connections){
+				string toReturn = "";
+				foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
+					string ip = sourceEntry.Key;
+					Hashtable table = sourceEntry.Value;
+					int bigConnectionsCount = 0;
+					foreach (DictionaryEntry pair in table) {
+						if(pair.Value > minimumDataConnection) {
+							bigConnectionsCount++;
+						}
+					}
+					if( bigConnectionsCount > 0 ){
+						toReturn += ip + " " + bigConnectionsCount + " ";
+						System.Console.WriteLine ( ip + " talked to " + bigConnectionsCount + " IPs with more than " + minimumDataConnection+ " of MB of data exchanged");
+					}
 				}
-				if( bigConnectionsCount > 0 ){
-					System.Console.WriteLine ( ip + " talked to " + bigConnectionsCount + " IPs with more than " + minimumDataConnection+ " of MB of data exchanged");
-				}
+			}
+		}
+
+		public override void restart() {
+			lock(connections){
+				connections = new Dictionary<string,Hashtable>();
 			}
 		}
 	}
