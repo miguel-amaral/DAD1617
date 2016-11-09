@@ -16,6 +16,15 @@ namespace DADStormProcess {
 		}
 	}
 
+	/// <summary>
+	/// Class that all CSF related class in inherit from, it will contain the tuple structure
+	/// </summary>
+	public abstract class CSF_TupleStructure{
+		//Setup
+		protected const int sourceIpIndex = 0; //TODO
+		protected const int destinIpIndex = 1; //TODO
+	}
+
 	public class CustomDll : GenerateStrategy {
 		private Assembly assembly;
 		private string   methodName;
@@ -36,4 +45,3 @@ namespace DADStormProcess {
 		}
 	}
 }
-

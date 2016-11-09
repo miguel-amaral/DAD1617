@@ -7,31 +7,16 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-namespace DADStormProcess
-{
-	public class CSF_IpInName : GenerateStrategy	{
+namespace DADStormProcess {
+	public class CSF_IpInName : CSF_TupleStructure {
 		//Inner variables required
 		//String is source ip; hastable key -> destIp , value -> number of communications
 		private Dictionary<string,Hashtable> sinnerList = new Dictionary<string,Hashtable>();
-		private DnsPermission permission;
-		private SecurityElement securityElementObj;
 		//Setup
-		private const int sourceIpIndex = 0; //TODO
-		private const int destinIpIndex = 1; //TODO
 		private const int minimumNumberOfMatches = 2; //between 1 and 4;
-		public CSF_IpInName ()
-		{
-			// Create a DnsPermission instance.
-			permission = new DnsPermission (PermissionState.Unrestricted);
+		public CSF_IpInName ()	{}
 
-			// Check for permission.
-			permission.Demand ();
-			// Create a SecurityElement object to hold XML encoding of the DnsPermission instance.
-			securityElementObj = permission.ToXml();   		
-		}
-
-		public override object generateTuple (IList<string> tuple)
-		{
+		public override object generateTuple (IList<string> tuple) {
 
 			string destIp = tuple [destinIpIndex];
 			string destDNSname;
@@ -40,8 +25,8 @@ namespace DADStormProcess
 				IPHostEntry host = Dns.GetHostEntry (destIp);
 				destDNSname = host.HostName;
 
-			} catch (Exception e) {
-				System.Console.WriteLine (e);
+			} catch (Exception) {
+				System.Console.WriteLine ( "ip not found: " + destIp );
 
 				//Lets ignore this troublemaker tuple then..
 				return defaultReturn(tuple);
@@ -53,7 +38,7 @@ namespace DADStormProcess
 					intMatches++;
 				}
 			}
-			System.Console.WriteLine ("Matches " + intMatches + "\nip: " + destIp +"\nname: " + destDNSname);
+			//System.Console.WriteLine ("Matches " + intMatches + "\nip: " + destIp +"\nname: " + destDNSname);
 
 			if (intMatches >= minimumNumberOfMatches) {
 				// So someone is talking with a domestic IP peer
