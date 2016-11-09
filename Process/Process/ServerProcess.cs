@@ -10,26 +10,6 @@ using System.Collections.Generic;
 
 namespace DADStormProcess {
 
-	public abstract class GenerateStrategy{
-		public abstract object generateTuple(IList<string> finalTuple);
-	}
-	public class CustomDll : GenerateStrategy {
-		private Assembly assembly;
-		private string   methodName;
-		private Type     type;
-		private var      obj;
-
-		public CustomDll(string dllName, string className, string methodName){
-			this.assembly = Assembly.LoadFile (@dllName);
-			this.type = assembly.GetType (className);
-			this.obj = Activator.CreateInstance (type);
-		}
-		public override obj generateTuple(IList<string> finalTuple) {
-			Object[] methodArgs = { finalTuple };
-			return type.InvokeMember (methodName, BindingFlags.Default | BindingFlags.InvokeMethod, null, obj, methodArgs);
-		}
-
-	}
 	public class ServerProcess {
 
 		private static ServerProcess instance = null;
@@ -102,9 +82,8 @@ namespace DADStormProcess {
 		/// <summary>
 		/// Method
 		/// </summary>
-		public buildServer(ConnectionPack cp,string dllName,string className,string methodName,string routingTechnic,bool   fullLogging ){
+		public void buildServer(ConnectionPack myCp,string dllName,string className,string methodName,string routingTechnic,bool   fullLogging ){
 			this.MyConPack 		 = myCp;
-			this.ProcessStaticArgs = dllArgsInputMain;
 			this.FullLog			 = fullLogging;
 
 			RoutingTechinic technic = null;
@@ -119,7 +98,12 @@ namespace DADStormProcess {
 				technic = new DADStormProcess.Primmary();
 			}
 			this.RoutTechnic	 = technic;
-			this.generateStrategy = new CustomDll(dllName, className, methodName);
+			if(className.Equals("CSF_IpInName")){
+				this.generateStrategy = new CSF_IpInName ();
+			}else {
+				this.generateStrategy = new CustomDll(dllName, className, methodName);
+			}
+
 		}
 
 		//		public ServerProcess(string strPort, string dllName, string className, string methodName, string[] processArgs){
@@ -269,7 +253,8 @@ namespace DADStormProcess {
 				}
 			}
 			staticArgs += " >";
-			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName + "\r\nrouting: " + RoutTechnic.methodName());
+			System.Console.WriteLine ("Setup");
+			System.Console.WriteLine ("routing: " + RoutTechnic.methodName());
 			System.Console.WriteLine ("Static Args: " + staticArgs);
 			while (true) {
 				IList<string> nextTuple = this.nextTuple ();
@@ -277,14 +262,14 @@ namespace DADStormProcess {
 
 				object resultObject = this.generateStrategy.generateTuple(finalTuple);
 
-				IList<IList<string>> result = resultObject as IList<IList<string>>;
+				List<IList<string>> result = resultObject as List<IList<string>>;
 				if(result != null){
 					//Successful cast
-					foreach(IList<string> tuple in result){
+					foreach(List<string> tuple in result){
 						emitTuple (tuple);
 					}
 				} else {
-					ProcessDebug ("error: returned " + returnValue.GetType ().ToString());
+					ProcessError ("returned " + resultObject.GetType ().ToString());
 					throw new Exception ("dll method did not return a List<List<string>>");
 				}
 
@@ -418,6 +403,7 @@ namespace DADStormProcess {
 		}
 
 		public string status ()	{
+			this.generateStrategy.reportBack (); //CSF easy way to force report
 			string status = "";
 			if(this.frozen) {
 				status += "FROZEN | ";
@@ -436,7 +422,11 @@ namespace DADStormProcess {
 				System.Console.WriteLine("[ Process : " +myConPack.Port + " ] " + msg);
 			}
 		}
-
+		private void ProcessError(string msg) {
+			Console.ForegroundColor = ConsoleColor.Red;
+			System.Console.WriteLine("[ Process : " +myConPack.Port + " : ERROR ] " + msg);
+			Console.ResetColor();
+		}
 		public static void Main(string[] args) {
 
 			int argsSize = args.Length;
@@ -467,6 +457,7 @@ namespace DADStormProcess {
 					string ip= host.AddressList [0].ToString();
 					ConnectionPack myCp = new ConnectionPack(ip,parsedPort);
 
+					sp.ProcessStaticArgs = dllArgsInputMain;
 					sp.buildServer(myCp, dllNameInputMain, classNameInputMain, methodNameInputMain, routingTechnic, fullLogging );
 
 					sp.createAndProcess();
