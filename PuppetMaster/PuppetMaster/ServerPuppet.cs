@@ -87,7 +87,7 @@ namespace PuppetMaster {
 									//foreach (ConnectionPack receivingPack in receivingReplicas) {
 									System.Console.WriteLine ("Added Connection\nOutOperator: " + outPack + " Receiver: " + receiving_operator);
 									outReplica.addDownStreamOperator (receivingReplicas);
-									//}								
+									//}
 								}
 							}
 						}
@@ -102,7 +102,7 @@ namespace PuppetMaster {
 								foreach (ConnectionPack receivingPack in receivingReplicas) {
 									DADStormProcess.ClientProcess receivingReplica = new DADStormProcess.ClientProcess (receivingPack);
 									receivingReplica.addFile (item.Key);
-								}								
+								}
 							}
 						}
 					}
@@ -129,7 +129,7 @@ namespace PuppetMaster {
 		/// <summary>
 		/// Method that from a string[] does a command in a single replica
 		/// </summary>
-		private void  replicaTargetOperations (string[] splitStr) {	
+		private void  replicaTargetOperations (string[] splitStr) {
 			if(splitStr.Length < 3) {
 				operatorTargetOperations (splitStr);
 				return;
@@ -228,8 +228,13 @@ namespace PuppetMaster {
 			} else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
 				//TODO
 				//this.fullLog = splitStr [1].Equals ("full", StringComparison.OrdinalIgnoreCase);
-			} 
+			} else {
+				//nothing so far, maybe an extra command
+				this.extraCommands(splitStr);
+			}
 		}
+
+		public virtual void extraCommands(string[] command) {}
 
 		private void readCommandsFromFile (string fileLocation){
 			String line;
@@ -254,11 +259,11 @@ namespace PuppetMaster {
 			// ----------------- //
 			if (splitStr [1].Equals ("input", StringComparison.OrdinalIgnoreCase) && splitStr [2].Equals ("ops", StringComparison.OrdinalIgnoreCase)) {
 				counter = 3;
-				// then it must 
+				// then it must
 			} else if (splitStr [1].Equals ("input_ops", StringComparison.OrdinalIgnoreCase)) {
 				counter = 2;
 			}
- 
+
 			while (!(splitStr [counter].Equals ("rep", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("fact", StringComparison.OrdinalIgnoreCase))
 			       && !splitStr [counter].Equals ("rep_fact", StringComparison.OrdinalIgnoreCase)) {
 
@@ -276,7 +281,7 @@ namespace PuppetMaster {
 					existingOperators.Add (current_operator_id);
 				}
 				counter++;
-			} 
+			}
 
 			// ------------------ //
 			// Replication Factor //
@@ -284,17 +289,17 @@ namespace PuppetMaster {
 			if (splitStr [counter].Equals ("rep", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("fact", StringComparison.OrdinalIgnoreCase)) {
 				counter++;
 				counter++;
-				// then it must 
+				// then it must
 			} else if (splitStr [counter].Equals ("rep_fact", StringComparison.OrdinalIgnoreCase)) {
 				counter++;
 			}
 			string rep_factor = splitStr [counter++];
 
-			//ignoring word routing 
+			//ignoring word routing
 			counter++;
 			string routing = splitStr [counter++];
 
-			//ignoring word address 
+			//ignoring word address
 			counter++;
 			List<ConnectionPack> currentConnectionPacks = new List<ConnectionPack> ();
 			while (!(splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase))
@@ -318,7 +323,7 @@ namespace PuppetMaster {
 			if (splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase)) {
 				counter++;
 				counter++;
-				// then it must 
+				// then it must
 			} else if (splitStr [counter].Equals ("operator_spec", StringComparison.OrdinalIgnoreCase)) {
 				counter++;
 			}
@@ -345,7 +350,7 @@ namespace PuppetMaster {
 				// condition;
 				// value;
 			}
-		
+
 
 			//XXX TODO
 			string arg1 = "olá";
@@ -393,7 +398,7 @@ namespace PuppetMaster {
 				configFileLocation = args [0];
 				sp.readCommandsFromFile (configFileLocation);
 
-			} 
+			}
 			/*
 				//string pc1   = "lab7p2";
 				string pc2 = "localhost";
