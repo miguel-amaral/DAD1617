@@ -63,6 +63,7 @@ namespace DADStormProcess {
 		}
 
 		public override void reportBack(){
+			//We do register if a connection happens only once or more often, but we ignore that..
 			foreach(KeyValuePair<string, Hashtable> sourceEntry in sinnerList) {
 				System.Console.WriteLine (sourceEntry.Key + " talked to " + sourceEntry.Value.Count + " domestic IPs");
 			}

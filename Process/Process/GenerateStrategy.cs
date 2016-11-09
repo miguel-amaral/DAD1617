@@ -23,6 +23,7 @@ namespace DADStormProcess {
 		//Setup
 		protected const int sourceIpIndex = 0; //TODO
 		protected const int destinIpIndex = 1; //TODO
+		protected const int sizeOfPacketIndex = 2; //TODO
 	}
 
 	public class CustomDll : GenerateStrategy {
