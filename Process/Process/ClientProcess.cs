@@ -3,6 +3,7 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Collections.Generic;
+using System.Net.Sockets;
 
 namespace DADStormProcess {
 	public class ClientProcess {
@@ -51,11 +52,21 @@ namespace DADStormProcess {
 			remoteProcess.crash();
 		}
 
-		public void interval(int milli) {
-			remoteProcess.interval(milli);
-		}
+        public void interval(int milli)
+        {
+            try
+            {
+                remoteProcess.interval(milli);
+            }
+            catch (SocketException e)
+            {
+                System.Console.WriteLine(e.Message);
 
-		public void addTuple(IList<string> tuple){
+            }
+        }
+
+
+        public void addTuple(IList<string> tuple){
 			remoteProcess.addTuple(tuple);
 		}
 
@@ -79,22 +90,31 @@ namespace DADStormProcess {
 			}
 		}
 
-		/**
+        public void reportBack() {
+            remoteProcess.reportBack();
+        }
+
+        public void reset() {
+            remoteProcess.reset();
+        }
+
+
+        /**
 		  * Debug method
 		  */
-/*
-		static void Main(string[] args) {
+        /*
+                static void Main(string[] args) {
 
-			TcpChannel channel = new TcpChannel(44444);
-			//ChannelServices.RegisterChannel(channel,false);
+                    TcpChannel channel = new TcpChannel(44444);
+                    //ChannelServices.RegisterChannel(channel,false);
 
-			//RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
-			ClientProcess pc = new ClientProcess();
-			pc.connect("44556");
-			System.Console.WriteLine(pc.ping());
-			System.Console.WriteLine("<enter> para sair...");
-			System.Console.ReadLine();
-		}
-*/
-	}
+                    //RemotingConfiguration.RegisterWellKnownServiceType(	typeof(MyRemoteObject),"MyRemoteObjectName",WellKnownObjectMode.Singleton);
+                    ClientProcess pc = new ClientProcess();
+                    pc.connect("44556");
+                    System.Console.WriteLine(pc.ping());
+                    System.Console.WriteLine("<enter> para sair...");
+                    System.Console.ReadLine();
+                }
+        */
+    }
 }

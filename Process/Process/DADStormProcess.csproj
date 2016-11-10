@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -31,6 +31,10 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="ClientProcess.cs" />
+    <Compile Include="CSF_baseClass.cs" />
+    <Compile Include="CSF_HighDataDiffPeers.cs" />
+    <Compile Include="CSF_HighUpload.cs" />
+    <Compile Include="CSF_KnownTrackers.cs" />
     <Compile Include="RemoteProcess.cs" />
     <Compile Include="ServerProcess.cs" />
     <Compile Include="RoutingTechics.cs" />

@@ -10,7 +10,7 @@ using System.Diagnostics;
 namespace Daemon {
 	public class ServerDaemon {
 
-		private static int port = 10001;
+		private static int port = 10000;
 		private static ServerDaemon instance = null;
 		private static TcpChannel channel;
 		private bool   fullLog = false;
@@ -30,12 +30,12 @@ namespace Daemon {
 			set	{ fullLog = value; }
 		}
 
-		public void newThread (string dllName, string className, string methodName, string processPort, string routing, object[] args = null) {
+		public void newThread (string dllName, string className, string methodName, string processPort, string proccessIp,  string routing, object[] args = null) {
 			Process process = new Process ();
 			// Configure the process using the StartInfo properties.
 			process.StartInfo.FileName = "Process.exe";
 
-			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + routing + " " + fullLog.ToString ();
+			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + routing + " " + fullLog.ToString () + " " + proccessIp;
 			if (args != null) {
 				foreach (string str in args) {
 					processArguments += " " + str;

@@ -9,7 +9,7 @@ namespace DADStormProcess {
 	public class CSF_HighDataDiffPeers : CSF_TupleStructure {
 
 		//Setup
-		private const minimumDataConnection = 100*1000*1000; //100Mb
+		private const int minimumDataConnection = 100*1000*1000; //100Mb
 
 		//String is source ip; hastable key -> destIp , value -> size of communications
 		protected Dictionary<string,Hashtable> connections = new Dictionary<string,Hashtable>();
@@ -32,7 +32,7 @@ namespace DADStormProcess {
 			lock(connections){
 				if (connections.TryGetValue (sourceIp, out existingTalks)) {
 					//check if it is the first time they talk
-					if (existingTalks.ContainsKey (destIp) {
+					if (existingTalks.ContainsKey (destIp)) {
 						existingTalks [destIp] = (int)existingTalks [destIp] + size;
 					} else {
 						existingTalks [destIp] = size;
@@ -54,7 +54,7 @@ namespace DADStormProcess {
 					Hashtable table = sourceEntry.Value;
 					int bigConnectionsCount = 0;
 					foreach (DictionaryEntry pair in table) {
-						if(pair.Value > minimumDataConnection) {
+						if((int)pair.Value > minimumDataConnection) {
 							bigConnectionsCount++;
 						}
 					}
@@ -66,7 +66,7 @@ namespace DADStormProcess {
 			}
 		}
 
-		public override void restart() {
+		public override void reset() {
 			lock(connections){
 				connections = new Dictionary<string,Hashtable>();
 			}

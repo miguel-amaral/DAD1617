@@ -1,6 +1,16 @@
-OP1 input ops CSF_ip.txt rep fact 2 routing hashing(1) address tcp://localhost:11000/op operator spec CUSTOM CSF_IpInName CSF_IpInName CSF_IpInName
-wait 1000
-status
+LoggingLevel full
+OP1 input ops CSF_PACKET.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec CUSTOM CSF_IpInName CSF_IpInName CSF_IpInName
+
+OP2 input ops OP1            rep fact 1 routing hashing(1) address tcp://localhost:11001/op operator spec CUSTOM CSF_HighDataDiffPeers CSF_HighDataDiffPeers CSF_HighDataDiffPeers
+OP3 input ops OP2            rep fact 1 routing hashing(1) address tcp://localhost:11002/op operator spec CUSTOM CSF_HighUpload CSF_HighUpload CSF_HighUpload
+OP4 input ops OP3            rep fact 1 routing hashing(1) address tcp://localhost:11003/op operator spec CUSTOM CSF_KnownTrackers CSF_KnownTrackers CSF_KnownTrackers
+%%%%%%%%%
 start OP1
+
+start OP2
+start OP3
+start OP4
 wait 1000
+
 status
+report

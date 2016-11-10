@@ -34,14 +34,14 @@ namespace DADStormProcess {
 			}
 		}
 
-		private void addTalk(sinner,tracker) {
+		private void addTalk(string sinner,string tracker) {
 			Hashtable existingCommunications;
 
 			lock(sinnerList){
 				//Check if source ip in dictionary
 				if (sinnerList.TryGetValue (sinner, out existingCommunications)) {
 					//check if it is the first time they talk
-					if (existingCommunications.ContainsKey (tracker) {
+					if (existingCommunications.ContainsKey (tracker)) {
 						existingCommunications [tracker] = (int)existingCommunications [tracker] + 1;
 					} else {
 						existingCommunications [tracker] = 1;
@@ -66,7 +66,7 @@ namespace DADStormProcess {
 
 		}
 
-		public override void restart(){
+		public override void reset(){
 			sinnerList = new Dictionary<string,Hashtable>();
 		}
 	}

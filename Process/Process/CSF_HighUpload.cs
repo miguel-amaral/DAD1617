@@ -9,7 +9,7 @@ namespace DADStormProcess {
 	public class CSF_HighUpload : CSF_HighDataDiffPeers {
 
 		//Setup
-		private const minimumHighUpload = 1000*1000*1000; //1000 MB
+		private const int minimumHighUpload = 1000*1000*1000; //1000 MB
 
 		public override void processTuple (IList<string> tuple) {
 			string destIp   = tuple [destinIpIndex];
@@ -26,7 +26,7 @@ namespace DADStormProcess {
 					Hashtable table = sourceEntry.Value;
 					int uploadSize = 0;
 					foreach (DictionaryEntry pair in table) {
-						uploadSize += pair.Value;
+						uploadSize += (int)pair.Value;
 					}
 					if( uploadSize > minimumHighUpload ){
 						toReturn += ip + " " + uploadSize + " ";

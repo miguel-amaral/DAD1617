@@ -115,14 +115,15 @@ namespace DADStormProcess {
 		/**
 		  * method that returns the next tuple to be processed
 		  */
-		private IList<string> nextTuple ()
-		{
-			lock (dllArgs) {
+		private IList<string> nextTuple ()	{
+            IList<string> nextArg = null;
+
+            lock (dllArgs) {
 				while (dllArgs.Count == 0 || frozen) {
 					if (frozen) {
 						ProcessDebug ("frozen: " + dllArgs.Count + " tuples are waiting");
 					} else {
-						//Read 1 tuple from each file?
+						//Read 1 tuple from each file
 						lock (filesLocation) {
 							if (filesLocation.Count > 0) {
 								foreach (string fileLocation in filesLocation) {
@@ -136,15 +137,14 @@ namespace DADStormProcess {
 										}
 									}
 									filesToRemove = new List<string> ();
-								}
-								continue; // try again
+								} continue; // try again
 							}
 						}
 					}
 					Monitor.Wait (dllArgs);
-				}
-				IList<string> nextArg = dllArgs.Dequeue();
-				return nextArg;
+                }
+                nextArg = dllArgs.Dequeue();
+                return nextArg;
 			}
 		}
 
@@ -152,8 +152,7 @@ namespace DADStormProcess {
 		  * method that reads from the file all the tuples in it
 		  * might need to become process and avoiding reading same tuple two times.. :(
 		  */
-		private void readTuple (string fileLocation)
-		{
+		private void readTuple (string fileLocation) {
 			string[] content;
 			if (!filesContent.TryGetValue (fileLocation, out content)) {
 				//Not found -> File not yet read
@@ -250,7 +249,7 @@ namespace DADStormProcess {
 
 				object resultObject = this.generateStrategy.generateTuple(finalTuple);
 
-				List<IList<string>> result = resultObject as List<IList<string>>;
+				IList<IList<string>> result = (IList < IList < string >> ) resultObject;
 				if(result != null){
 					//Successful cast
 					foreach(List<string> tuple in result){
@@ -258,7 +257,7 @@ namespace DADStormProcess {
 					}
 				} else {
 					ProcessError ("returned " + resultObject.GetType ().ToString());
-					throw new Exception ("dll method did not return a List<List<string>>");
+					throw new Exception ("dll method did not return a IList<IList<string>>");
 				}
 
 				//By default milliseconds is zero, but puppet master may want to slow things down..
@@ -403,7 +402,7 @@ namespace DADStormProcess {
 
 
 		public string status ()	{
-			reportBack() //CSF easy way to force report
+            reportBack(); //CSF easy way to force report
 			string status = "";
 			if(this.frozen) {
 				status += "FROZEN | ";
@@ -431,7 +430,7 @@ namespace DADStormProcess {
 
 			int argsSize = args.Length;
 			try {
-				int numberOfParameters = 6;
+				int numberOfParameters = 7;
 				//Configuring Process
 				if (argsSize >= numberOfParameters) {
 					string strPort = args[0];
@@ -441,6 +440,7 @@ namespace DADStormProcess {
 					string routingTechnic      = args[4];
 					//Bool that indicates whether full logging or not
 					bool   fullLogging         = Convert.ToBoolean(args[5]);
+                    string ip = args[6];
 
 					string[] dllArgsInputMain = null;
 					if (argsSize > numberOfParameters) {
@@ -453,8 +453,6 @@ namespace DADStormProcess {
 					if(parsedPort < 10002 || parsedPort > 65535) {
 						throw new FormatException("Port out of possible range");
 					}
-					IPHostEntry host = Dns.GetHostEntry (Dns.GetHostName ());
-					string ip= host.AddressList [0].ToString();
 					ConnectionPack myCp = new ConnectionPack(ip,parsedPort);
 
 					sp.ProcessStaticArgs = dllArgsInputMain;

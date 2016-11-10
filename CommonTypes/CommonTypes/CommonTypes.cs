@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 
 public static class DEBUG{
 	public const bool DAEMON  = true;
-	public const bool PROCESS = false;
+	public const bool PROCESS = true;
 	public const bool PUPPET  = true;
 }
 

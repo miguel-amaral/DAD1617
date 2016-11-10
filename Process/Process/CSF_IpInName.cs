@@ -72,7 +72,7 @@ namespace DADStormProcess {
 			}
 		}
 
-		public override void restart(){
+		public override void reset(){
 			lock(sinnerList){
 				sinnerList = new Dictionary<string,Hashtable>();
 			}

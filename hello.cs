@@ -5,11 +5,11 @@ using System.Collections.Generic;
 
 public class Hello
 {
-	public IList<List<string>> plusString(List<string> old){
+	public IList<IList<string>> plusString(IList<string> old){
 			int i = old.Count;
 			string print = "from hello.dll method plusString:" + i;
 			old.Add(i.ToString ());
-			List<List<string>> neW = new List<List<string>>();
+			List<IList<string>> neW = new List<IList<string>>();
 			neW.Add(old);
 			System.Console.WriteLine(print);
 

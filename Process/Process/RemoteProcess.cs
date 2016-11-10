@@ -45,5 +45,17 @@ namespace DADStormProcess {
 		public string status () {
 			return ServerProcess.Instance.status ();
 		}
-	}
+
+
+        //CSF
+        public void reportBack() {
+            ServerProcess.Instance.reportBack();
+        }
+
+        //CSF
+        public void reset() {
+            ServerProcess.Instance.reset();
+        }
+
+    }
 }

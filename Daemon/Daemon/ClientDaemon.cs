@@ -16,23 +16,15 @@ namespace Daemon {
 		}
 
 		public string ping() {
-			if (remoteDaemon != null) {
-				return remoteDaemon.ping();
-			} else {
-				return "TODO You did not connect to Daemon yet";
-			}
+			return remoteDaemon.ping();
 		}
 
 		/**
 		  * Interface provided for the creation of a remote Thread
 		  */
-		public void newThread(string dllName, string className , string methodName, string processPort , string routing, object[] args = null) {
-			if (remoteDaemon != null) {
-				remoteDaemon.newThread(dllName, className , methodName, processPort, routing , args);
-			} else {
-				//TODO
-				System.Console.WriteLine("TODO: YOU DID NOT CONNECT YET to DAEMON;");
-			}
+		public void newThread(string dllName, string className , string methodName, string processPort, string proccessIp, string routing, object[] args = null) {
+			remoteDaemon.newThread(dllName, className , methodName, processPort, proccessIp, routing , args);
+
 		}
 
 

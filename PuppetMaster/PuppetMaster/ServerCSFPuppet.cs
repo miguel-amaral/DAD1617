@@ -9,15 +9,74 @@ using System.Collections.Generic;
 
 
 namespace PuppetMaster {
-	public class ServerCSFPuppet {
-		public virtual void extraCommands(string[] command) {
-			if (splitStr [0].Equals ("report", StringComparison.OrdinalIgnoreCase)) {
-
-			} else if (splitStr [0].Equals ("restart", StringComparison.OrdinalIgnoreCase)) {
-
+	public class ServerCSFPuppet : ServerPuppet {
+		public override void extraCommands(string[] command) {
+			if (command[0].Equals ("report", StringComparison.OrdinalIgnoreCase)) {
+                this.doOperation("report");
+			} else if (command[0].Equals ("reset", StringComparison.OrdinalIgnoreCase)) {
+                this.doOperation("reset");
 			}
 		}
 
-		
-	}
+        private void doOperation(string operation) {
+            foreach (string op in operatorsConPacks.Keys) {
+                doOperation(operation,op);
+            }
+        }
+
+        private void doOperation(string operation, string operatorID) {
+            List<ConnectionPack> listConPacks;
+            if (operatorsConPacks.TryGetValue(operatorID, out listConPacks)) {
+                foreach (ConnectionPack cp in listConPacks) {
+                    doOperation(operation,cp);
+                }
+            }
+        }
+
+
+        private void doOperation(string operation, ConnectionPack cp) {
+            DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess(cp);
+            if(operation.Equals("report", StringComparison.OrdinalIgnoreCase)) {
+                process.reportBack();
+            }
+            if (operation.Equals("reset", StringComparison.OrdinalIgnoreCase)) {
+                process.reset();
+            }
+        }
+
+
+        public static new void Main(string[] args)
+        {
+            System.Console.WriteLine("CSF");
+            TcpChannel channel = new TcpChannel(port);
+            ChannelServices.RegisterChannel(channel, false);
+            PuppetMasterRemoteServerObject myServerObj = new PuppetMasterRemoteServerObject();
+            RemotingServices.Marshal(myServerObj, "PuppetMasterRemoteServerObject", typeof(PuppetMasterRemoteServerObject));
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            System.Console.WriteLine("PuppetMaster Server Online : port: " + port);
+            Console.ResetColor();
+            System.Console.WriteLine("<enter> to exit...");
+
+            System.Console.WriteLine("Hello, World! Im Controller and I will be your captain today");
+
+            string configFileLocation;
+            ServerCSFPuppet sp = (ServerCSFPuppet) ServerPuppet.CSFInstance;
+            if (args.Length > 0)
+            {
+                configFileLocation = args[0];
+                sp.readCommandsFromFile(configFileLocation);
+            }
+
+            System.Console.WriteLine("we are now in manual writing commands, write EXIT to stop");
+            string line = System.Console.ReadLine();
+            while (!line.Equals("exit", StringComparison.OrdinalIgnoreCase))
+            {
+                sp.doCommand(line);
+                line = System.Console.ReadLine();
+            }
+
+            System.Console.WriteLine("Goodbye World! It was a pleasure to serve you today");
+        }
+    }
 }

@@ -1,6 +1,0 @@
-OP1 input ops CSF_ip.data rep fact 2 routing hashing(1) address tcp://localhost:11000/op operator spec CUSTOM CSF_IpInName CSF_IpInName CSF_IpInName
-wait 1000
-status
-start OP1
-wait 1000
-status

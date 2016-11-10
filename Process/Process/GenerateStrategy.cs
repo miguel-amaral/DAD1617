@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.IO;
 
 namespace DADStormProcess {
 
@@ -22,7 +24,7 @@ namespace DADStormProcess {
 		protected const int sizeOfPacketIndex = 2; //TODO
 		public abstract void processTuple(IList<string> tuple);
 
-		protected virtual List<IList<string>> defaultReturn (IList<string> l) {
+        protected virtual IList<IList<string>> defaultReturn (IList<string> l) {
 			List<IList<string>> result = new List<IList<string>> ();
 			result.Add (l);
 			return result;
@@ -30,7 +32,7 @@ namespace DADStormProcess {
 
 		// always returns the tuple it receives
 		public override object generateTuple (IList<string> tuple) {
-			var t = Task.Run(() => this.processTuple() );//TemplateMethod
+			var t = Task.Run(() => this.processTuple(tuple) );//TemplateMethod
 			return defaultReturn (tuple);
 		}
 	}
@@ -42,7 +44,7 @@ namespace DADStormProcess {
 		private object   obj;
 
 		public CustomDll(string dllName, string className, string methodName){
-			this.assembly = Assembly.LoadFile (@dllName);
+            this.assembly = Assembly.Load(File.ReadAllBytes(dllName));
 			this.type = assembly.GetType (className);
 			this.methodName = methodName;
 			this.obj = Activator.CreateInstance (type);

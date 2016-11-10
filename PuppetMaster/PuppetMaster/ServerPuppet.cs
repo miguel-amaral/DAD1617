@@ -6,12 +6,14 @@ using System.Runtime.Remoting.Channels.Tcp;
 
 using System.Threading;
 using System.Collections.Generic;
-
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace PuppetMaster {
 	public class ServerPuppet {
 
-		private static int port = 10000;
+        protected static int port = 10001;
+        private static int daemonPort = 10000;
 		private bool fullLog = false;
 		private bool firstStart = true;
 		private static ServerPuppet instance = null;
@@ -20,7 +22,7 @@ namespace PuppetMaster {
 		private Dictionary<string, List<string>> downStreamOperators = new Dictionary<string, List<string>>();
 		// key is operator name
 		// value is List of connections packs off said operator
-		private Dictionary<string, List<ConnectionPack>> operatorsConPacks = new Dictionary<string, List<ConnectionPack>>();
+		protected Dictionary<string, List<ConnectionPack>> operatorsConPacks = new Dictionary<string, List<ConnectionPack>>();
 		public static ServerPuppet Instance {
 			get {
 				if (instance == null) {
@@ -30,6 +32,52 @@ namespace PuppetMaster {
 				return instance;
 			}
 		}
+        public static ServerPuppet CSFInstance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    System.Console.WriteLine("New ServerCSFPuppet instance created");
+                    instance = new ServerCSFPuppet();
+                }
+                return instance;
+            }
+        }
+        
+
+        private void doStatus(string[] command)  {
+            if (command.Length > 2) {
+                doStatus(command[1], Int32.Parse(command[2]));
+            }
+            else if (command.Length > 1) {
+                doStatus(command[1]);
+            }
+            else {
+                doStatus();
+            }
+        }
+        private void doStatus(string opID, int index) {
+            List<ConnectionPack> listConPacks;
+            if (operatorsConPacks.TryGetValue(opID, out listConPacks)) {
+                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                System.Console.WriteLine("Operator: " + opID + " status");
+                Console.ResetColor();
+                doStatus(listConPacks[index]);
+            }
+        }
+        private void doStatus(ConnectionPack cp) {
+            DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess(cp);
+            string status = process.status();
+            if (status.Equals("Machine Failed")) {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
+            else {
+                Console.ForegroundColor = ConsoleColor.Green;
+            }
+            System.Console.WriteLine(cp + " " + status);
+            Console.ResetColor();
+        }
 
 		private void doStatus (string opID)	{
 			List<ConnectionPack> listConPacks;
@@ -38,19 +86,9 @@ namespace PuppetMaster {
 				System.Console.WriteLine ("Operator: " + opID + " status");
 				Console.ResetColor();
 				foreach (ConnectionPack cp in listConPacks) {
-					DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess (cp);
-					string status = process.status ();
-					if (status.Equals ("Machine Failed")) {
-						Console.ForegroundColor = ConsoleColor.Red;
-					} else  {
-						Console.ForegroundColor = ConsoleColor.Green;
-					}
-					System.Console.WriteLine (cp + " " + status);
-					Console.ResetColor();
+                    doStatus(cp);
 				}
 			}
-
-
 		}
 
 		private void doStatus() {
@@ -65,7 +103,7 @@ namespace PuppetMaster {
 		private void doFirstStartConnections ()	{
 			if (firstStart) {
 				System.Console.WriteLine ();
-				System.Console.WriteLine ("Deploying Connections in network");
+				PuppetDebug ("Deploying Connections in network");
 				System.Console.WriteLine ();
 				//Creating the network betwen all operators
 				foreach (KeyValuePair<string, List<string>> item in downStreamOperators) {
@@ -85,7 +123,7 @@ namespace PuppetMaster {
 								if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
 									//for each replica in the receivingOperator
 									//foreach (ConnectionPack receivingPack in receivingReplicas) {
-									System.Console.WriteLine ("Added Connection\nOutOperator: " + outPack + " Receiver: " + receiving_operator);
+									PuppetDebug ("Connection: Out: " + outPack + " In: " + receiving_operator);
 									outReplica.addDownStreamOperator (receivingReplicas);
 									//}
 								}
@@ -98,7 +136,7 @@ namespace PuppetMaster {
 							//Getting list of receiving replicas of operator
 							if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
 								//for each replica in the receivingOperator
-								System.Console.WriteLine ("adding file: " + item.Key + " to: " + receiving_operator);
+								PuppetDebug ("adding file: " + item.Key + " to: " + receiving_operator);
 								foreach (ConnectionPack receivingPack in receivingReplicas) {
 									DADStormProcess.ClientProcess receivingReplica = new DADStormProcess.ClientProcess (receivingPack);
 									receivingReplica.addFile (item.Key);
@@ -107,9 +145,8 @@ namespace PuppetMaster {
 						}
 					}
 				}
-				IPHostEntry host = Dns.GetHostEntry (Dns.GetHostName ());
-				string ip = host.AddressList [0].ToString();
-				ConnectionPack myConPack = new ConnectionPack (ip,port);
+                string ip = getMyIp();
+                ConnectionPack myConPack = new ConnectionPack (ip,port);
 				foreach(List<ConnectionPack> list in operatorsConPacks.Values) {
 					foreach(ConnectionPack cp in list){
 						DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess (cp);
@@ -158,7 +195,7 @@ namespace PuppetMaster {
 				}
 
 			} else {
-				System.Console.WriteLine("Operator: " + operator_id + " not in list");
+				PuppetError("Operator: " + operator_id + " not in list");
 			}
 		}
 
@@ -205,15 +242,7 @@ namespace PuppetMaster {
 			if (splitStr.Length == 0) {
 				return;
 			} else if (splitStr [0].Equals ("status", StringComparison.OrdinalIgnoreCase)) {
-				if(splitStr.Length > 1) {
-					doStatus (splitStr [1]);
-				} else {
-					doStatus ();
-				}
-			} else if ((splitStr [1].Equals ("input", StringComparison.OrdinalIgnoreCase) && splitStr [2].Equals ("ops", StringComparison.OrdinalIgnoreCase))
-			    || splitStr [1].Equals ("input_ops", StringComparison.OrdinalIgnoreCase)) {
-				this.createNewOperator (splitStr);
-				//Process files TODO this.
+                doStatus(splitStr);
 			} else if (splitStr [0].Equals ("freeze", StringComparison.OrdinalIgnoreCase)
 			           || splitStr [0].Equals ("unfree", StringComparison.OrdinalIgnoreCase)
 			           || splitStr [0].Equals ("crash", StringComparison.OrdinalIgnoreCase)
@@ -228,15 +257,19 @@ namespace PuppetMaster {
 			} else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
 				//TODO
 				//this.fullLog = splitStr [1].Equals ("full", StringComparison.OrdinalIgnoreCase);
-			} else {
+			} else if (splitStr.Length > 1 && ((splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase))
+                      || splitStr[1].Equals("input_ops", StringComparison.OrdinalIgnoreCase))) {
+                this.createNewOperator(splitStr);
+                //Process files TODO this.
+            } else {
 				//nothing so far, maybe an extra command
 				this.extraCommands(splitStr);
 			}
 		}
 
-		public virtual void extraCommands(string[] command) {}
+		public virtual void extraCommands(string[] command) { /*CSF will add its own commands*/ }
 
-		private void readCommandsFromFile (string fileLocation){
+		protected void readCommandsFromFile (string fileLocation){
 			String line;
 			// Read the file and display it line by line.
 			System.IO.StreamReader file = new System.IO.StreamReader(fileLocation);
@@ -310,14 +343,12 @@ namespace PuppetMaster {
 
 				string ip = parsedUrl [1];
 				if (ip.Equals ("localhost", StringComparison.OrdinalIgnoreCase)) {
-					IPHostEntry host = Dns.GetHostEntry (Dns.GetHostName ());
-					ip = host.AddressList [0].ToString();
-				}
+                    ip = getMyIp();
+                }
 				ConnectionPack cp = new ConnectionPack (ip, Int32.Parse (parsedUrl [2]));
 				currentConnectionPacks.Add (cp);
 				counter++;
 			}
-			System.Console.WriteLine("Operator: " + current_operator_id + " has " + currentConnectionPacks.Count + " replicas");
 			operatorsConPacks.Add (current_operator_id, currentConnectionPacks);
 
 			if (splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase)) {
@@ -360,15 +391,38 @@ namespace PuppetMaster {
 			//staticAsrguments = null;
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
-				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, 10001),fullLog);
-				cd.newThread (dll, className, methodName, cp.Port.ToString(), routing,staticAsrguments);
+				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, daemonPort),fullLog);
+				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, routing,staticAsrguments);
 			}
 			//Make sure everything is created
 			Thread.Sleep (100);
+            PuppetDebug("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
+        }
 
+        private string getMyIp() {
+            // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection) 
+            NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (NetworkInterface network in networkInterfaces)
+            {
+                // Read the IP configuration for each network 
+                IPInterfaceProperties properties = network.GetIPProperties();
 
+                // Each network interface may have multiple IP addresses 
+                foreach (IPAddressInformation address in properties.UnicastAddresses)
+                {
+                    // We're only interested in IPv4 addresses for now 
+                    if (address.Address.AddressFamily != AddressFamily.InterNetwork)
+                        continue;
 
-		}
+                    // Ignore loopback addresses (e.g., 127.0.0.1) 
+                    if (IPAddress.IsLoopback(address.Address))
+                        continue;
+
+                    return address.Address.ToString();
+                }
+            }
+            return "localhost";
+        }
 
 		public void logTupple(string senderUrl, IList<string> tuple){
 			//tuple replica URL, < list − of − tuple − f ields >
@@ -380,15 +434,25 @@ namespace PuppetMaster {
 			System.Console.WriteLine(toPrint);
 		}
 
-		public static void Main (string[] args)
-		{
+        private void PuppetDebug(string msg) {
+            System.Console.WriteLine("[ PuppetMaster ] " + msg);
+        }
+        private void PuppetError(string msg) {
+            Console.ForegroundColor = ConsoleColor.Red;
+            System.Console.WriteLine("[ Error ] " + msg);
+            Console.ResetColor();
+
+        }
+        public static void Main (string[] args)	{
 			TcpChannel channel = new TcpChannel (port);
 			ChannelServices.RegisterChannel (channel, false);
 			PuppetMasterRemoteServerObject myServerObj = new PuppetMasterRemoteServerObject ();
 			RemotingServices.Marshal (myServerObj, "PuppetMasterRemoteServerObject", typeof(PuppetMasterRemoteServerObject));
 
-			System.Console.WriteLine ("PuppetMaster Server Online : port: " + port);
-			System.Console.WriteLine ("<enter> to exit...");
+            Console.ForegroundColor = ConsoleColor.Green;
+            System.Console.WriteLine ("PuppetMaster Server Online : port: " + port);
+            Console.ResetColor();
+            System.Console.WriteLine ("<enter> to exit...");
 
 			System.Console.WriteLine ("Hello, World! Im Controller and I will be your captain today");
 
@@ -397,87 +461,8 @@ namespace PuppetMaster {
 			if (args.Length > 0) {
 				configFileLocation = args [0];
 				sp.readCommandsFromFile (configFileLocation);
-
 			}
-			/*
-				//string pc1   = "lab7p2";
-				string pc2 = "localhost";
-				int port1 = 42154;
-				int port2 = 42155;
-				string arg1 = "olá";
-				string arg2 = "mundo!";
-				string[] argumentos = { arg1, arg2 };
-				argumentos = null;
 
-				//		Daemon.ClientDaemon daemon1 = new Daemon.ClientDaemon();
-				//		daemon1.connect("10001",pc1);
-				//		System.Console.WriteLine("daemon 1: "+daemon1.ping());
-
-				try {
-					ConnectionPack cp_daemon = new ConnectionPack (pc2, 10001);
-					Daemon.ClientDaemon daemon2 = new Daemon.ClientDaemon (cp_daemon, false);
-					System.Console.WriteLine ("daemon 2: " + daemon2.ping ());
-
-					//	daemon1.newThread( "hello.dll" , "Hello" , "Hello0", port1);
-					daemon2.newThread ("hello.dll", "Hello", "retornaInt", port2.ToString (),"", argumentos);
-					daemon2.newThread ("hello.dll", "Hello", "retornaInt", port1.ToString (),"", argumentos);
-					argumentos = new string[2];
-					argumentos [0] = arg2;
-					argumentos [1] = arg1;
-					//			daemon2.newThread( "hello.dll" , "Hello" , "Hello2", port1, argumentos);
-					//		daemon2.newThread( "hello.dll" , "Hello" , "Main", port1, argumentos);
-
-
-					// Allow for the creation of services
-					// Kinda of start method
-					Thread.Sleep (1000);
-
-					ConnectionPack cp_process1 = new ConnectionPack (pc2, port2);
-					ConnectionPack cp_process2 = new ConnectionPack (pc2, port1);
-					//	DADStormProcess.ClientProcess process1 = new DADStormProcess.ClientProcess();
-					DADStormProcess.ClientProcess process2 = new DADStormProcess.ClientProcess (cp_process1);
-					DADStormProcess.ClientProcess process3 = new DADStormProcess.ClientProcess (cp_process2);
-
-					//DADStormProcess.ClientProcess process3 = new DADStormProcess.ClientProcess();
-
-					//	process1.connect(port1,pc1);
-
-
-					//process2.addDownStreamOperator(cp_process2);
-					process2.addTuple (argumentos);
-					process2.addTuple (argumentos);
-					process2.addTuple (argumentos);
-					process2.addTuple (argumentos);
-					process2.addTuple (argumentos);
-					process2.addTuple (argumentos);
-					process2.addTuple (argumentos);
-					process2.addTuple (argumentos);
-
-					List<ConnectionPack> replicas = new List<ConnectionPack>();
-					replicas.Add(cp_process2);
-					process2.addDownStreamOperator (replicas);
-
-					Thread.Sleep (1000);
-
-					process2.start ();
-					Thread.Sleep (5000);
-
-					process3.start ();
-
-
-
-					//			process3.connect(port1,pc2);
-
-					//	System.Console.WriteLine("process 1: "+process1.ping());
-					System.Console.WriteLine ("process 2: " + process2.ping ());
-					//			System.Console.WriteLine("process 3: "+process3.ping());
-				} catch (RemotingException e) {
-					Console.ForegroundColor = ConsoleColor.Red;
-					System.Console.WriteLine ("Connection failed, you sure Daemon Server is online at ip: " + pc2 + " ? ");
-					System.Console.WriteLine ("Reason: " + e.Message);
-					Console.ResetColor ();
-				}
-				*/
 			System.Console.WriteLine("we are now in manual writing commands, write EXIT to stop");
 			string line = System.Console.ReadLine ();
 			while(!line.Equals("exit", StringComparison.OrdinalIgnoreCase )) {
