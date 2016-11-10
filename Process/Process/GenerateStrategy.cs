@@ -30,7 +30,7 @@ namespace DADStormProcess {
 
 		// always returns the tuple it receives
 		public override object generateTuple (IList<string> tuple) {
-			this.processTuple(); //TemplateMethod
+			var t = Task.Run(() => this.processTuple() );//TemplateMethod
 			return defaultReturn (tuple);
 		}
 	}
