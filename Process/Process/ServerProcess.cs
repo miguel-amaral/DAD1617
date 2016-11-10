@@ -100,28 +100,16 @@ namespace DADStormProcess {
 			this.RoutTechnic	 = technic;
 			if(className.Equals("CSF_IpInName")){
 				this.generateStrategy = new CSF_IpInName ();
-			}else {
+			} else if(className.Equals("CSF_HighDataDiffPeers")){
+				this.generateStrategy = new CSF_HighDataDiffPeers ();
+			} else if(className.Equals("CSF_HighUpload")){
+				this.generateStrategy = new CSF_HighUpload ();
+			} else if(className.Equals("CSF_KnownTrackers")){
+				this.generateStrategy = new CSF_KnownTrackers ();
+			} else {
 				this.generateStrategy = new CustomDll(dllName, className, methodName);
 			}
-
 		}
-
-		//		public ServerProcess(string strPort, string dllName, string className, string methodName, string[] processArgs){
-		//
-		//			try {
-		//				int parsedPort = Int32.Parse(strPort);
-		//				if(parsedPort < 10002 || parsedPort > 65535) {
-		//					throw new FormatException("Port out of possible");
-		//				}
-		//				port = parsedPort;
-		//				this.dllName    = dllName;
-		//				this.className  = className;
-		//				this.methodName = methodName;
-		//				this.processArgs= processArgs;
-		//			} catch (FormatException e) {
-		//				Console.WriteLine(e.Message);
-		//			}
-		//		}
 
 
 		/**
@@ -402,8 +390,20 @@ namespace DADStormProcess {
 			executeProcess();
 		}
 
+		//CSF method
+		public void reportBack(){
+			this.generateStrategy.reportBack ();
+		}
+
+		//CSF method
+		public void reset(){
+			this.generateStrategy.reset ();
+		}
+
+
+
 		public string status ()	{
-			this.generateStrategy.reportBack (); //CSF easy way to force report
+			reportBack() //CSF easy way to force report
 			string status = "";
 			if(this.frozen) {
 				status += "FROZEN | ";

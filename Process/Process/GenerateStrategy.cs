@@ -7,12 +7,31 @@ namespace DADStormProcess {
 	public abstract class GenerateStrategy{
 		public abstract object generateTuple(IList<string> finalTuple);
 
-		//method only used in CSF
+		//methods only used in CSF
 		public virtual void reportBack () {}
-		protected List<IList<string>> defaultReturn (IList<string> l) {
+		public virtual void reset ()      {}
+	}
+
+	/// <summary>
+	/// Class that all CSF related class in inherit from, it will contain the tuple structure
+	/// </summary>
+	public abstract class CSF_TupleStructure  : GenerateStrategy {
+		//Setup
+		protected const int sourceIpIndex = 0; //TODO
+		protected const int destinIpIndex = 1; //TODO
+		protected const int sizeOfPacketIndex = 2; //TODO
+		public abstract void processTuple(IList<string> tuple);
+
+		protected virtual List<IList<string>> defaultReturn (IList<string> l) {
 			List<IList<string>> result = new List<IList<string>> ();
 			result.Add (l);
 			return result;
+		}
+
+		// always returns the tuple it receives
+		public override object generateTuple (IList<string> tuple) {
+			var t = Task.Run(() => this.processTuple() );//TemplateMethod
+			return defaultReturn (tuple);
 		}
 	}
 
@@ -36,4 +55,3 @@ namespace DADStormProcess {
 		}
 	}
 }
-
