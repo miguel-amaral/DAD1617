@@ -9,7 +9,7 @@ namespace DADStormProcess {
 	public class CSF_HighDataDiffPeers : CSF_TupleStructure {
 
 		//Setup
-		private const int minimumDataConnection = 100*1000*1000; //100Mb
+		private const int minimumDataConnection = 100*1024*1024; //100MB
 
 		//String is source ip; hastable key -> destIp , value -> size of communications
 		protected Dictionary<string,Hashtable> connections = new Dictionary<string,Hashtable>();

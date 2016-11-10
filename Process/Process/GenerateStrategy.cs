@@ -19,9 +19,14 @@ namespace DADStormProcess {
 	/// </summary>
 	public abstract class CSF_TupleStructure  : GenerateStrategy {
 		//Setup
-		protected const int sourceIpIndex = 0; //TODO
-		protected const int destinIpIndex = 1; //TODO
-		protected const int sizeOfPacketIndex = 2; //TODO
+		protected const int sourceIpIndex = 0;
+		protected const int sourcePortIndex = 1;
+		protected const int destinIpIndex = 2;
+		protected const int destinPortIndex = 3;
+		protected const int sizeOfPacketIndex = 4;
+		protected const int protocolIndex = 5;
+//		protected const int Index = 10;
+
 		public abstract void processTuple(IList<string> tuple);
 
         protected virtual IList<IList<string>> defaultReturn (IList<string> l) {
@@ -32,7 +37,7 @@ namespace DADStormProcess {
 
 		// always returns the tuple it receives
 		public override object generateTuple (IList<string> tuple) {
-			var t = Task.Run(() => this.processTuple(tuple) );//TemplateMethod
+			Task.Run(() => this.processTuple(tuple) );//TemplateMethod
 			return defaultReturn (tuple);
 		}
 	}

@@ -9,7 +9,7 @@ namespace DADStormProcess {
 	public class CSF_HighUpload : CSF_HighDataDiffPeers {
 
 		//Setup
-		private const int minimumHighUpload = 1000*1000*1000; //1000 MB
+		private const int minimumHighUpload = 102*1024*1024; //100 MB
 
 		public override void processTuple (IList<string> tuple) {
 			string destIp   = tuple [destinIpIndex];

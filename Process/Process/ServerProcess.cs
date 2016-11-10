@@ -166,7 +166,10 @@ namespace DADStormProcess {
 					string line = content [index];
 					String[] tuple = line.Split (new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
 
-					if (!tuple [0].StartsWith ("%")) {
+					if(tuple.Length == 0){
+						//Ignore
+					}
+					else if (!tuple [0].StartsWith ("%")) {
 						ProcessDebug ("Read Tuple: " + line);
 						//Only adds non commentaries
 						IList<string> toAdd = new List<string> ();
