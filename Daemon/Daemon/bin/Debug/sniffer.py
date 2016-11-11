@@ -1,13 +1,14 @@
 import fileinput
-PROTOCOLS_IGNORE = ('ARP', 'ARP,')
+PROTOCOLS_IGNORE = ('ARP', 'ARP,', 'ICMP')
 def main():
 	for line in fileinput.input():
 		words = line.split(" ")
+		skip = False
+		for protocol in PROTOCOLS_IGNORE:
+			if protocol in line:
+				skip = True
 
-		if words[1] in PROTOCOLS_IGNORE:
-			continue
-
-		if words[2] == "Unknown":
+		if skip or words[2] == "Unknown":
 			continue
 
 		source = words[2].split(".")
