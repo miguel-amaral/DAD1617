@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <StartArguments>csf_ip_test.txt</StartArguments>
+    <StartArguments>first_config.txt</StartArguments>
     <StartWorkingDirectory>C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\</StartWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup>

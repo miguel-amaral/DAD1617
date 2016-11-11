@@ -14,6 +14,7 @@ namespace DADStormProcess {
 
 		private static ServerProcess instance = null;
 		private int      milliseconds =0;
+        //private decimal  lastRead = 0;
 		private bool     frozen  = true;
 		private bool     fullLog = false;
 		private bool     primmary= true;
@@ -78,39 +79,6 @@ namespace DADStormProcess {
 				return instance;
 			}
 		}
-
-		/// <summary>
-		/// Method
-		/// </summary>
-		public void buildServer(ConnectionPack myCp,string dllName,string className,string methodName,string routingTechnic,bool   fullLogging ){
-			this.MyConPack 		 = myCp;
-			this.FullLog			 = fullLogging;
-
-			RoutingTechinic technic = null;
-			if ( routingTechnic.Equals("random", StringComparison.OrdinalIgnoreCase) ) {
-				technic = new DADStormProcess.RandomRouting();
-			} else if ( routingTechnic.StartsWith("hashing", StringComparison.OrdinalIgnoreCase) ) {
-				String[] splitStr = routingTechnic.Split (new[] { '(', ')'}, StringSplitOptions.RemoveEmptyEntries);
-				int hashingNumber = Int32.Parse(splitStr[1]);
-				technic = new DADStormProcess.Hashing(hashingNumber);
-			// BY default lets use Primmary routing
-			} else {
-				technic = new DADStormProcess.Primmary();
-			}
-			this.RoutTechnic	 = technic;
-			if(className.Equals("CSF_IpInName")){
-				this.generateStrategy = new CSF_IpInName ();
-			} else if(className.Equals("CSF_HighDataDiffPeers")){
-				this.generateStrategy = new CSF_HighDataDiffPeers ();
-			} else if(className.Equals("CSF_HighUpload")){
-				this.generateStrategy = new CSF_HighUpload ();
-			} else if(className.Equals("CSF_KnownTrackers")){
-				this.generateStrategy = new CSF_KnownTrackers ();
-			} else {
-				this.generateStrategy = new CustomDll(dllName, className, methodName);
-			}
-		}
-
 
 		/**
 		  * method that returns the next tuple to be processed
@@ -178,6 +146,7 @@ namespace DADStormProcess {
 						}
 						this.addTuple (toAdd);
 					}
+                    //lastRead = decimal.Divide(index, content.Length) ;//Operacao de divisao
 				} else {
 					ProcessDebug ("file: " + fileLocation + " has been read completly");
 					//File has been read totally, removing from known files
@@ -210,9 +179,9 @@ namespace DADStormProcess {
 		/// </summary>
 		/// <param name="tuple">Tuple.</param>
 		private IList<string> addStaticArgs (IList<string> nextTuple)	{
-			IList<string> finalTuple;
+			IList<string> finalTuple = new List<string>();
 			if (processStaticArgs != null) {
-				finalTuple = processStaticArgs;
+				finalTuple = new List<string>(processStaticArgs);
 				foreach(string str in nextTuple){
 					finalTuple.Add (str);
 				}
@@ -251,12 +220,13 @@ namespace DADStormProcess {
 				IList<string> finalTuple = addStaticArgs(nextTuple);
 
 				object resultObject = this.generateStrategy.generateTuple(finalTuple);
-
 				IList<IList<string>> result = (IList < IList < string >> ) resultObject;
 				if(result != null){
 					//Successful cast
 					foreach(List<string> tuple in result){
-						emitTuple (tuple);
+                        if(tuple.Count > 0){ //Lets ignore empty tuples shall we
+                            emitTuple(tuple);
+                        } 
 					}
 				} else {
 					ProcessError ("returned " + resultObject.GetType ().ToString());
@@ -313,13 +283,48 @@ namespace DADStormProcess {
 			}
 		}
 
-		/* -------------------------------------------------------------------- */
-		/* -------------------------------------------------------------------- */
-		/* --------------------------- Public Methods ------------------------- */
-		/* -------------------------------------------------------------------- */
-		/* -------------------------------------------------------------------- */
+        /* -------------------------------------------------------------------- */
+        /* -------------------------------------------------------------------- */
+        /* --------------------------- Public Methods ------------------------- */
+        /* -------------------------------------------------------------------- */
+        /* -------------------------------------------------------------------- */
 
-		public void addDownStreamOperator(List<ConnectionPack> cp){
+        /// <summary>
+        /// Setup the class
+        /// </summary>
+        public void buildServer(ConnectionPack myCp, string dllName, string className, string methodName, string routingTechnic, bool fullLogging)
+        {
+            this.MyConPack = myCp;
+            this.FullLog = fullLogging;
+
+            RoutingTechinic technic = null;
+            if (routingTechnic.Equals("random", StringComparison.OrdinalIgnoreCase)) {
+                technic = new DADStormProcess.RandomRouting();
+            } else if (routingTechnic.StartsWith("hashing", StringComparison.OrdinalIgnoreCase)) {
+                String[] splitStr = routingTechnic.Split(new[] { '(', ')' }, StringSplitOptions.RemoveEmptyEntries);
+                int hashingNumber = Int32.Parse(splitStr[1]);
+                technic = new DADStormProcess.Hashing(hashingNumber);
+                // BY default lets use Primmary routing
+            } else {
+                technic = new DADStormProcess.Primmary();
+            }
+
+            this.RoutTechnic = technic;
+
+            if (className.Equals("CSF_IpInName")) {
+                this.generateStrategy = new CSF_IpInName();
+            } else if (className.Equals("CSF_HighDataDiffPeers")) {
+                this.generateStrategy = new CSF_HighDataDiffPeers();
+            } else if (className.Equals("CSF_HighUpload")) {
+                this.generateStrategy = new CSF_HighUpload();
+            } else if (className.Equals("CSF_KnownTrackers")) {
+                this.generateStrategy = new CSF_KnownTrackers();
+            } else {
+                this.generateStrategy = new CustomDll(dllName, className, methodName);
+            }
+        }
+
+        public void addDownStreamOperator(List<ConnectionPack> cp){
 			ProcessDebug ("Down Stream Op added: " + cp);
 			downStreamNodes.Add ( cp );
 		}
@@ -414,8 +419,8 @@ namespace DADStormProcess {
 				status += "tuples waiting: " + dllArgs.Count;
 			}
 			lock (filesLocation) {
-				status += " | incomplete files: " + filesLocation.Count;
-			}
+                status += " | incomplete files: " + filesLocation.Count;//+ " : " +lastRead+" %";
+            }
 			return status;
 		}
 

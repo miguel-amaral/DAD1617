@@ -28,6 +28,7 @@ namespace PuppetMaster {
             List<ConnectionPack> listConPacks;
             if (operatorsConPacks.TryGetValue(operatorID, out listConPacks)) {
                 foreach (ConnectionPack cp in listConPacks) {
+                    Thread.Sleep(3000);
                     doOperation(operation,cp);
                 }
             }

@@ -49,11 +49,11 @@ namespace DADStormProcess {
 		private object   obj;
 
 		public CustomDll(string dllName, string className, string methodName){
+            System.Console.WriteLine("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName + "\r\n");
             this.assembly = Assembly.Load(File.ReadAllBytes(dllName));
 			this.type = assembly.GetType (className);
 			this.methodName = methodName;
 			this.obj = Activator.CreateInstance (type);
-			System.Console.WriteLine ("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName + "\r\n");
 		}
 
 		public override object generateTuple(IList<string> finalTuple) {

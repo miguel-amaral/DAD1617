@@ -51,5 +51,9 @@
       <Project>{74E6BA6A-1709-4A70-AB97-6492C3EEEB1C}</Project>
       <Name>CommonTypes</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\DADStorm\CustomOperators\CustomOperators.csproj">
+      <Project>{465207c3-a4ad-4fab-a2ce-d436176316d5}</Project>
+      <Name>CustomOperators</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

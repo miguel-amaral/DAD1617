@@ -1,6 +1,6 @@
 C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\PuppetMaster.exe
 C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\PuppetMaster.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\CommonTypes.exe
+C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\CommonTypes.dll
 C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\Daemon.exe
 C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\Process.exe
 C:\Users\ist178865\Source\Repos\DAD1617\PuppetMaster\PuppetMaster\bin\Debug\Daemon.pdb

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -38,6 +38,10 @@
     <Reference Include="System.Runtime.Remoting" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\DADStorm\CustomOperators\CustomOperators.csproj">
+      <Project>{465207c3-a4ad-4fab-a2ce-d436176316d5}</Project>
+      <Name>CustomOperators</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Process\Process\DADStormProcess.csproj">
       <Project>{D28DE0B3-FFD7-4E07-98F3-F1AB80DCB538}</Project>
       <Name>DADStormProcess</Name>

@@ -360,21 +360,24 @@ namespace PuppetMaster {
 			}
 
 			string operatorType = splitStr [counter++];
-			string dll       = null;
-			string className = null;
+			string dll       = "CommonTypes.dll";
+            string className = "Default";
 			string methodName= null;
+            string[] staticAsrguments = null;
 
-			if (operatorType.Equals ("CUSTOM", StringComparison.OrdinalIgnoreCase)) {
+
+            if (operatorType.Equals ("CUSTOM", StringComparison.OrdinalIgnoreCase)) {
 				dll        = splitStr [counter++];
 				className  = splitStr [counter++];
 				methodName = splitStr [counter++];
 			} else if (operatorType.Equals ("UNIQ", StringComparison.OrdinalIgnoreCase)) {
-				//field_number;
-			} else if (operatorType.Equals ("COUNT", StringComparison.OrdinalIgnoreCase)) {
-				//;
-			} else if (operatorType.Equals ("DUP", StringComparison.OrdinalIgnoreCase)) {
-				dll = "Default.dll";
-				className = "Default";
+                methodName = "Uniq";
+                string[] args = { splitStr [counter++] };
+                staticAsrguments = args;
+                //field_number;
+            } else if (operatorType.Equals ("COUNT", StringComparison.OrdinalIgnoreCase)) {
+                methodName = "Count";
+            } else if (operatorType.Equals ("DUP", StringComparison.OrdinalIgnoreCase)) {
 				methodName = "Dup";
 			} else if (operatorType.Equals ("FILTER", StringComparison.OrdinalIgnoreCase)) {
 				// field_number;
@@ -384,10 +387,6 @@ namespace PuppetMaster {
 
 
 			//XXX TODO
-			string arg1 = "olá";
-			string arg2 = "mundo!";
-			string[] staticAsrguments = { arg1, arg2 };
-			staticAsrguments = null;
 			//staticAsrguments = null;
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
