@@ -87,19 +87,45 @@ public class Default {
         }
     }
 
+	private IList<IList<string>> emptyTuple(){
+		List<IList<string>> returning = new List<IList<string>>();
+		IList<string> newTuple = new List<string>();
+		returning.Add(newTuple);
+		return returning;
+	}
+
     public IList<IList<string>> Uniq(IList<string> tuple) {
         int index = Int32.Parse(tuple[0]);
         tuple.RemoveAt(0);
         if ( tuploUnico(tuple,index) ) {
             return Dup(tuple);
         } else {
-            List<IList<string>> returning = new List<IList<string>>();
-            IList<string> newTuple = new List<string>();
-            returning.Add(newTuple);
-            return returning;
+			return emptyTuple();
         }
     }
 
+	//	FILTER field number, condition, value
+	public IList<IList<string>> Filter(IList<string> tuple) {
+		int index = Int32.Parse(tuple[0]);
+        tuple.RemoveAt(0);
+		string condition = tuple[0];
+		tuple.RemoveAt(0);
+		string staticValue = tuple[0];
+		tuple.RemoveAt(0);
+		string dinamicValue = tuple[index];
+
+		if(condition.Equals(">")){
+			if( staticValue > dinamicValue ){
+				return Dup(tuple);
+			}
+		} else if (condition.Equals("<")){
+			if( staticValue < dinamicValue ){
+				return Dup(tuple);
+			}
+		} else if (condition.Equals("="){
+			if( staticValue == dinamicValue ){
+				return Dup(tuple);
+			}
+		}
+		return emptyTuple();
 }
-
-

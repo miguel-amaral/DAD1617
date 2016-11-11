@@ -44,7 +44,7 @@ namespace PuppetMaster {
                 return instance;
             }
         }
-        
+
 
         private void doStatus(string[] command)  {
             if (command.Length > 2) {
@@ -380,40 +380,38 @@ namespace PuppetMaster {
             } else if (operatorType.Equals ("DUP", StringComparison.OrdinalIgnoreCase)) {
 				methodName = "Dup";
 			} else if (operatorType.Equals ("FILTER", StringComparison.OrdinalIgnoreCase)) {
-				// field_number;
-				// condition;
-				// value;
+                string field_number  = splitStr [counter++]; // field_number;
+                string condition     = splitStr [counter++]; // condition;
+                string comparedValue = splitStr [counter++]; // value;
+				string[] args = { field_number, condition, comparedValue };
 			}
 
-
-			//XXX TODO
-			//staticAsrguments = null;
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
 				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, daemonPort),fullLog);
 				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, routing,staticAsrguments);
 			}
-			//Make sure everything is created
+			//Make sure everything is created before we try anything else
 			Thread.Sleep (100);
             PuppetDebug("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
         }
 
         private string getMyIp() {
-            // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection) 
+            // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection)
             NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface network in networkInterfaces)
             {
-                // Read the IP configuration for each network 
+                // Read the IP configuration for each network
                 IPInterfaceProperties properties = network.GetIPProperties();
 
-                // Each network interface may have multiple IP addresses 
+                // Each network interface may have multiple IP addresses
                 foreach (IPAddressInformation address in properties.UnicastAddresses)
                 {
-                    // We're only interested in IPv4 addresses for now 
+                    // We're only interested in IPv4 addresses for now
                     if (address.Address.AddressFamily != AddressFamily.InterNetwork)
                         continue;
 
-                    // Ignore loopback addresses (e.g., 127.0.0.1) 
+                    // Ignore loopback addresses (e.g., 127.0.0.1)
                     if (IPAddress.IsLoopback(address.Address))
                         continue;
 
