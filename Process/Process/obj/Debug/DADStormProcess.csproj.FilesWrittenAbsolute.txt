@@ -1,7 +1,0 @@
-/home/miguel/sandbox/DADStorm/Process/Process/obj/Debug/.NETFramework,Version=v4.5.AssemblyAttribute.cs
-/home/miguel/sandbox/DADStorm/Process/Process/bin/Debug/Process.exe.mdb
-/home/miguel/sandbox/DADStorm/Process/Process/bin/Debug/Process.exe
-/home/miguel/sandbox/DADStorm/Process/Process/obj/Debug/Process.exe
-/home/miguel/sandbox/DADStorm/Process/Process/obj/Debug/Process.exe.mdb
-/home/miguel/sandbox/DADStorm/Process/Process/bin/Debug/CommonTypes.exe
-/home/miguel/sandbox/DADStorm/Process/Process/bin/Debug/CommonTypes.exe.mdb

@@ -1,9 +1,0 @@
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\bin\Debug\Daemon.exe
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\bin\Debug\Daemon.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\bin\Debug\CommonTypes.dll
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\bin\Debug\Process.exe
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\bin\Debug\Process.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\bin\Debug\CommonTypes.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\obj\Debug\Daemon.csprojResolveAssemblyReference.cache
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\obj\Debug\Daemon.exe
-C:\Users\ist178865\Source\Repos\DAD1617\Daemon\Daemon\obj\Debug\Daemon.pdb

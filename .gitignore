@@ -273,9 +273,9 @@ __pycache__/
 
 # Cake - Uncomment if you are using it
 # tools/
-*.dll
-*.exe
-*.pdb
-*.mdb
-*.csproj
-*.cache
+#*.dll
+#*.exe
+#*.pdb
+#*.mdb
+#*.csproj
+#*.cache

@@ -1,5 +1,0 @@
-C:\Users\ist178865\Source\Repos\DAD1617\CommonTypes\CommonTypes\bin\Debug\CommonTypes.dll
-C:\Users\ist178865\Source\Repos\DAD1617\CommonTypes\CommonTypes\bin\Debug\CommonTypes.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\CommonTypes\CommonTypes\obj\Debug\CommonTypes.dll
-C:\Users\ist178865\Source\Repos\DAD1617\CommonTypes\CommonTypes\obj\Debug\CommonTypes.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\CommonTypes\CommonTypes\obj\Debug\CommonTypes.csprojResolveAssemblyReference.cache

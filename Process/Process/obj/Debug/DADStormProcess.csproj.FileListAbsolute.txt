@@ -1,7 +1,0 @@
-C:\Users\ist178865\Source\Repos\DAD1617\Process\Process\bin\Debug\Process.exe
-C:\Users\ist178865\Source\Repos\DAD1617\Process\Process\bin\Debug\Process.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\Process\Process\bin\Debug\CommonTypes.dll
-C:\Users\ist178865\Source\Repos\DAD1617\Process\Process\bin\Debug\CommonTypes.pdb
-C:\Users\ist178865\Source\Repos\DAD1617\Process\Process\obj\Debug\DADStormProcess.csprojResolveAssemblyReference.cache
-C:\Users\ist178865\Source\Repos\DAD1617\Process\Process\obj\Debug\Process.exe
-C:\Users\ist178865\Source\Repos\DAD1617\Process\Process\obj\Debug\Process.pdb
