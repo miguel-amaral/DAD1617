@@ -51,11 +51,9 @@ namespace DADStormProcess {
 		public void crash() {
             try {
                 remoteProcess.crash();
-            } catch (SocketException e) {
+            } catch (SocketException) {
                 //Process just crashed dont owrry about no exception
             }
-
-
         }
 
         public void interval(int milli)
@@ -96,8 +94,8 @@ namespace DADStormProcess {
 			}
 		}
 
-        public void reportBack() {
-            remoteProcess.reportBack();
+        public CSF_metric reportBack() {
+            return remoteProcess.reportBack();
         }
 
         public void reset() {

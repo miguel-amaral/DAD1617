@@ -18,8 +18,13 @@ namespace DADStormProcess {
 			registerOneWayConnection(sourceIp,destIp,size);
 		}
 
-		public override void reportBack() {
-			string toReturn = "";
+		public override CSF_metric reportBack() {
+            Dictionary<string, int> metricSinners = new Dictionary<string, int>();
+            string metricName = this.GetType().Name;
+
+            //--------------------------//
+            //   calculate metrc value  //
+            //--------------------------//
 			lock(connections){
 				foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
 					string ip = sourceEntry.Key;
@@ -29,12 +34,14 @@ namespace DADStormProcess {
 						uploadSize += (int)pair.Value;
 					}
 					if( uploadSize > minimumHighUpload ){
-						toReturn += ip + " " + uploadSize + " ";
 						System.Console.WriteLine ( ip + " uploaded " + uploadSize + ", triggered when more than " + minimumHighUpload+ " MB of data uploaded");
-					}
-				}
+                        metricSinners.Add(ip, uploadSize);
+                    }
+                }
 			}
-		}
+            CSF_metric metric = new CSF_metric(metricName, metricSinners);
+            return metric;
+        }
 	}
 }
 //Do big upload several ips

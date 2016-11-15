@@ -48,8 +48,8 @@ namespace DADStormProcess {
 
 
         //CSF
-        public void reportBack() {
-            ServerProcess.Instance.reportBack();
+        public CSF_metric reportBack() {
+            return ServerProcess.Instance.reportBack();
         }
 
         //CSF

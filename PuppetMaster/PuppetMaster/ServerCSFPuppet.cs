@@ -38,13 +38,17 @@ namespace PuppetMaster {
         private void doOperation(string operation, ConnectionPack cp) {
             DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess(cp);
             if(operation.Equals("report", StringComparison.OrdinalIgnoreCase)) {
-                process.reportBack();
+                CSF_metric metric = process.reportBack();
+                processMetric(metric);
             }
             if (operation.Equals("reset", StringComparison.OrdinalIgnoreCase)) {
                 process.reset();
             }
         }
 
+        private void processMetric(CSF_metric metric) {
+            //TODO
+        }
 
         public static new void Main(string[] args)
         {

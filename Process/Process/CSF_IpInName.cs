@@ -63,14 +63,23 @@ namespace DADStormProcess {
 			}
 		}
 
-		public override void reportBack(){
-			lock(sinnerList){
+		public override CSF_metric reportBack(){
+            Dictionary<string, int> metricSinners = new Dictionary<string, int>();
+            string metricName = this.GetType().Name;
+
+            //--------------------------//
+            //   calculate metric value  //
+            //--------------------------//
+            lock (sinnerList){
 				//We do register if a connection happens only once or more often, but we ignore that..
 				foreach(KeyValuePair<string, Hashtable> sourceEntry in sinnerList) {
 					System.Console.WriteLine (sourceEntry.Key + " talked to " + sourceEntry.Value.Count + " domestic IPs");
-				}
-			}
-		}
+                    metricSinners.Add(sourceEntry.Key, sourceEntry.Value.Count);
+                }
+            }
+            CSF_metric metric = new CSF_metric(metricName, metricSinners);
+            return metric;
+        }
 
 		public override void reset(){
 			lock(sinnerList){

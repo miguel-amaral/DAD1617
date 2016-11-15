@@ -55,16 +55,25 @@ namespace DADStormProcess {
 			}
 		}
 
-		public override void reportBack(){
-			
-			lock(sinnerList){
-				//We do register if a connection happens only once or more often, but we ignore that..
-				foreach(KeyValuePair<string, Hashtable> sourceEntry in sinnerList) {
-					System.Console.WriteLine (sourceEntry.Key + " talked to " + sourceEntry.Value.Count + " trackers");
-				}
-			}
+		public override CSF_metric reportBack(){
+            Dictionary<string, int> metricSinners = new Dictionary<string, int>();
+            string metricName = this.GetType().Name;
 
-		}
+            //--------------------------//
+            //   calculate metrc value  //
+            //--------------------------//
+            lock (sinnerList) {
+                //We do register if a connection happens only once or more often, but we ignore that..
+                foreach (KeyValuePair<string, Hashtable> sourceEntry in sinnerList)
+                {
+                    System.Console.WriteLine(sourceEntry.Key + " talked to " + sourceEntry.Value.Count + " trackers");
+                    metricSinners.Add(sourceEntry.Key, sourceEntry.Value.Count);
+                }
+            }
+            CSF_metric metric = new CSF_metric(metricName, metricSinners);
+            return metric;
+
+        }
 
 		public override void reset(){
 			sinnerList = new Dictionary<string,Hashtable>();

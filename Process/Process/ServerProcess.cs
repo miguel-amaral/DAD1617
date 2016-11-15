@@ -416,8 +416,8 @@ namespace DADStormProcess {
 		}
 
 		//CSF method
-		public void reportBack(){
-			this.generateStrategy.reportBack ();
+		public CSF_metric reportBack(){
+			return this.generateStrategy.reportBack ();
 		}
 
 		//CSF method
@@ -428,7 +428,6 @@ namespace DADStormProcess {
 
 
 		public string status ()	{
-            reportBack(); //CSF easy way to force report
 			string status = "";
 			if(this.frozen) {
 				status += "FROZEN | ";

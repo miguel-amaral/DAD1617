@@ -79,7 +79,9 @@ namespace PuppetMaster {
             Console.ResetColor();
         }
 
-		private void doStatus (string opID)	{
+        private string[] ignoreHostname = { "DESKTOP-AMS9BIJ" };
+
+        private void doStatus (string opID)	{
 			List<ConnectionPack> listConPacks;
 			if (operatorsConPacks.TryGetValue (opID, out listConPacks)) {
 				Console.ForegroundColor = ConsoleColor.DarkCyan;
@@ -449,7 +451,13 @@ namespace PuppetMaster {
         }
 
         private string getMyIp() {
-            return "localhost";
+            string hostname = Environment.MachineName;
+            int pos = Array.IndexOf(ignoreHostname, hostname);
+            if (pos > -1)
+            {
+                //There will be trouble if we dont ignore this hostname
+                return "localhost";
+            }
             // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection)
             NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface network in networkInterfaces)
@@ -494,7 +502,7 @@ namespace PuppetMaster {
 
         }
         public static void Main (string[] args)	{
-			TcpChannel channel = new TcpChannel (port);
+            TcpChannel channel = new TcpChannel (port);
 			ChannelServices.RegisterChannel (channel, false);
 			PuppetMasterRemoteServerObject myServerObj = new PuppetMasterRemoteServerObject ();
 			RemotingServices.Marshal (myServerObj, "PuppetMasterRemoteServerObject", typeof(PuppetMasterRemoteServerObject));

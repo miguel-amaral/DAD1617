@@ -41,6 +41,34 @@ public class ConnectionPack{
 	}
 }
 
+[Serializable]
+public class CSF_metric {
+    private string metric;
+    private Dictionary<string, int> sinners;
+    public CSF_metric(string metric, Dictionary<string, int> sinners) {
+        this.Metric = metric;
+        this.Sinners = sinners;
+    }
+
+    public string Metric {
+        get {
+            return metric;
+        }
+        set {
+            metric = value;
+        }
+    }
+
+    public Dictionary<string, int> Sinners {
+        get {
+            return sinners;
+        }
+        set {
+            sinners = value;
+        }
+    }
+}
+
 namespace PuppetMaster {
 	public class RegistryRemoteException : RemotingException, ISerializable
 	{

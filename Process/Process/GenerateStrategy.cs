@@ -10,7 +10,7 @@ namespace DADStormProcess {
 		public abstract object generateTuple(IList<string> finalTuple);
 
 		//methods only used in CSF
-		public virtual void reportBack () {}
+		public virtual CSF_metric reportBack () { return null; }
 		public virtual void reset ()      {}
 	}
 
@@ -35,9 +35,18 @@ namespace DADStormProcess {
 			return result;
 		}
 
-		// always returns the tuple it receives
-		public override object generateTuple (IList<string> tuple) {
-			Task.Run(() => this.processTuple(tuple) );//TemplateMethod
+        // always returns the tuple it receives
+        public override object generateTuple(IList<string> tuple) {
+            Task.Run(
+                () => {
+                    try {
+                        this.processTuple(tuple);//TemplateMethod
+                    } catch (Exception e) {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        System.Console.WriteLine(e.Message);
+                        Console.ResetColor();
+                    }
+                });
 			return defaultReturn (tuple);
 		}
 	}

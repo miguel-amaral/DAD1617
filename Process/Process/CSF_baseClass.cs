@@ -10,9 +10,17 @@ namespace DADStormProcess {
 		public override void processTuple (IList<string> tuple) {
 
 		}
-		public override void reportBack(){
+		public override CSF_metric reportBack(){
+            Dictionary<string, int> metricSinners = new Dictionary<string, int>();
+            string metricName = this.GetType().Name;
 
-		}
+            //--------------------------//
+            //   calculate metrc value  //
+            //--------------------------//
+
+            CSF_metric metric = new CSF_metric(metricName, metricSinners);
+            return metric;
+        }
 		public override void reset(){
 
 		}

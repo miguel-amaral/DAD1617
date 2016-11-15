@@ -46,8 +46,11 @@ namespace DADStormProcess {
 			}
 		}
 
-		public override void reportBack(){
-			lock(connections){
+		public override CSF_metric reportBack(){
+            Dictionary<string, int> sinners = new Dictionary<string, int>();
+            string metricName = "CSF_HighDataDiffPeers";
+
+            lock (connections){
 				string toReturn = "";
 				foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
 					string ip = sourceEntry.Key;
@@ -61,12 +64,16 @@ namespace DADStormProcess {
 					if( bigConnectionsCount > 0 ){
 						toReturn += ip + " " + bigConnectionsCount + " ";
 						System.Console.WriteLine ( ip + " talked to " + bigConnectionsCount + " IPs with more than " + minimumDataConnection+ " of MB of data exchanged");
+                        sinners.Add(ip, bigConnectionsCount);
 					}
 				}
 			}
-		}
 
-		public override void reset() {
+            CSF_metric metric = new CSF_metric(metricName, sinners);
+            return metric;
+        }
+
+        public override void reset() {
 			lock(connections){
 				connections = new Dictionary<string,Hashtable>();
 			}
