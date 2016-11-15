@@ -7,6 +7,28 @@ using System.Runtime.Remoting.Channels.Tcp;
 using System.Threading;
 using System.Collections.Generic;
 
+//TODO
+//Use of Local Peer discovery: Modern BitTorrent clients implements Local Peer Discovery.
+    //Such protocol is implemented using HTTP-like messages over UDP multicast group
+    //239.192.152.143 on port 6771. However other applications(like DropBox) also use this
+    //protocol which, once again, might trigger false positives.This can be avoided by looking
+    //into the packet content
+
+//TCP Hole Punching: Another way for clients to connect to other peers behind a Firewall/NAT
+    //is to ask trackers to help them(using TCP Hole Punching technique). When
+    //1
+    //this happen, a TCP socket will change its destination/origin without the end users to start
+    //a new socket.This technique is not commonly used by other applications and can be related
+    //to BitTorrent usage
+
+//Use of UPnP protocol: Clients behind a NAT usually use UPnP to ask the router to open
+    //ports which will be used to receive incoming connections from another peers.The use of
+    //this protocol will increase the chance that the client is using BitTorrent. On the other hand
+    //there are several legitimate applications that make use of this protocol (like Skype) which
+    //might trigger false positives
+
+//High bandwidth usage: More often than not a high bandwidth usage during a long periods
+    //of time are synonym of BitTorrent traffic.
 
 namespace PuppetMaster {
 	public class ServerCSFPuppet : ServerPuppet {
