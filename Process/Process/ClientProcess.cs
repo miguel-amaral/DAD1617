@@ -49,8 +49,14 @@ namespace DADStormProcess {
 		}
 		
 		public void crash() {
-			remoteProcess.crash();
-		}
+            try {
+                remoteProcess.crash();
+            } catch (SocketException e) {
+                //Process just crashed dont owrry about no exception
+            }
+
+
+        }
 
         public void interval(int milli)
         {
@@ -85,7 +91,7 @@ namespace DADStormProcess {
 		public string status() {
 			try {
 				return remoteProcess.status ();
-			} catch (Exception e) {
+			} catch (Exception ) {
 				return "Machine Failed";
 			}
 		}

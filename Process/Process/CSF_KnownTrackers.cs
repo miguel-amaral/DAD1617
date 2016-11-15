@@ -56,7 +56,7 @@ namespace DADStormProcess {
 		}
 
 		public override void reportBack(){
-			string toReturn = "";
+			
 			lock(sinnerList){
 				//We do register if a connection happens only once or more often, but we ignore that..
 				foreach(KeyValuePair<string, Hashtable> sourceEntry in sinnerList) {

@@ -138,16 +138,22 @@ namespace DADStormProcess {
 						//Ignore
 					}
 					else if (!tuple [0].StartsWith ("%")) {
-						ProcessDebug ("Read Tuple: " + line);
-						//Only adds non commentaries
-						IList<string> toAdd = new List<string> ();
+						ProcessDebug ("Read Tuple: < " + String.Join(", ", tuple) + " > ");
+                        //Only adds non commentaries
+                        IList <string> toAdd = new List<string> ();
 						foreach(string str in tuple) {
 							toAdd.Add (str);
 						}
 						this.addTuple (toAdd);
 					}
+                    if (!primmary) {
+                        lock (filesIndex) {
+                            filesIndex[fileLocation] = index;
+                        }
+                    }
                     //lastRead = decimal.Divide(index, content.Length) ;//Operacao de divisao
-				} else {
+                }
+                else {
 					ProcessDebug ("file: " + fileLocation + " has been read completly");
 					//File has been read totally, removing from known files
 					lock (filesToRemove) {
@@ -189,12 +195,13 @@ namespace DADStormProcess {
 				finalTuple = nextTuple;
 			}
 
-			string tuplePlusArgs = "";
+			string tuplePlusArgs = "<";
 			foreach (string str in finalTuple) {
 				tuplePlusArgs += " " + str;
 			}
-			ProcessDebug ("Next Tuple:" + tuplePlusArgs);
-			return finalTuple;
+            tuplePlusArgs += ">";
+            ProcessDebug ("Next Tuple: " +  tuplePlusArgs);
+            return finalTuple;
 		}
 
 		/**
@@ -266,8 +273,7 @@ namespace DADStormProcess {
 		/**
 		  * Method that sends a tuple to every downstream operator
 		  */
-		private void sendToNextOperators (IList<string> tuple)
-		{
+		private void sendToNextOperators (IList<string> tuple) {
 			if (downStreamNodes.Count > 0) {
 				//Foreach operator
 				foreach(List<ConnectionPack> receivingOperator in downStreamNodes){
@@ -292,7 +298,7 @@ namespace DADStormProcess {
         /// <summary>
         /// Setup the class
         /// </summary>
-        public void buildServer(ConnectionPack myCp, string dllName, string className, string methodName, string routingTechnic, bool fullLogging)
+        public void buildServer(ConnectionPack myCp, string dllName, string className, string methodName, string routingTechnic, bool fullLogging, int semantics)
         {
             this.MyConPack = myCp;
             this.FullLog = fullLogging;
@@ -322,6 +328,14 @@ namespace DADStormProcess {
             } else {
                 this.generateStrategy = new CustomDll(dllName, className, methodName);
             }
+
+            if (semantics == 0) {
+                //at most  once
+            } else if (semantics == 1) {
+                //at least once
+            } else if (semantics == 2) {
+                //exactly  once
+            }
         }
 
         public void addDownStreamOperator(List<ConnectionPack> cp){
@@ -330,7 +344,11 @@ namespace DADStormProcess {
 		}
 
 		public void crash() {
-			Environment.Exit (1);
+            new Thread(() => {
+                Thread.Sleep(100); //allow remote method to return
+                Environment.Exit(1);
+            }).Start();
+            return;
 		}
 
 		public void freeze() {
@@ -438,17 +456,18 @@ namespace DADStormProcess {
 
 			int argsSize = args.Length;
 			try {
-				int numberOfParameters = 7;
+				int numberOfParameters = 8;
 				//Configuring Process
 				if (argsSize >= numberOfParameters) {
 					string strPort = args[0];
 					string dllNameInputMain    = args[1];
 					string classNameInputMain  = args[2];
 					string methodNameInputMain = args[3];
-					string routingTechnic      = args[4];
+					string semantics = args[4];
+                    string routingTechnic      = args[5];
 					//Bool that indicates whether full logging or not
-					bool   fullLogging         = Convert.ToBoolean(args[5]);
-                    string ip = args[6];
+					bool   fullLogging         = Convert.ToBoolean(args[6]);
+                    string ip = args[7];
 
 					string[] dllArgsInputMain = null;
 					if (argsSize > numberOfParameters) {
@@ -461,10 +480,15 @@ namespace DADStormProcess {
 					if(parsedPort < 10002 || parsedPort > 65535) {
 						throw new FormatException("Port out of possible range");
 					}
-					ConnectionPack myCp = new ConnectionPack(ip,parsedPort);
+                    int semanticsInt = Int32.Parse(semantics);
+                    if(semanticsInt < 0 || semanticsInt > 2)
+                    {
+                        semanticsInt = 0;
+                    }
+                    ConnectionPack myCp = new ConnectionPack(ip,parsedPort);
 
 					sp.ProcessStaticArgs = dllArgsInputMain;
-					sp.buildServer(myCp, dllNameInputMain, classNameInputMain, methodNameInputMain, routingTechnic, fullLogging );
+					sp.buildServer(myCp, dllNameInputMain, classNameInputMain, methodNameInputMain, routingTechnic, fullLogging, semanticsInt );
 
 					sp.createAndProcess();
 

@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Daemon", "..\Daemon\Daemon\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "..\CommonTypes\CommonTypes\CommonTypes.csproj", "{74E6BA6A-1709-4A70-AB97-6492C3EEEB1C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomOperators", "CustomOperators\CustomOperators.csproj", "{465207C3-A4AD-4FAB-A2CE-D436176316D5}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,10 +33,6 @@ Global
 		{74E6BA6A-1709-4A70-AB97-6492C3EEEB1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74E6BA6A-1709-4A70-AB97-6492C3EEEB1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74E6BA6A-1709-4A70-AB97-6492C3EEEB1C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{465207C3-A4AD-4FAB-A2CE-D436176316D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{465207C3-A4AD-4FAB-A2CE-D436176316D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{465207C3-A4AD-4FAB-A2CE-D436176316D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{465207C3-A4AD-4FAB-A2CE-D436176316D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

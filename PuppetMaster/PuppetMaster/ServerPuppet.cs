@@ -44,7 +44,7 @@ namespace PuppetMaster {
                 return instance;
             }
         }
-
+        public static int semantics = 0; //semantics 0 - at most once; 1 - at least once; 2 - exactly once
 
         private void doStatus(string[] command)  {
             if (command.Length > 2) {
@@ -252,12 +252,17 @@ namespace PuppetMaster {
 				this.operatorTargetOperations (splitStr);
 			} else if (splitStr [0].Equals ("wait", StringComparison.OrdinalIgnoreCase)) {
 				Thread.Sleep (Int32.Parse (splitStr [1]));
-			} else if (splitStr [0].Equals ("LoggingLevel", StringComparison.OrdinalIgnoreCase)) {
-				this.fullLog = splitStr [1].Equals ("full", StringComparison.OrdinalIgnoreCase);
-			} else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
-				//TODO
-				//this.fullLog = splitStr [1].Equals ("full", StringComparison.OrdinalIgnoreCase);
-			} else if (splitStr.Length > 1 && ((splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase))
+			} else if (splitStr[0].Equals("LoggingLevel", StringComparison.OrdinalIgnoreCase))            {
+                this.fullLog = splitStr[1].Equals("full", StringComparison.OrdinalIgnoreCase);
+            } else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
+                if(splitStr[1].Equals("at-most-once", StringComparison.OrdinalIgnoreCase)) {
+                    semantics = 0;
+                } else if (splitStr[1].Equals("at-least-once", StringComparison.OrdinalIgnoreCase)) {
+                    semantics = 1;
+                } else if (splitStr[1].Equals("exactly-once", StringComparison.OrdinalIgnoreCase)) {
+                    semantics = 2;
+                }
+            } else if (splitStr.Length > 1 && ((splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase))
                       || splitStr[1].Equals("input_ops", StringComparison.OrdinalIgnoreCase))) {
                 this.createNewOperator(splitStr);
                 //Process files TODO this.
@@ -273,8 +278,26 @@ namespace PuppetMaster {
 			String line;
 			// Read the file and display it line by line.
 			System.IO.StreamReader file = new System.IO.StreamReader(fileLocation);
-			while((line = file.ReadLine()) != null) {
-				doCommand (line);
+            System.Console.WriteLine("Loading file: " + fileLocation);
+            System.Console.WriteLine("Please specify whether you want step by step or all in");
+            System.Console.WriteLine("Type \"step\" or \"all\"");
+            string mode = System.Console.ReadLine();
+            while (!(mode.Equals("all", StringComparison.OrdinalIgnoreCase) || mode.Equals("step", StringComparison.OrdinalIgnoreCase)))
+            {
+                mode = System.Console.ReadLine();
+            }
+            bool stepByStep = mode.Equals("step", StringComparison.OrdinalIgnoreCase);
+            if (stepByStep) {
+                System.Console.WriteLine("Ok just hit enter whenever you want to do a step");
+            }
+            while ((line = file.ReadLine()) != null) {
+                if (stepByStep) {
+                    System.Console.WriteLine("Next Step: " + line);
+                    string next = System.Console.ReadLine();
+                    if(next.Equals("all", StringComparison.OrdinalIgnoreCase)) { stepByStep = false; }
+                    else if(next.Equals("stop", StringComparison.OrdinalIgnoreCase)) { break; }
+                }
+                doCommand(line);
 			}
 			file.Close();
 		}
@@ -379,24 +402,54 @@ namespace PuppetMaster {
                 methodName = "Count";
             } else if (operatorType.Equals ("DUP", StringComparison.OrdinalIgnoreCase)) {
 				methodName = "Dup";
-			} else if (operatorType.Equals ("FILTER", StringComparison.OrdinalIgnoreCase)) {
+            } else if (operatorType.Equals("OUTPUT", StringComparison.OrdinalIgnoreCase)) {
+                methodName = "Output";
+                string[] args = { splitStr[counter++] }; //File to Output
+                staticAsrguments = args;
+            } else if (operatorType.Equals ("FILTER", StringComparison.OrdinalIgnoreCase)) {
+                methodName = "Filter";
                 string field_number  = splitStr [counter++]; // field_number;
                 string condition     = splitStr [counter++]; // condition;
                 string comparedValue = splitStr [counter++]; // value;
 				string[] args = { field_number, condition, comparedValue };
-			}
+                staticAsrguments = args;
+            }
 
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
 				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, daemonPort),fullLog);
-				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, routing,staticAsrguments);
+				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, semantics, routing,staticAsrguments);
 			}
 			//Make sure everything is created before we try anything else
 			Thread.Sleep (100);
             PuppetDebug("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
         }
 
+        private void killOperator(string opID) {
+            List<ConnectionPack> listConPacks;
+            if (operatorsConPacks.TryGetValue(opID, out listConPacks)) {
+                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                System.Console.WriteLine("Killing Operator: " + opID);
+                Console.ResetColor();
+                foreach (ConnectionPack cp in listConPacks) {
+                    killProcess(cp);
+                }
+            }
+        }
+
+        private void killProcess(ConnectionPack cp) {
+            DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess(cp);
+            process.crash();
+        }
+
+        public void killRemainingOperators() {
+            foreach (string op in operatorsConPacks.Keys) {
+                killOperator(op);
+            }
+        }
+
         private string getMyIp() {
+            return "localhost";
             // Get a list of all network interfaces (usually one per network card, dialup, and VPN connection)
             NetworkInterface[] networkInterfaces = NetworkInterface.GetAllNetworkInterfaces();
             foreach (NetworkInterface network in networkInterfaces)
@@ -430,7 +483,7 @@ namespace PuppetMaster {
 			toPrint += " >";
 			System.Console.WriteLine(toPrint);
 		}
-
+        
         private void PuppetDebug(string msg) {
             System.Console.WriteLine("[ PuppetMaster ] " + msg);
         }
@@ -456,18 +509,23 @@ namespace PuppetMaster {
 			string configFileLocation;
 			ServerPuppet sp = ServerPuppet.Instance;
 			if (args.Length > 0) {
-				configFileLocation = args [0];
-				sp.readCommandsFromFile (configFileLocation);
+                configFileLocation = args [0];
+                sp.readCommandsFromFile (configFileLocation);
 			}
 
 			System.Console.WriteLine("we are now in manual writing commands, write EXIT to stop");
 			string line = System.Console.ReadLine ();
 			while(!line.Equals("exit", StringComparison.OrdinalIgnoreCase )) {
 				sp.doCommand (line);
-				line = System.Console.ReadLine ();
+                line = System.Console.ReadLine ();
 			}
 
 			System.Console.WriteLine("Goodbye World! It was a pleasure to serve you today");
-		}
+            Console.ForegroundColor = ConsoleColor.Red;
+            System.Console.WriteLine("Puppet Server is going OFFLINE");
+            Console.ResetColor();
+            sp.killRemainingOperators();
+            Thread.Sleep(2000);
+        }
 	}
 }

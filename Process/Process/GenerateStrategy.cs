@@ -52,6 +52,11 @@ namespace DADStormProcess {
             System.Console.WriteLine("Setup\r\ndllName   : " + dllName + "\r\nclassName : " + className + "\r\nmethodName: " + methodName + "\r\n");
             this.assembly = Assembly.Load(File.ReadAllBytes(dllName));
 			this.type = assembly.GetType (className);
+            if(this.type == null) {
+                System.Console.WriteLine("Cannot Find class: " + className);
+                System.Console.ReadLine();
+                Environment.Exit(1);
+            }
 			this.methodName = methodName;
 			this.obj = Activator.CreateInstance (type);
 		}

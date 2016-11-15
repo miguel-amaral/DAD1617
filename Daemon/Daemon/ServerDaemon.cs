@@ -30,12 +30,12 @@ namespace Daemon {
 			set	{ fullLog = value; }
 		}
 
-		public void newThread (string dllName, string className, string methodName, string processPort, string proccessIp,  string routing, object[] args = null) {
+		public void newThread (string dllName, string className, string methodName, string processPort, string proccessIp, int semantics, string routing, object[] args = null) {
 			Process process = new Process ();
 			// Configure the process using the StartInfo properties.
 			process.StartInfo.FileName = "Process.exe";
 
-			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + routing + " " + fullLog.ToString () + " " + proccessIp;
+			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + semantics.ToString() + " "  + routing + " " + fullLog.ToString () + " " + proccessIp;
 			if (args != null) {
 				foreach (string str in args) {
 					processArguments += " " + str;
@@ -66,13 +66,12 @@ namespace Daemon {
 //			System.Console.WriteLine("<enter> para sair...");
 			System.Console.WriteLine("<ctrl+c> para sair...");
 
-			//Change this to a pulse monitor situation
-			while (true){
-				/*XXX!XXX!XXX!*/ Thread.Sleep(100); /*XXX!XXX!XXX!*/ //TODO
-			}
+            System.Console.ReadLine();
+
 			Console.ForegroundColor = ConsoleColor.Red;
 			System.Console.WriteLine("Daemon Server is going OFFLINE" );
 			Console.ResetColor();
+            Thread.Sleep(2000);
 		}
 	}
 }
