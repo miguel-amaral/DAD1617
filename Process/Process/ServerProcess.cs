@@ -199,9 +199,9 @@ namespace DADStormProcess {
 			foreach (string str in finalTuple) {
 				tuplePlusArgs += " " + str;
 			}
-            tuplePlusArgs += ">";
-            ProcessDebug ("Next Tuple: " +  tuplePlusArgs);
-            return finalTuple;
+			tuplePlusArgs += ">";
+			ProcessDebug ("Next Tuple: " +  tuplePlusArgs);
+			return finalTuple;
 		}
 
 		/**
@@ -233,7 +233,7 @@ namespace DADStormProcess {
 					foreach(List<string> tuple in result){
                         if(tuple.Count > 0){ //Lets ignore empty tuples shall we
                             emitTuple(tuple);
-                        } 
+                        }
 					}
 				} else {
 					ProcessError ("returned " + resultObject.GetType ().ToString());
@@ -325,6 +325,10 @@ namespace DADStormProcess {
                 this.generateStrategy = new CSF_HighUpload();
             } else if (className.Equals("CSF_KnownTrackers")) {
                 this.generateStrategy = new CSF_KnownTrackers();
+            } else if (className.Equals("CSF_ProtocolUPnP")) {
+                this.generateStrategy = new CSF_ProtocolUPnP("UPnP");
+            } else if (className.Equals("CSF_LocalPeerDiscovery")) {
+                this.generateStrategy = new CSF_LocalPeerDiscovery();
             } else {
                 this.generateStrategy = new CustomDll(dllName, className, methodName);
             }
