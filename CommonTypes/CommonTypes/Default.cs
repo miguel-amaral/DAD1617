@@ -75,22 +75,22 @@ public class Default
         string dinamicValue = tuple[index];
 
         if (condition.Equals(">")) {
-            if (staticValue.Length > dinamicValue.Length) {
+            if (String.Compare(dinamicValue, staticValue) > 0) {
                 return Dup(tuple);
             }
         } else if (condition.Equals("<")) {
-            if (staticValue.Length < dinamicValue.Length) {
+            if (String.Compare(dinamicValue, staticValue) < 0) {
                 return Dup(tuple);
             }
         } else if (condition.Equals("=")) {
-            if (staticValue.Equals(dinamicValue)) {
+            if (String.Compare(dinamicValue, staticValue) == 0) {
                 return Dup(tuple);
             }
         }
         return emptyTuple();
     }
     public IList<IList<string>> Output(IList<string> tuple) {
-        
+
         string outputFile = @tuple[0];
         tuple.RemoveAt(0);
 
@@ -103,4 +103,3 @@ public class Default
         return Dup(tuple);
     }
 }
-
