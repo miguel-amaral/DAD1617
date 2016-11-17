@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
 
-//High bandwidth to several different peers is abnominal behvaiour
+//explanation
 namespace DADStormProcess {
 	public class CSF_BaseClass: CSF_TupleStructure {
 		public override void processTuple (IList<string> tuple) {

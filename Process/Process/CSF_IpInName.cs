@@ -26,8 +26,6 @@ namespace DADStormProcess {
 				destDNSname = host.HostName;
 
 			} catch (Exception) {
-				//System.Console.WriteLine ( "ip not found: " + destIp );
-
 				//Lets ignore this troublemaker tuple then..
 				return ;
 			}
