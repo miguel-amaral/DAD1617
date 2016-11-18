@@ -35,6 +35,8 @@
     <Compile Include="CSF_HighDataDiffPeers.cs" />
     <Compile Include="CSF_HighUpload.cs" />
     <Compile Include="CSF_KnownTrackers.cs" />
+    <Compile Include="CSF_LocalPeerDiscovery.cs" />
+    <Compile Include="CSF_ProtocolUPnP.cs" />
     <Compile Include="RemoteProcess.cs" />
     <Compile Include="ServerProcess.cs" />
     <Compile Include="RoutingTechics.cs" />

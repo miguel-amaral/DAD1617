@@ -28,7 +28,8 @@ using System.Collections.Generic;
     //might trigger false positives
 
 //High bandwidth usage: More often than not a high bandwidth usage during a long periods
-    //of time are synonym of BitTorrent traffic.
+    //of time are synonym of BitTorrent traffic.
+
 
 namespace PuppetMaster {
 	public class ServerCSFPuppet : ServerPuppet {
