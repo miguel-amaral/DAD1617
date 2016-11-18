@@ -55,13 +55,60 @@ public class MergingVisitor : MetricVisitor{
 		original.RawValues = originalList;
 	}
 
-	private void mergeHighUpload(CSF_metric other)			{
+	private void mergeHighUpload(CSF_metric other) {
+		private Dictionary<string,Hashtable> originalList = original.RawValues();
+		private Dictionary<string,Hashtable>    otherList =    other.RawValues();
 
+		//Go through every entry in the otherList
+		foreach(KeyValuePair<string, Hashtable> othersEntry in otherList) {
+			Hashtable existingCommunications;
+
+			//Check if the original's list has this sinner already
+			if (originalList.TryGetValue (othersEntry.key, out existingCommunications)) {
+				//Lets increase the sin then..
+				foreach (DictionaryEntry connection in othersEntry.Value) {
+					//check if it is the first time they talk
+					if (existingCommunications.ContainsKey (connection.Key)) {
+						//More talks to the same guy
+						existingCommunications [connection.Key] = (int)existingCommunications [connection.Key] + connection.Value;
+					} else {
+						//Oh new guy added
+						existingCommunications [connection.Key] = connection.Value;
+					}
+				}
+			} else { //it does not have, simple we will add this sinner to the list
+				originalList [othersEntry.Key] = othersEntry.Value;
+			}
+		}
 	}
 
-	private void mergeHighDownload(CSF_metric other)		{}
-	private void mergeHighDataDiffPeers(CSF_metric other)	{}
-	private void mergeKnownTrackers(CSF_metric other)		{}
-	private void mergeLocalPeerDiscovery(CSF_metric other)	{}
-	private void mergeProtocolUPnP(CSF_metric other)		{}
+	private void mergeHighDownload(CSF_metric other)		{
+		this.mergeHighUpload(other);
+	}
+
+	private void mergeHighDataDiffPeers(CSF_metric other)	{
+		this.mergeHighUpload(other);
+	}
+
+	private void mergeKnownTrackers(CSF_metric other)		{
+		this.mergeLocalPeerDiscovery(other);
+	}
+	private void mergeLocalPeerDiscovery(CSF_metric other)	{
+		private Dictionary<string,int> originalList = original.Sinners();
+		private Dictionary<string,int>    otherList =    other.Sinners();
+
+
+		//Go through every entry in the otherList
+		foreach(KeyValuePair<string, int> othersEntry in otherList) {
+
+			if (originalList.TryGetValue (othersEntry.Key){
+				originalList[othersEntry.Key] = originalList[othersEntry.Key] + othersEntry.Value;
+			} else {
+				originalList[othersEntry.Key] = othersEntry.Value;
+			}
+		}
+	}
+	private void mergeProtocolUPnP(CSF_metric other)		{
+		this.mergeLocalPeerDiscovery(other);
+	}
 }

@@ -70,7 +70,7 @@ namespace DADStormProcess {
                     metricSinners.Add(sourceEntry.Key, sourceEntry.Value.Count);
                 }
             }
-            CSF_metric metric = new CSF_metric(metricName, metricSinners);
+            CSF_metric metric = new CSF_metric(metricName, sinnerList);
             return metric;
 
         }

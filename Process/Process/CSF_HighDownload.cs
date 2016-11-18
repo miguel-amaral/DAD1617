@@ -39,7 +39,7 @@ namespace DADStormProcess {
                     }
                 }
 			}
-            CSF_metric metric = new CSF_metric(metricName, metricSinners);
+            CSF_metric metric = new CSF_metric(metricName, this.connections);
             return metric;
         }
 	}

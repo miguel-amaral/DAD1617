@@ -47,11 +47,10 @@ namespace DADStormProcess {
 		}
 
 		public override CSF_metric reportBack(){
-            Dictionary<string, int> sinners = new Dictionary<string, int>();
-            string metricName = "CSF_HighDataDiffPeers";
+			Dictionary<string, int> sinners = new Dictionary<string, int>();
+			string metricName = "CSF_HighDataDiffPeers";
 
-            lock (connections){
-				string toReturn = "";
+			lock (connections){
 				foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
 					string ip = sourceEntry.Key;
 					Hashtable table = sourceEntry.Value;
@@ -62,14 +61,13 @@ namespace DADStormProcess {
 						}
 					}
 					if( bigConnectionsCount > 0 ){
-						toReturn += ip + " " + bigConnectionsCount + " ";
-						System.Console.WriteLine ( ip + " talked to " + bigConnectionsCount + " IPs with more than " + minimumDataConnection+ " of MB of data exchanged");
-                        sinners.Add(ip, bigConnectionsCount);
+						System.Console.WriteLine ( ip + " talked to " + bigConnectionsCount + " IPs with more than " + minimumDataConnection + " of MB of data exchanged");
+						sinners.Add(ip, bigConnectionsCount);
 					}
 				}
 			}
 
-            CSF_metric metric = new CSF_metric(metricName, sinners);
+            CSF_metric metric = new CSF_HighDataDiffPeers(metricName, connections);
             return metric;
         }
 
