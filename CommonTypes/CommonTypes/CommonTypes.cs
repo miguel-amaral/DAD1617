@@ -45,7 +45,15 @@ public class ConnectionPack{
 public class CSF_metric {
     private string metric;
     private Dictionary<string, int> sinners;
+	//String is source ip; hastable key -> destIp , value -> size/number of communications
+	protected Dictionary<string,Hashtable> rawValues;
+
     public CSF_metric(string metric, Dictionary<string, int> sinners) {
+        this.Metric = metric;
+        this.Sinners = sinners;
+    }
+
+    public CSF_metric(string metric, Dictionary<string,Hashtable> sinners) {
         this.Metric = metric;
         this.Sinners = sinners;
     }
@@ -67,6 +75,28 @@ public class CSF_metric {
             sinners = value;
         }
     }
+
+    public Dictionary<string, Hashtable> RawValues {
+        get {
+            return rawValues;
+        }
+        set {
+            rawValues = value;
+        }
+    }
+
+	void acept(MetricVisitor visitor){
+		visitor.visit(this);
+	}
+
+	bool aceptWithBool(MetricVisitor visitor){
+		return visitor.visitWithBool(this);
+	}
+}
+
+public interface MetricVisitor {
+	bool visitWithBool(CSF_metric);
+	void visit(CSF_metric);
 }
 
 namespace PuppetMaster {

@@ -21,7 +21,7 @@ namespace DADStormProcess {
 			string destIp = tuple [destinIpIndex];
 			string destDNSname;
 			try {
-//				IPAddress addr = IPAddress.Parse();
+				//IPAddress addr = IPAddress.Parse();
 				IPHostEntry host = Dns.GetHostEntry (destIp);
 				destDNSname = host.HostName;
 
@@ -66,7 +66,7 @@ namespace DADStormProcess {
             string metricName = this.GetType().Name;
 
             //--------------------------//
-            //   calculate metric value  //
+            //   calculate metric value //
             //--------------------------//
             lock (sinnerList){
 				//We do register if a connection happens only once or more often, but we ignore that..
@@ -75,7 +75,7 @@ namespace DADStormProcess {
                     metricSinners.Add(sourceEntry.Key, sourceEntry.Value.Count);
                 }
             }
-            CSF_metric metric = new CSF_metric(metricName, metricSinners);
+            CSF_metric metric = new CSF_IpInName(metricName, sinnerList);
             return metric;
         }
 

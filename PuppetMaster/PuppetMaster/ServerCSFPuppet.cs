@@ -32,11 +32,14 @@ using System.Collections.Generic;
 
 namespace PuppetMaster {
 	public class ServerCSFPuppet : ServerPuppet {
+		private List<CSF_metric> metrics = new List<CSF_metric>();
 		public override void extraCommands(string[] command) {
 			if (command[0].Equals ("report", StringComparison.OrdinalIgnoreCase)) {
                 this.doOperation("report");
+
 			} else if (command[0].Equals ("reset", StringComparison.OrdinalIgnoreCase)) {
                 this.doOperation("reset");
+				metrics = new List<CSF_metric>();
 			}
 		}
 
@@ -61,19 +64,36 @@ namespace PuppetMaster {
             DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess(cp);
             if(operation.Equals("report", StringComparison.OrdinalIgnoreCase)) {
                 CSF_metric metric = process.reportBack();
-                processMetric(metric);
+                metrics.Add(metric);
             }
             if (operation.Equals("reset", StringComparison.OrdinalIgnoreCase)) {
                 process.reset();
             }
         }
+		private void mergeMetrics(List<CSF_metric> metrics){
+			for(int index = 0 ; index < ( metrics.Length - 1) ; index++) {
+				CSF_metric original = metrics[index];
+				MergingVisitor visitor = new MergingVisitor(element);
+				for(int endIndex = index ; endIndex < metrics.Length ; ) {
+					CSF_metric toBeMerged = metrics[endIndex];
+					if(toBeMerged.aceptWithBool(toBeMerged) {
+						metrics.RemoveAt(endIndex);
+					} else {
+						endIndex++;
+					}
+				}
+			}
+		}
+
+		private void processAllMetrics(List<CSF_metric> metrics) {
+
+		}
 
         private void processMetric(CSF_metric metric) {
             //TODO
         }
 
-        public static new void Main(string[] args)
-        {
+        public static new void Main(string[] args) {
             System.Console.WriteLine("CSF");
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, false);
