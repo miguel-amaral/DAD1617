@@ -1,6 +1,8 @@
 using System;
 using System.Runtime.Remoting;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Json;
 
 namespace DADStormProcess {
 	public class ProcessRemoteServerObject : MarshalByRefObject {
@@ -48,7 +50,7 @@ namespace DADStormProcess {
 
 
         //CSF
-        public CSF_metric reportBack() {
+        public MemoryStream reportBack() {
             return ServerProcess.Instance.reportBack();
         }
 

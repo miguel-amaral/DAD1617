@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Json;
 
 //High bandwidth to several different peers is abnominal behvaiour
 namespace DADStormProcess {
@@ -55,28 +57,38 @@ namespace DADStormProcess {
 			}
 		}
 
-		public override CSF_metric reportBack(){
-            Dictionary<string, int> metricSinners = new Dictionary<string, int>();
+		public override MemoryStream reportBack(){
+            //Dictionary<string, int> metricSinners = new Dictionary<string, int>();
             string metricName = this.GetType().Name;
 
             //--------------------------//
             //   calculate metrc value  //
             //--------------------------//
-            lock (sinnerList) {
-                //We do register if a connection happens only once or more often, but we ignore that..
-                foreach (KeyValuePair<string, Hashtable> sourceEntry in sinnerList)
-                {
-                    System.Console.WriteLine(sourceEntry.Key + " talked to " + sourceEntry.Value.Count + " trackers");
-                    metricSinners.Add(sourceEntry.Key, sourceEntry.Value.Count);
-                }
+            //lock (sinnerList) {
+            //    //We do register if a connection happens only once or more often, but we ignore that..
+            //    foreach (KeyValuePair<string, Hashtable> sourceEntry in sinnerList) {
+            //        System.Console.WriteLine(sourceEntry.Key + " talked to " + sourceEntry.Value.Count + " trackers");
+            //        metricSinners.Add(sourceEntry.Key, sourceEntry.Value.Count);
+            //    }
+            //}
+
+            MemoryStream stream = new MemoryStream();
+            lock (sinnerList)
+            {
+                CSF_metric metric = new CSF_metric(metricName, sinnerList);
+
+                DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(CSF_metric));
+                js.WriteObject(stream, metric);
             }
-            CSF_metric metric = new CSF_metric(metricName, metricSinners);
-            return metric;
+            return stream;
 
         }
 
 		public override void reset(){
-			sinnerList = new Dictionary<string,Hashtable>();
+            lock (sinnerList)
+            {
+                sinnerList = new Dictionary<string, Hashtable>();
+            }
 		}
 	}
 }

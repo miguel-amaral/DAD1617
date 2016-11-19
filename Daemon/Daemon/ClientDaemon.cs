@@ -43,7 +43,7 @@ namespace Daemon {
 
 			cd.newThread("hello.dll","Hello","Hello2", "12345", argumentos);
 
-			Thread.Sleep(100);
+			Thread.Sleep(100); //call for debug in main method
 
 			cd.ping();
 			System.Console.WriteLine("<enter> para sair...");

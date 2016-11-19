@@ -34,8 +34,8 @@ namespace Daemon {
 			Process process = new Process ();
 			// Configure the process using the StartInfo properties.
 			process.StartInfo.FileName = "Process.exe";
-
-			string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + semantics.ToString() + " "  + routing + " " + fullLog.ToString () + " " + proccessIp;
+            process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
+            string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + semantics.ToString() + " "  + routing + " " + fullLog.ToString () + " " + proccessIp;
 			if (args != null) {
 				foreach (string str in args) {
 					processArguments += " " + str;
@@ -71,7 +71,7 @@ namespace Daemon {
 			Console.ForegroundColor = ConsoleColor.Red;
 			System.Console.WriteLine("Daemon Server is going OFFLINE" );
 			Console.ResetColor();
-            Thread.Sleep(2000);
+            Thread.Sleep(2000); //Ensuring everything is offline
 		}
 	}
 }

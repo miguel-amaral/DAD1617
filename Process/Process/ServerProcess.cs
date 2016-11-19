@@ -14,7 +14,7 @@ namespace DADStormProcess {
 
 		private static ServerProcess instance = null;
 		private int      milliseconds =0;
-        //private decimal  lastRead = 0;
+        private decimal  lastRead = 100;
 		private bool     frozen  = true;
 		private bool     fullLog = false;
 		private bool     primmary= true;
@@ -151,10 +151,12 @@ namespace DADStormProcess {
                             filesIndex[fileLocation] = index;
                         }
                     }
-                    //lastRead = decimal.Divide(index, content.Length) ;//Operacao de divisao
+                    lastRead = decimal.Divide(index, content.Length) * 100;//Operacao de divisao
                 }
                 else {
-					ProcessDebug ("file: " + fileLocation + " has been read completly");
+                    lastRead = 100;
+
+                    ProcessDebug ("file: " + fileLocation + " has been read completly");
 					//File has been read totally, removing from known files
 					lock (filesToRemove) {
 						filesToRemove.Add (fileLocation);
@@ -319,6 +321,8 @@ namespace DADStormProcess {
 
             if (className.Equals("CSF_IpInName")) {
                 this.generateStrategy = new CSF_IpInName();
+            } else if (className.Equals("CSF_HighDownload")) {
+                this.generateStrategy = new CSF_HighDownload();
             } else if (className.Equals("CSF_HighDataDiffPeers")) {
                 this.generateStrategy = new CSF_HighDataDiffPeers();
             } else if (className.Equals("CSF_HighUpload")) {
@@ -420,7 +424,7 @@ namespace DADStormProcess {
 		}
 
 		//CSF method
-		public CSF_metric reportBack(){
+		public MemoryStream reportBack(){
 			return this.generateStrategy.reportBack ();
 		}
 
@@ -440,7 +444,7 @@ namespace DADStormProcess {
 				status += "tuples waiting: " + dllArgs.Count;
 			}
 			lock (filesLocation) {
-                status += " | incomplete files: " + filesLocation.Count;//+ " : " +lastRead+" %";
+                status += " | incomplete files: " + filesLocation.Count + " : " +lastRead+"%";
             }
 			return status;
 		}

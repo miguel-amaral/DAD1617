@@ -4,6 +4,8 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Tcp;
 using System.Collections.Generic;
 using System.Net.Sockets;
+using System.IO;
+using System.Runtime.Serialization.Json;
 
 namespace DADStormProcess {
 	public class ClientProcess {
@@ -94,7 +96,7 @@ namespace DADStormProcess {
 			}
 		}
 
-        public CSF_metric reportBack() {
+        public MemoryStream reportBack() {
             return remoteProcess.reportBack();
         }
 

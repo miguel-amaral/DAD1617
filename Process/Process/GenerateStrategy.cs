@@ -10,7 +10,7 @@ namespace DADStormProcess {
 		public abstract object generateTuple(IList<string> finalTuple);
 
 		//methods only used in CSF
-		public virtual CSF_metric reportBack () { return null; }
+		public virtual MemoryStream reportBack () { return null; }
 		public virtual void reset ()      {}
 	}
 

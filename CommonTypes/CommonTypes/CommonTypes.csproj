@@ -33,9 +33,13 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
     <Compile Include="CommonTypes.cs" />
+    <Compile Include="CSF_metrics.cs" />
     <Compile Include="Default.cs" />
+    <Compile Include="MergingVisitor.cs" />
+    <Compile Include="MetricCalculatorVisitor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Runtime.Serialization" />
   </ItemGroup>
 </Project>

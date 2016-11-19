@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Json;
 
 //High bandwidth to several different peers is abnominal behvaiour
 namespace DADStormProcess {
@@ -46,31 +48,35 @@ namespace DADStormProcess {
 			}
 		}
 
-		public override CSF_metric reportBack(){
-            Dictionary<string, int> sinners = new Dictionary<string, int>();
-            string metricName = "CSF_HighDataDiffPeers";
+		public override MemoryStream reportBack(){
+			//Dictionary<string, int> sinners = new Dictionary<string, int>();
+			string metricName = "CSF_HighDataDiffPeers";
 
-            lock (connections){
-				string toReturn = "";
-				foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
-					string ip = sourceEntry.Key;
-					Hashtable table = sourceEntry.Value;
-					int bigConnectionsCount = 0;
-					foreach (DictionaryEntry pair in table) {
-						if((int)pair.Value > minimumDataConnection) {
-							bigConnectionsCount++;
-						}
-					}
-					if( bigConnectionsCount > 0 ){
-						toReturn += ip + " " + bigConnectionsCount + " ";
-						System.Console.WriteLine ( ip + " talked to " + bigConnectionsCount + " IPs with more than " + minimumDataConnection+ " of MB of data exchanged");
-                        sinners.Add(ip, bigConnectionsCount);
-					}
-				}
-			}
+			//lock (connections){
+			//	foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
+			//		string ip = sourceEntry.Key;
+			//		Hashtable table = sourceEntry.Value;
+			//		int bigConnectionsCount = 0;
+			//		foreach (DictionaryEntry pair in table) {
+			//			if((int)pair.Value > minimumDataConnection) {
+			//				bigConnectionsCount++;
+			//			}
+			//		}
+			//		if( bigConnectionsCount > 0 ){
+			//			System.Console.WriteLine ( ip + " talked to " + bigConnectionsCount + " IPs with more than " + minimumDataConnection + " of MB of data exchanged");
+			//			sinners.Add(ip, bigConnectionsCount);
+			//		}
+			//	}
+			//}
+            
+            MemoryStream stream = new MemoryStream();
+            lock (connections) {
+                CSF_metric metric = new CSF_metric(metricName, connections);
 
-            CSF_metric metric = new CSF_metric(metricName, sinners);
-            return metric;
+                DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(CSF_metric));
+                js.WriteObject(stream, metric);
+            }
+            return stream;
         }
 
         public override void reset() {

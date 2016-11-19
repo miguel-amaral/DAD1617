@@ -3,6 +3,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Json;
 
 //High bandwidth to several different peers is abnominal behvaiour
 namespace DADStormProcess {
@@ -18,29 +20,35 @@ namespace DADStormProcess {
 			registerOneWayConnection(sourceIp,destIp,size);
 		}
 
-		public override CSF_metric reportBack() {
-            Dictionary<string, int> metricSinners = new Dictionary<string, int>();
+		public override MemoryStream reportBack() {
+            //Dictionary<string, int> metricSinners = new Dictionary<string, int>();
             string metricName = this.GetType().Name;
 
             //--------------------------//
             //   calculate metrc value  //
             //--------------------------//
-			lock(connections){
-				foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
-					string ip = sourceEntry.Key;
-					Hashtable table = sourceEntry.Value;
-					int uploadSize = 0;
-					foreach (DictionaryEntry pair in table) {
-						uploadSize += (int)pair.Value;
-					}
-					if( uploadSize > minimumHighUpload ){
-						System.Console.WriteLine ( ip + " uploaded " + uploadSize + ", triggered when more than " + minimumHighUpload+ " MB of data uploaded");
-                        metricSinners.Add(ip, uploadSize);
-                    }
-                }
-			}
-            CSF_metric metric = new CSF_metric(metricName, metricSinners);
-            return metric;
+			//lock(connections){
+			//	foreach(KeyValuePair<string, Hashtable> sourceEntry in connections) {
+			//		string ip = sourceEntry.Key;
+			//		Hashtable table = sourceEntry.Value;
+			//		int uploadSize = 0;
+			//		foreach (DictionaryEntry pair in table) {
+			//			uploadSize += (int)pair.Value;
+			//		}
+			//		if( uploadSize > minimumHighUpload ){
+			//			System.Console.WriteLine ( ip + " uploaded " + uploadSize + ", triggered when more than " + minimumHighUpload+ " MB of data uploaded");
+            //            metricSinners.Add(ip, uploadSize);
+            //        }
+            //    }
+			//}
+            MemoryStream stream = new MemoryStream();
+            lock (connections) {
+                CSF_metric metric = new CSF_metric(metricName, this.connections);
+
+                DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(CSF_metric));
+                js.WriteObject(stream, metric);
+            }
+            return stream;
         }
 	}
 }

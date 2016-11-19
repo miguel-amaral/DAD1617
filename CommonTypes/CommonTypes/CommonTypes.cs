@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 
 public static class DEBUG{
 	public const bool DAEMON  = true;
-	public const bool PROCESS = true;
+	public const bool PROCESS = false;
 	public const bool PUPPET  = true;
 }
 
@@ -39,34 +39,6 @@ public class ConnectionPack{
 	public override int GetHashCode() {
 		return this.Ip.GetHashCode();
 	}
-}
-
-[Serializable]
-public class CSF_metric {
-    private string metric;
-    private Dictionary<string, int> sinners;
-    public CSF_metric(string metric, Dictionary<string, int> sinners) {
-        this.Metric = metric;
-        this.Sinners = sinners;
-    }
-
-    public string Metric {
-        get {
-            return metric;
-        }
-        set {
-            metric = value;
-        }
-    }
-
-    public Dictionary<string, int> Sinners {
-        get {
-            return sinners;
-        }
-        set {
-            sinners = value;
-        }
-    }
 }
 
 namespace PuppetMaster {

@@ -135,15 +135,7 @@ namespace PuppetMaster {
 						//else it must be a file
 						//foreach receivingOperator
 						foreach (string receiving_operator in item.Value) {
-							//Getting list of receiving replicas of operator
-							if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
-								//for each replica in the receivingOperator
-								PuppetDebug ("adding file: " + item.Key + " to: " + receiving_operator);
-								foreach (ConnectionPack receivingPack in receivingReplicas) {
-									DADStormProcess.ClientProcess receivingReplica = new DADStormProcess.ClientProcess (receivingPack);
-									receivingReplica.addFile (item.Key);
-								}
-							}
+                            addFileToOperator(item.Key, receiving_operator);
 						}
 					}
 				}
@@ -164,6 +156,19 @@ namespace PuppetMaster {
 				return;
 			}
 		}
+
+        protected void addFileToOperator(string fileLocation, string opID) {
+            List<ConnectionPack> receivingReplicas;
+            //Getting list of receiving replicas of operator
+            if (operatorsConPacks.TryGetValue(opID, out receivingReplicas)) {
+                //for each replica in the receivingOperator
+                PuppetDebug("adding file: " + fileLocation + " to: " + opID);
+                foreach (ConnectionPack receivingPack in receivingReplicas) {
+                    DADStormProcess.ClientProcess receivingReplica = new DADStormProcess.ClientProcess(receivingPack);
+                    receivingReplica.addFile(fileLocation);
+                }
+            }
+        }
 
 		/// <summary>
 		/// Method that from a string[] does a command in a single replica
@@ -243,17 +248,21 @@ namespace PuppetMaster {
 			String[] splitStr = line.Split (new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
 			if (splitStr.Length == 0) {
 				return;
-			} else if (splitStr [0].Equals ("status", StringComparison.OrdinalIgnoreCase)) {
+			}
+            else if (splitStr[0].Equals("status", StringComparison.OrdinalIgnoreCase)) {
                 doStatus(splitStr);
-			} else if (splitStr [0].Equals ("freeze", StringComparison.OrdinalIgnoreCase)
-			           || splitStr [0].Equals ("unfree", StringComparison.OrdinalIgnoreCase)
+            }
+            else if (splitStr[0].Equals("read_file", StringComparison.OrdinalIgnoreCase)) {
+                readCommandsFromFile(splitStr[1]);
+            } else if (splitStr [0].Equals ("freeze", StringComparison.OrdinalIgnoreCase)
+			           || splitStr [0].Equals ("unfreeze", StringComparison.OrdinalIgnoreCase)
 			           || splitStr [0].Equals ("crash", StringComparison.OrdinalIgnoreCase)
 			           || splitStr [0].Equals ("start", StringComparison.OrdinalIgnoreCase)) {
 				this.replicaTargetOperations (splitStr);
 			} else if (splitStr [0].Equals ("interval", StringComparison.OrdinalIgnoreCase)) {
 				this.operatorTargetOperations (splitStr);
 			} else if (splitStr [0].Equals ("wait", StringComparison.OrdinalIgnoreCase)) {
-				Thread.Sleep (Int32.Parse (splitStr [1]));
+				Thread.Sleep (Int32.Parse (splitStr [1])); //wait sleep
 			} else if (splitStr[0].Equals("LoggingLevel", StringComparison.OrdinalIgnoreCase))            {
                 this.fullLog = splitStr[1].Equals("full", StringComparison.OrdinalIgnoreCase);
             } else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
@@ -270,17 +279,21 @@ namespace PuppetMaster {
                 //Process files TODO this.
             } else {
 				//nothing so far, maybe an extra command
-				this.extraCommands(splitStr);
+				if(!this.extraCommands(splitStr)) {
+                    Console.ForegroundColor = ConsoleColor.DarkRed;
+                    System.Console.WriteLine("Command: " + line + " not found");
+                    Console.ResetColor();
+                }
 			}
 		}
 
-		public virtual void extraCommands(string[] command) { /*CSF will add its own commands*/ }
+		public virtual bool extraCommands(string[] command) { return false;/*CSF will add its own commands*/ }
 
 		protected void readCommandsFromFile (string fileLocation){
 			String line;
-			// Read the file and display it line by line.
-			System.IO.StreamReader file = new System.IO.StreamReader(fileLocation);
+            // Read the file and display it line by line.
             System.Console.WriteLine("Loading file: " + fileLocation);
+            System.IO.StreamReader file = new System.IO.StreamReader(@fileLocation);
             System.Console.WriteLine("Please specify whether you want step by step or all in");
             System.Console.WriteLine("Type \"step\" or \"all\"");
             string mode = System.Console.ReadLine();
@@ -422,8 +435,7 @@ namespace PuppetMaster {
 				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, daemonPort),fullLog);
 				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, semantics, routing,staticAsrguments);
 			}
-			//Make sure everything is created before we try anything else
-			Thread.Sleep (100);
+			Thread.Sleep (100);  //Make sure everything is created before we try anything else
             PuppetDebug("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
         }
 
@@ -434,7 +446,11 @@ namespace PuppetMaster {
                 System.Console.WriteLine("Killing Operator: " + opID);
                 Console.ResetColor();
                 foreach (ConnectionPack cp in listConPacks) {
-                    killProcess(cp);
+                    try  {
+                        killProcess(cp);
+                    } catch (Exception) {
+                        // He is probably dead already
+                    }
                 }
             }
         }
@@ -518,7 +534,7 @@ namespace PuppetMaster {
 			ServerPuppet sp = ServerPuppet.Instance;
 			if (args.Length > 0) {
                 configFileLocation = args [0];
-                sp.readCommandsFromFile (configFileLocation);
+                sp.readCommandsFromFile (@configFileLocation);
 			}
 
 			System.Console.WriteLine("we are now in manual writing commands, write EXIT to stop");
@@ -533,7 +549,7 @@ namespace PuppetMaster {
             System.Console.WriteLine("Puppet Server is going OFFLINE");
             Console.ResetColor();
             sp.killRemainingOperators();
-            Thread.Sleep(2000);
+            Thread.Sleep(2000);//Ensuring everything is offline
         }
 	}
 }

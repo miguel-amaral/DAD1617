@@ -1,0 +1,4 @@
+%sourceIp port destIp port size protocol
+%
+%exisiting dest
+3.1.1.0 1000 5.1.1.0 2000 250 UPnP
