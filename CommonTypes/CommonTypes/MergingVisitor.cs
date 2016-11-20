@@ -38,8 +38,23 @@ public class MergingVisitor : MetricVisitor {
         Dictionary<string,Hashtable> originalList = this.original.RawValues;
 		Dictionary<string,Hashtable>    otherList =         other.RawValues;
 
-		//Go through every entry in the otherList
-		foreach(KeyValuePair<string, Hashtable> othersEntry in otherList) {
+        if (otherList == null) {
+            // nothing to be merged..
+            if (originalList == null) {
+                originalList = new Dictionary<string, Hashtable>();
+            }
+            return;
+        } else if (originalList == null) {
+            if (otherList != null) { //it is always true
+                originalList = otherList;
+            } else {
+                originalList = new Dictionary<string, Hashtable>();
+            }
+            return;
+        }
+
+        //Go through every entry in the otherList
+        foreach (KeyValuePair<string, Hashtable> othersEntry in otherList) {
 			Hashtable existingCommunications;
 			//Check if the original's list has this sinner already
 			if (originalList.TryGetValue (othersEntry.Key, out existingCommunications)) {
@@ -76,14 +91,28 @@ public class MergingVisitor : MetricVisitor {
 	}
 
 	private void mergeKnownTrackers(CSF_metric other)		{
-		this.mergeLocalPeerDiscovery(other);
+		this.mergeIpInName(other);
 	}
 
 	private void mergeLocalPeerDiscovery(CSF_metric other)	{
 		Dictionary<string,int> originalList = original.Sinners;
 		Dictionary<string,int>    otherList =    other.Sinners;
 
-
+        if (otherList == null) {
+            // nothing to be merged..
+            if (originalList == null) {
+                originalList = new Dictionary<string, int>();
+            }
+            return; 
+        } else if (originalList == null) {
+            if (otherList != null) { //it is always true
+                originalList = otherList;
+            } else {
+                originalList = new Dictionary<string, int>();
+            }
+            return;
+        }
+        //else there is something to merge
 		//Go through every entry in the otherList
 		foreach(KeyValuePair<string, int> othersEntry in otherList) {
 

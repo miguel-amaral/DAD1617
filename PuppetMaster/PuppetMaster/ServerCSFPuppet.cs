@@ -16,8 +16,10 @@ namespace PuppetMaster {
 
         private DataContractJsonSerializer js = new DataContractJsonSerializer(typeof(CSF_metric));
         private List<CSF_metric> metrics = new List<CSF_metric>();
+
         public override bool extraCommands(string[] command) {
             if (command[0].Equals("report", StringComparison.OrdinalIgnoreCase)) {
+                metrics = new List<CSF_metric>();
                 this.doOperation("report");
                 System.Console.WriteLine("merging..");
                 this.mergeMetrics();
@@ -39,8 +41,8 @@ namespace PuppetMaster {
                     while (true) { 
                         Thread.Sleep(fileInterval); //Wait for the creation of nextFile
                         i = i + 1;
-                        //this.addFileToOperator(file + i, opID);
-                        System.Console.WriteLine(file + i + " to op: " + opID);
+                        this.addFileToOperator(file + i, opID);
+                        //System.Console.WriteLine(file + i + " to op: " + opID);
                     }
                 }).Start();
             } else {
@@ -48,6 +50,7 @@ namespace PuppetMaster {
             }
             return true;
         }
+
         private void doOperation(string operation) {
             foreach (string op in operatorsConPacks.Keys) {
                 doOperation(operation,op);
@@ -62,14 +65,12 @@ namespace PuppetMaster {
                 }
             }
         }
-
-
+        
         private void doOperation(string operation, ConnectionPack cp) {
             DADStormProcess.ClientProcess process = new DADStormProcess.ClientProcess(cp);
             if(operation.Equals("report", StringComparison.OrdinalIgnoreCase)) {
                 MemoryStream stream = process.reportBack();
-                if(stream != null)
-                {
+                if(stream != null) {
                     stream.Position = 0;
                     CSF_metric metric = correctMetric((CSF_metric)js.ReadObject(stream));
                     metrics.Add(metric);
@@ -129,13 +130,15 @@ namespace PuppetMaster {
 		}
 
 		private void processAllMetrics() {
-            foreach(CSF_metric metric in metrics) {
-                processMetric(metric);
-            }
-		}
-
-        private void processMetric(CSF_metric metric) {
             MetricCalculatorVisitor visitor = new MetricCalculatorVisitor();
+            foreach(CSF_metric metric in metrics) {
+                processMetric(visitor,metric);
+            }
+            visitor.printMetric();
+
+        }
+
+        private void processMetric(MetricCalculatorVisitor visitor, CSF_metric metric) {
             metric.acept(visitor);
         }
 

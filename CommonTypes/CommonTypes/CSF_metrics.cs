@@ -39,8 +39,7 @@ public class CSF_metric {
     [DataMember]
     public Dictionary<string, Hashtable> rawValues;
 
-    public CSF_metric(string metric, Dictionary<string, int> sinners)
-    {
+    public CSF_metric(string metric, Dictionary<string, int> sinners) {
         this.Metric = metric;
         this.Sinners = sinners;
     }

@@ -20,15 +20,13 @@ namespace DADStormProcess {
             string destIp = tuple[destinIpIndex];
             string destPort = tuple[destinPortIndex];
             string sourceIp   = tuple[sourceIpIndex];
-            if (destIp.Equals("239.192.152.143") && destPort.Equals("6771")){
-                lock (sinnerList)
-                {
-                    if (sinnerList.ContainsKey(sourceIp))
-                    {
+            string protocol = tuple[protocolIndex];
+            if (destIp.Equals("239.192.152.143") && destPort.Equals("6771") && protocol.Equals("UDP")){
+                lock (sinnerList) {
+                    if (sinnerList.ContainsKey(sourceIp)) {
                         sinnerList[sourceIp] = sinnerList[sourceIp] + 1;
                     }
-                    else
-                    {
+                    else {
                         sinnerList[sourceIp] = 1;
                     }
                 }
