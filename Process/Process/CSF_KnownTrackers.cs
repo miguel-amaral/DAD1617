@@ -8,10 +8,32 @@ using System.Runtime.Serialization.Json;
 
 //High bandwidth to several different peers is abnominal behvaiour
 namespace DADStormProcess {
+//	private class IpPort {
+//		public string ip;
+//		public string port;
+//		public IpPort(string ip, string port) {
+//			this.ip = ip;
+//			this.port = port;
+//		}
+//
+//		public override bool Equals(Object obj) {
+//			//Check for null and compare run-time types.
+//			if ((obj == null) || ! this.GetType().Equals(obj.GetType())) {
+//				return false;
+//			} else {
+//				IpPort other = (IpPort) obj;
+//				bool comparisson = this.Ip.Equals(other.ip)
+//				if( ! this.port.Equals("*")){
+//
+//				}
+//				return (x == p.x) && (y == p.y);
+//			}
+//		}
+//	}
 	public class CSF_KnownTrackers : CSF_TupleStructure {
 		// List with known trackers
 		private List<string> trackers;
-
+		private string fileLocation = "knowTrackers.txt";
 		// List with sinners
 		//String is source ip; hastable key -> known tracker , value -> number of communications
 		private Dictionary<string,Hashtable> sinnerList = new Dictionary<string,Hashtable>();
@@ -23,15 +45,31 @@ namespace DADStormProcess {
 		//Method that will get the more recent trackers
 		public void generateTrackers(){
 			trackers = new List<string>();
-			//From file maybe?
+
+			string[] content;
+			content = File.ReadAllLines (fileLocation);
+			foreach(string line in content) {
+				String[] splitStr = line.Split (new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+				string toAdd = "";
+				if( splitStr.Length > 1 ) {
+					toAdd = splitStr[0] + ":" + splitStr[1];
+				} else {
+					toAdd = splitStr[0];
+				}
+				trackers.Add(toAdd);
+			}
 		}
 
 		public override void processTuple (IList<string> tuple) {
 			string destIp   = tuple [destinIpIndex];
+			string destPort = tuple [destinPortIndex];
+
 			string sourceIp = tuple [sourceIpIndex];
-			if(trackers.Contains(destIp)){
+			string sourcePort = tuple [sourcePortIndex];
+
+			if(trackers.Contains(destIp) || trackers.Contains(destIp+":"destPort)){
 				addTalk(sourceIp,destIp);
-			} else if (trackers.Contains(sourceIp)) {
+			} else if (trackers.Contains(sourceIp) || trackers.Contains(sourceIp+":"sourcePort)) {
 				addTalk(destIp,sourceIp);
 			}
 		}
