@@ -22,8 +22,8 @@ namespace Daemon {
 		/**
 		  * Interface provided for the creation of a remote Thread
 		  */
-		public void newThread(string dllName, string className , string methodName, string processPort, string proccessIp, int semantics, string routing, object[] args = null) {
-			remoteDaemon.newThread(dllName, className , methodName, processPort, proccessIp, semantics, routing , args);
+		public void newThread(string dllName, string className , string methodName, string processPort, string proccessIp, int semantics, string routing, string operatorID, object[] args = null) {
+			remoteDaemon.newThread(dllName, className , methodName, processPort, proccessIp, semantics, routing, operatorID, args);
 
 		}
 

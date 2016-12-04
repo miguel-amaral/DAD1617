@@ -146,7 +146,7 @@ namespace PuppetMaster {
             System.Console.WriteLine("CSF");
             TcpChannel channel = new TcpChannel(port);
             ChannelServices.RegisterChannel(channel, false);
-            PuppetMasterRemoteServerObject myServerObj = new PuppetMasterRemoteServerObject();
+            myServerObj = new PuppetMasterRemoteServerObject();
             RemotingServices.Marshal(myServerObj, "PuppetMasterRemoteServerObject", typeof(PuppetMasterRemoteServerObject));
 
             Console.ForegroundColor = ConsoleColor.Green;

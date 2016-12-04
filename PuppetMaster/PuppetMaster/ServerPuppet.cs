@@ -13,6 +13,7 @@ namespace PuppetMaster {
 	public class ServerPuppet {
 
         protected static int port = 10001;
+        protected static PuppetMasterRemoteServerObject myServerObj;
         private static int daemonPort = 10000;
 		private bool fullLog = false;
 		private bool firstStart = true;
@@ -32,8 +33,7 @@ namespace PuppetMaster {
 				return instance;
 			}
 		}
-        public static ServerPuppet CSFInstance
-        {
+        public static ServerPuppet CSFInstance {
             get
             {
                 if (instance == null)
@@ -433,7 +433,7 @@ namespace PuppetMaster {
 			//Create the Processes
 			foreach(ConnectionPack cp in currentConnectionPacks){
 				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, daemonPort),fullLog);
-				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, semantics, routing,staticAsrguments);
+				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, semantics, routing, current_operator_id,staticAsrguments);
 			}
 			Thread.Sleep (100);  //Make sure everything is created before we try anything else
             PuppetDebug("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
@@ -520,7 +520,7 @@ namespace PuppetMaster {
         public static void Main (string[] args)	{
             TcpChannel channel = new TcpChannel (port);
 			ChannelServices.RegisterChannel (channel, false);
-			PuppetMasterRemoteServerObject myServerObj = new PuppetMasterRemoteServerObject ();
+			myServerObj = new PuppetMasterRemoteServerObject ();
 			RemotingServices.Marshal (myServerObj, "PuppetMasterRemoteServerObject", typeof(PuppetMasterRemoteServerObject));
 
             Console.ForegroundColor = ConsoleColor.Green;

@@ -12,7 +12,8 @@ namespace Daemon {
 
 		private static int port = 10000;
 		private static ServerDaemon instance = null;
-		private static TcpChannel channel;
+        private static DaemonRemoteServerObject myServerObj;
+        private static TcpChannel channel;
 		private bool   fullLog = false;
 		private ServerDaemon() {}
 
@@ -30,12 +31,12 @@ namespace Daemon {
 			set	{ fullLog = value; }
 		}
 
-		public void newThread (string dllName, string className, string methodName, string processPort, string proccessIp, int semantics, string routing, object[] args = null) {
+		public void newThread (string dllName, string className, string methodName, string processPort, string proccessIp, int semantics, string routing, string operatorID, object[] args = null) {
 			Process process = new Process ();
 			// Configure the process using the StartInfo properties.
 			process.StartInfo.FileName = "Process.exe";
             process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
-            string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + semantics.ToString() + " "  + routing + " " + fullLog.ToString () + " " + proccessIp;
+            string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + semantics.ToString() + " "  + routing + " " + fullLog.ToString () + " " + proccessIp + " " + operatorID;
 			if (args != null) {
 				foreach (string str in args) {
 					processArguments += " " + str;
@@ -59,7 +60,7 @@ namespace Daemon {
 			channel = new TcpChannel(port);
 			ChannelServices.RegisterChannel(channel,false);
 
-			DaemonRemoteServerObject myServerObj = new DaemonRemoteServerObject();
+			myServerObj = new DaemonRemoteServerObject();
 			RemotingServices.Marshal(myServerObj, "DaemonRemoteServerObject",typeof(DaemonRemoteServerObject));
 
 			System.Console.WriteLine("Daemon Server Online : port: " + port);

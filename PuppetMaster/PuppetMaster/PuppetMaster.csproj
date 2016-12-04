@@ -44,7 +44,7 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>PuppetMaster.ServerCSFPuppet</StartupObject>
+    <StartupObject>PuppetMaster.ServerPuppet</StartupObject>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

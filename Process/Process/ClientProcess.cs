@@ -58,16 +58,11 @@ namespace DADStormProcess {
             }
         }
 
-        public void interval(int milli)
-        {
-            try
-            {
+        public void interval(int milli) {
+            try {
                 remoteProcess.interval(milli);
-            }
-            catch (SocketException e)
-            {
+            } catch (SocketException e) {
                 System.Console.WriteLine(e.Message);
-
             }
         }
 
@@ -104,6 +99,13 @@ namespace DADStormProcess {
             remoteProcess.reset();
         }
 
+        public void receiveReplicaBackup(string oldID, IList<IList<string>> result) {
+            remoteProcess.receiveReplicaBackup(oldID, result);
+        }
+
+        public void loseResponsability(string id) {
+            remoteProcess.loseResponsability(id);
+        } 
 
         /**
 		  * Debug method

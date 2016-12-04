@@ -1,29 +1,18 @@
 % LoggingLevel full
-%%%fileInterval 60 //How many seconds between creation of each file
+fileInterval 30 //How many seconds between creation of each file
 %%%PACKET_FILE operator fileLocationPrefix
 
-OP1 input ops ..\..\CSF_PACKET_2.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec   DUP
-%OP1 input ops ../../CSF_PACKET_2.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec  DUP
+%OP1 input ops ..\..\CSF_PACKET.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec   DUP
+%OP1 input ops ../../CSF_PACKET.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec  DUP
 
-OP2 input ops OP1            rep fact 1 routing hashing(1) address tcp://localhost:11001/op operator spec CUSTOM CSF_HighDataDiffPeers CSF_HighDataDiffPeers CSF_HighDataDiffPeers
-OP3 input ops OP2            rep fact 1 routing hashing(1) address tcp://localhost:11002/op operator spec CUSTOM CSF_HighUpload CSF_HighUpload CSF_HighUpload
-OP4 input ops OP3            rep fact 1 routing hashing(1) address tcp://localhost:11003/op operator spec CUSTOM CSF_HighDownload CSF_HighDownload CSF_HighDownload
-OP5 input ops OP4            rep fact 1 routing hashing(1) address tcp://localhost:11004/op operator spec CUSTOM CSF_IpInName CSF_IpInName CSF_IpInName
-OP6 input ops OP5            rep fact 1 routing hashing(1) address tcp://localhost:11005/op operator spec CUSTOM CSF_ProtocolUPnP CSF_ProtocolUPnP CSF_ProtocolUPnP
-OP7 input ops OP6            rep fact 1 routing hashing(1) address tcp://localhost:11006/op operator spec CUSTOM CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery
-OP8 input ops OP7            rep fact 1 routing hashing(1) address tcp://localhost:11007/op operator spec CUSTOM CSF_KnownTrackers CSF_KnownTrackers CSF_KnownTrackers
+OP2 input ops OP1            rep fact 1 routing primmary address tcp://localhost:11001/op operator spec CUSTOM CSF_HighDataDiffPeers CSF_HighDataDiffPeers CSF_HighDataDiffPeers
+OP3 input ops OP2            rep fact 1 routing primmary address tcp://localhost:11002/op operator spec CUSTOM CSF_HighUpload CSF_HighUpload CSF_HighUpload
+OP4 input ops OP3            rep fact 1 routing primmary address tcp://localhost:11003/op operator spec CUSTOM CSF_HighDownload CSF_HighDownload CSF_HighDownload
+OP5 input ops OP4            rep fact 1 routing primmary address tcp://localhost:11004/op operator spec CUSTOM CSF_IpInName CSF_IpInName CSF_IpInName
+OP6 input ops OP5            rep fact 1 routing primmary address tcp://localhost:11005/op operator spec CUSTOM CSF_ProtocolUPnP CSF_ProtocolUPnP CSF_ProtocolUPnP
+OP7 input ops OP6            rep fact 1 routing primmary address tcp://localhost:11006/op operator spec CUSTOM CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery
+OP8 input ops OP7            rep fact 1 routing primmary address tcp://localhost:11007/op operator spec CUSTOM CSF_KnownTrackers CSF_KnownTrackers CSF_KnownTrackers
 %%%%%%%%%%Second Replica%%%%%%%%%%
-%OP11 input ops ..\..\CSF_PACKET_2.txt rep fact 1 routing hashing(1) address tcp://localhost:11010/op operator spec DUP
-%%OP1 input ops ../../CSF_PACKET_2.txt rep fact 1 routing hashing(1) address tcp://localhost:11010/op operator spec DUP
-%OP12 input ops OP11            rep fact 1 routing hashing(1) address tcp://localhost:11011/op operator spec CUSTOM CSF_HighDataDiffPeers CSF_HighDataDiffPeers CSF_HighDataDiffPeers
-%OP13 input ops OP12            rep fact 1 routing hashing(1) address tcp://localhost:11012/op operator spec CUSTOM CSF_HighUpload CSF_HighUpload CSF_HighUpload
-%OP14 input ops OP13            rep fact 1 routing hashing(1) address tcp://localhost:11013/op operator spec CUSTOM CSF_HighDownload CSF_HighDownload CSF_HighDownload
-%OP15 input ops OP14            rep fact 1 routing hashing(1) address tcp://localhost:11014/op operator spec CUSTOM CSF_IpInName CSF_IpInName CSF_IpInName
-%OP16 input ops OP15            rep fact 1 routing hashing(1) address tcp://localhost:11015/op operator spec CUSTOM CSF_ProtocolUPnP CSF_ProtocolUPnP CSF_ProtocolUPnP
-%OP17 input ops OP16            rep fact 1 routing hashing(1) address tcp://localhost:11016/op operator spec CUSTOM CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery
-%%OP18 input ops OP17            rep fact 1 routing hashing(1) address tcp://localhost:11017/op operator spec CUSTOM CSF_KnownTrackers CSF_KnownTrackers CSF_KnownTrackers
-%%%%%%%%%
-PACKET_FILE OP11 CSF_PACKET
 PACKET_FILE OP1  CSF_PACKET
 start OP1
 start OP2
@@ -33,15 +22,5 @@ start OP5
 start OP6
 start OP7
 start OP8
-%%%%%%%%%%Second Replica%%%%%%%%%%
-%start OP11
-%start OP12
-%start OP13
-%start OP14
-%start OP15
-%start OP16
-%start OP17
-%start OP18
-status
 wait 8000
 report

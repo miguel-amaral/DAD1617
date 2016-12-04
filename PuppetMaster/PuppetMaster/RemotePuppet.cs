@@ -13,5 +13,12 @@ namespace PuppetMaster {
 		public void addTuple (string senderUrl, IList<string> tuple){
 			ServerPuppet.Instance.logTupple(senderUrl,tuple);
 		}
-	}
+
+        public override object InitializeLifetimeService()
+        {
+
+            return null;
+
+        }
+    }
 }

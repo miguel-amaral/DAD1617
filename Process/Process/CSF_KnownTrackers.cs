@@ -33,10 +33,12 @@ namespace DADStormProcess {
 	public class CSF_KnownTrackers : CSF_TupleStructure {
 		// List with known trackers
 		private List<string> trackers;
-		private string fileLocation = "knowTrackers.txt";
-		// List with sinners
-		//String is source ip; hastable key -> known tracker , value -> number of communications
-		private Dictionary<string,Hashtable> sinnerList = new Dictionary<string,Hashtable>();
+        //private string fileLocation = @"..\..\knownTrackerIpsPorts.txt";
+        private string fileLocation = @"knownTrackerIpsPorts.txt";
+
+        // List with sinners
+        //String is source ip; hastable key -> known tracker , value -> number of communications
+        private Dictionary<string,Hashtable> sinnerList = new Dictionary<string,Hashtable>();
 
 		public CSF_KnownTrackers(){
 			generateTrackers();
@@ -67,9 +69,9 @@ namespace DADStormProcess {
 			string sourceIp = tuple [sourceIpIndex];
 			string sourcePort = tuple [sourcePortIndex];
 
-			if(trackers.Contains(destIp) || trackers.Contains(destIp+":"destPort)){
+			if(trackers.Contains(destIp) || trackers.Contains(destIp+":"+destPort)){
 				addTalk(sourceIp,destIp);
-			} else if (trackers.Contains(sourceIp) || trackers.Contains(sourceIp+":"sourcePort)) {
+			} else if (trackers.Contains(sourceIp) || trackers.Contains(sourceIp+":"+sourcePort)) {
 				addTalk(destIp,sourceIp);
 			}
 		}
