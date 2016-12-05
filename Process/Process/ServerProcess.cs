@@ -39,6 +39,8 @@ namespace DADStormProcess {
         private Dictionary<string, int> filesIndex = new Dictionary<string, int>();
         private Dictionary<string, IList<IList<string>>> processedIDs = new Dictionary<string, IList<IList<string>>>();
         private Dictionary<string, IList<IList<string>>> responsability = new Dictionary<string, IList<IList<string>>>();
+        private Dictionary<string, List<string>> responsabilityLinks = new Dictionary<string, List<string>>();
+
 
         public ConnectionPack PuppetMasterConPack {
             get { return puppetMasterConPack; }
@@ -234,9 +236,9 @@ namespace DADStormProcess {
                 IList<string> nextTuple = this.nextTuple();
 
                 List<string> metadata = getMetadata(nextTuple);
-                string ip = metadata[0];
-                string port = metadata[1];
                 string oldID = metadata[2];
+                string port = metadata[1];
+                string ip = metadata[0];
 
                 ConnectionPack previous = new ConnectionPack(ip, Int32.Parse(port));
 
@@ -262,9 +264,9 @@ namespace DADStormProcess {
         private GetMetadata getMetadata;
         private List<string> getMetadataAtMost(IList<string> tuple) {
             List<string> toReturn = new List<string>();
-            toReturn.Add("");
-            toReturn.Add("0");
-            toReturn.Add("0.0.0.0");
+            toReturn.Insert(0, "");
+            toReturn.Insert(0,"0");
+            toReturn.Insert(0,"0.0.0.0");
             return toReturn;
         }
         private List<string> getMetadataAtLeast(IList<string> nextTuple) {
@@ -276,9 +278,9 @@ namespace DADStormProcess {
             nextTuple.RemoveAt(0);
 
             List<string> toReturn = new List<string>();
-            toReturn.Add(oldID);
-            toReturn.Add(port);
-            toReturn.Add(ip);
+            toReturn.Insert(0, ip);
+            toReturn.Insert(1, port);
+            toReturn.Insert(2, oldID);
             return toReturn;
         }
         private List<string> getMetadataExactly(IList<string> nextTuple) {
@@ -290,34 +292,45 @@ namespace DADStormProcess {
             nextTuple.RemoveAt(0);
 
             List<string> toReturn = new List<string>();
-            toReturn.Add(oldID);
-            toReturn.Add(port);
-            toReturn.Add(ip);
+            toReturn.Insert(0, ip);
+            toReturn.Insert(1, port);
+            toReturn.Insert(2, oldID);
             return toReturn;
         }
-        private delegate List<string> InsertMetadata(string oldID, List<string> tuple, int index);
+        private delegate List<string> InsertMetadata(string oldID, List<string> tuple, int indexResult, int indexOperator);
         private InsertMetadata insertMetadata;
-        private List<string> insertMetadataAtMost(string oldID, List<string> tuple, int index) {
+        private List<string> insertMetadataAtMost (string oldID, List<string> tuple, int indexResult, int indexOperator) {
             return tuple;
         }
-        private List<string> insertMetadataAtLeast(string oldID, List<string> tuple, int index) {
+        private List<string> insertMetadataAtLeast(string oldID, List<string> tuple, int indexResult, int indexOperator) {
             string newID = oldID;
-            if (index > -1) {
-                newID = oldID + index;
+
+            if (indexResult > -1) {
+                newID += "_" + indexResult;
             }
+            if (indexOperator > -1) {
+                newID += ":" + indexOperator;
+            }
+
             tuple.Insert(0, newID);
             string ip = MyConPack.Ip;
             string port = MyConPack.Port.ToString();
 
             tuple.Insert(0, port);
             tuple.Insert(0, ip);
+
             return tuple;
         }
-        private List<string> insertMetadataExactly(string oldID, List<string> tuple, int index) {
+        private List<string> insertMetadataExactly(string oldID, List<string> tuple, int indexResult, int indexOperator) {
             string newID = oldID;
-            if (index > -1) {
-                newID = oldID + index;
+
+            if (indexResult > -1) {
+                newID += "_" + indexResult;
             }
+            if (indexOperator > -1) {
+                newID += ":" + indexOperator;
+            }
+
             tuple.Insert(0, newID);
             string ip = MyConPack.Ip;
             string port = MyConPack.Port.ToString();
@@ -352,6 +365,7 @@ namespace DADStormProcess {
             assumeResponsability(previous, ID);
         }
         private void assureSemanticsOnEmitExactly(ConnectionPack previous, string ID, IList<IList<string>> result) {
+            System.Console.WriteLine(ID);
             doBackup(ID, result);
             assumeResponsability(previous, ID);
         }
@@ -402,18 +416,36 @@ namespace DADStormProcess {
         private void emitTuple(ConnectionPack previous, string oldID, IList<IList<string>> result){
             assureSemanticsOnEmit(previous,oldID,result);
             
+            int indexResult = -1;
 
-            int index = -1;
             foreach (List<string> tuple in result) {
-                if(result.Count > 1) index++;
-                //Lets ignore empty tuples shall we
-                if (tuple.Count > 0) {
-                    List<string> tupleToSend = insertMetadata(oldID, tuple, index);
-                    ProcessDebug("Another tuple generated: <" + String.Join(", ", tupleToSend) + ">");
+                if (result.Count > 1) { indexResult++; }
+
+                if (tuple.Count > 0) { //Lets ignore empty tuples shall we
                     if (fullLog == true) {
-                        logToPuppetMaster(tupleToSend);
+                        logToPuppetMaster(tuple);
                     }
-                    sendToNextOperators(tupleToSend);
+                    int indexOperators = -1;
+                    if (downStreamNodes.Count > 0) {
+                        //Foreach operator
+                        foreach (List<ConnectionPack> receivingOperator in downStreamNodes) {
+                            if (downStreamNodes.Count > 1) { indexOperators++; }
+
+                            List<string> tupleToSend = insertMetadata(oldID, tuple, indexResult, indexOperators);
+                            ConnectionPack nextOperatorCp = this.RoutTechnic.nextDestination(receivingOperator, tuple);
+                            //try {
+                            ProcessDebug("Another tuple generated: <" + String.Join(", ", tuple) + ">");
+                            sendTupleToOperator(nextOperatorCp, tupleToSend);
+                            ProcessDebug(receivingOperator + " received tuple on " + nextOperatorCp);
+                            /*} catch () {
+                                socket exception maybe?
+                            } */
+                        }
+                        ProcessDebug(oldID + " send complete");
+                    } else {
+                        ProcessDebug("No one to send tuple to :(");
+                        //Case where there is no one to receive..//probably its last operator
+                    }
                 }
             }
 		}
@@ -430,25 +462,38 @@ namespace DADStormProcess {
 			ProcessDebug("Puppet Master informed");
 		}
 
-		/**
+        /// <summary>
+        /// method that sends a tuple to an endpoint
+        /// </summary>
+        /// <param name="endpoint"></param>
+        /// <param name="tuple"></param>
+        private void sendTupleToOperator(ConnectionPack endpoint, IList<string> tuple) {
+            DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess(endpoint);
+            nextProcess.addTuple(tuple);
+        }
+
+        /**
 		  * Method that sends a tuple to every downstream operator
 		  */
-		private void sendToNextOperators (IList<string> tuple) {
-
-			if (downStreamNodes.Count > 0) {
-				//Foreach operator
-				foreach(List<ConnectionPack> receivingOperator in downStreamNodes){
-					ConnectionPack nextOperatorCp = this.RoutTechnic.nextDestination(receivingOperator, tuple);
-					DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess (nextOperatorCp);
-					nextProcess.addTuple (tuple);
-					ProcessDebug (nextOperatorCp + " received tuple");
-				}
-			} else {
-				ProcessDebug ("No one to send tuple to :(");
-				//Case where there is no one to receive..
-				//probably its last operator
-			}
-		}
+        //private void sendToNextOperators (IList<string> tuple) {
+        //
+		//	if (downStreamNodes.Count > 0) {
+		//		//Foreach operator
+		//		foreach(List<ConnectionPack> receivingOperator in downStreamNodes){
+        //            ConnectionPack nextOperatorCp = this.RoutTechnic.nextDestination(receivingOperator, tuple);
+        //            //try {
+        //                sendTupleToOperator(nextOperatorCp, tuple);
+        //                ProcessDebug(nextOperatorCp + " received tuple");
+        //            /*} catch () {
+        //                socket exception maybe?
+        //            } */
+        //        }
+        //    } else {
+		//		ProcessDebug ("No one to send tuple to :(");
+		//		//Case where there is no one to receive..
+		//		//probably its last operator
+		//	}
+		//}
 
         private void removeResponsabilityFromOperator(string ID) {
             //Do not do remote call on ourselves FIXME TODO
@@ -465,11 +510,10 @@ namespace DADStormProcess {
         /* -------------------------------------------------------------------- */
         /* -------------------------------------------------------------------- */
 
-            /// <summary>
-            /// Setup the class
-            /// </summary>
-        public void buildServer(ConnectionPack myCp, string dllName, string className, string methodName, string routingTechnic, bool fullLogging, int semantics, string operatorID)
-        {
+        /// <summary>
+        /// Setup the class
+        /// </summary>
+        public void buildServer(ConnectionPack myCp, string dllName, string className, string methodName, string routingTechnic, bool fullLogging, int semantics, string operatorID) {
             this.MyConPack = myCp;
             this.FullLog = fullLogging;
             this.operatorID = operatorID;

@@ -549,7 +549,7 @@ namespace PuppetMaster {
             System.Console.WriteLine("Puppet Server is going OFFLINE");
             Console.ResetColor();
             sp.killRemainingOperators();
-            Thread.Sleep(2000);//Ensuring everything is offline
+            Thread.Sleep(1000);//Ensuring everything is offline
         }
 	}
 }

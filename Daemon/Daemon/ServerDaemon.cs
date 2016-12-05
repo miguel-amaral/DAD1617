@@ -72,7 +72,7 @@ namespace Daemon {
 			Console.ForegroundColor = ConsoleColor.Red;
 			System.Console.WriteLine("Daemon Server is going OFFLINE" );
 			Console.ResetColor();
-            Thread.Sleep(2000); //Ensuring everything is offline
+            Thread.Sleep(1000); //Ensuring everything is offline
 		}
 	}
 }

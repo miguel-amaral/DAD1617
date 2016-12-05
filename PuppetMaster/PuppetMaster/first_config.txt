@@ -1,7 +1,8 @@
 logginglevel full
+semantics exactly-once
 %%
 %%
-OP1 input ops ..\..\tuples.txt  rep fact 1 routing hashing(1) address tcp://localhost:11111/op operator spec DUP
+OP1 input ops ..\..\tuples.txt ..\..\tuples2.txt  rep fact 1 routing hashing(1) address tcp://localhost:11111/op operator spec DUP
 OP2 input ops OP1 rep fact 1 routing random address tcp://localhost:13333/op operator spec UNIQ 0
 OP3 input ops OP2 rep fact 1 routing random address tcp://localhost:14444/op operator spec FILTER 0 > "j"
 OP4 input ops OP3 rep fact 1 routing primmary address tcp://localhost:15555/op operator spec OUTPUT out.txt
