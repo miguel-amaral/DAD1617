@@ -30,7 +30,7 @@ namespace DADStormProcess {
         private ProcessRemoteServerObject myServerObj;
         private Queue<IList<string>> dllArgs = new Queue<IList<string>>();
 
-        private List<List<ConnectionPack>> downStreamNodes = new List<List<ConnectionPack>>();
+        private Dictionary<string, List<ConnectionPack>> downStreamNodes = new Dictionary<string, List<ConnectionPack>>();
         private List<ConnectionPack> operatorReplicas;
         private List<string> filesLocation = new List<string>();
         private List<string> filesToRemove = new List<string>();
@@ -40,7 +40,7 @@ namespace DADStormProcess {
         private Dictionary<string, IList<IList<string>>> processedIDs = new Dictionary<string, IList<IList<string>>>();
         private Dictionary<string, IList<IList<string>>> responsability = new Dictionary<string, IList<IList<string>>>();
         private Dictionary<string, List<string>> responsabilityLinks = new Dictionary<string, List<string>>();
-
+        private Dictionary<string, string> idTranslation = new Dictionary<string, string>();
 
         public ConnectionPack PuppetMasterConPack {
             get { return puppetMasterConPack; }
@@ -112,7 +112,8 @@ namespace DADStormProcess {
                                         }
                                     }
                                     filesToRemove = new List<string>();
-                                } continue; // try again
+                                }
+                                continue; // try again
                             }
                         }
                     }
@@ -151,8 +152,8 @@ namespace DADStormProcess {
                             toAdd.Add(str);
                         }
 
-                        string id = this.operatorID + fileLocation + index.ToString();
-                        toAdd = insertMetadataOnRead(id, toAdd);
+                        string id = this.operatorID + "-" + fileLocation + "-" + index.ToString();
+                        insertMetadataOnRead(id, toAdd);
                         this.addTuple(toAdd);
                     }
                     if (!primmary) {
@@ -265,8 +266,8 @@ namespace DADStormProcess {
         private List<string> getMetadataAtMost(IList<string> tuple) {
             List<string> toReturn = new List<string>();
             toReturn.Insert(0, "");
-            toReturn.Insert(0,"0");
-            toReturn.Insert(0,"0.0.0.0");
+            toReturn.Insert(0, "0");
+            toReturn.Insert(0, "0.0.0.0");
             return toReturn;
         }
         private List<string> getMetadataAtLeast(IList<string> nextTuple) {
@@ -297,20 +298,27 @@ namespace DADStormProcess {
             toReturn.Insert(2, oldID);
             return toReturn;
         }
-        private delegate List<string> InsertMetadata(string oldID, List<string> tuple, int indexResult, int indexOperator);
+        private delegate string GetID(IList<string> tuple);
+        private GetID getID;
+        private string getIDAtMost(IList<string> tuple) {
+            return "";
+        }
+        private string getIDAtLeast(IList<string> nextTuple) {
+            string oldID = nextTuple[2];
+            return oldID;
+        }
+        private string getIDExactly(IList<string> nextTuple) {
+            string oldID = nextTuple[2];
+            return oldID;
+        }
+
+        private delegate void InsertMetadata(string oldID, List<string> tuple, int indexResult, int indexOperator);
         private InsertMetadata insertMetadata;
-        private List<string> insertMetadataAtMost (string oldID, List<string> tuple, int indexResult, int indexOperator) {
-            return tuple;
+        private void insertMetadataAtMost(string oldID, List<string> tuple, int indexResult, int indexOperator) {
+            
         }
-        private List<string> insertMetadataAtLeast(string oldID, List<string> tuple, int indexResult, int indexOperator) {
-            string newID = oldID;
-
-            if (indexResult > -1) {
-                newID += "_" + indexResult;
-            }
-            if (indexOperator > -1) {
-                newID += ":" + indexOperator;
-            }
+        private void insertMetadataAtLeast(string oldID, List<string> tuple, int indexResult, int indexOperator) {
+            string newID = getNewId(oldID, indexResult, indexOperator);
 
             tuple.Insert(0, newID);
             string ip = MyConPack.Ip;
@@ -319,17 +327,10 @@ namespace DADStormProcess {
             tuple.Insert(0, port);
             tuple.Insert(0, ip);
 
-            return tuple;
+            //return tuple;
         }
-        private List<string> insertMetadataExactly(string oldID, List<string> tuple, int indexResult, int indexOperator) {
-            string newID = oldID;
-
-            if (indexResult > -1) {
-                newID += "_" + indexResult;
-            }
-            if (indexOperator > -1) {
-                newID += ":" + indexOperator;
-            }
+        private void insertMetadataExactly(string oldID, List<string> tuple, int indexResult, int indexOperator) {
+            string newID = getNewId(oldID, indexResult, indexOperator);
 
             tuple.Insert(0, newID);
             string ip = MyConPack.Ip;
@@ -337,24 +338,24 @@ namespace DADStormProcess {
 
             tuple.Insert(0, port);
             tuple.Insert(0, ip);
-            return tuple;
+            //return tuple;
         }
-        private delegate List<string> InsertMetadataOnRead(string ID, List<string> tuple);
+        private delegate void InsertMetadataOnRead(string ID, List<string> tuple);
         private InsertMetadataOnRead insertMetadataOnRead;
-        private List<string> insertMetadataOnReadAtMost(string ID, List<string> tuple) {
-            return tuple;
+        private void insertMetadataOnReadAtMost(string ID, List<string> tuple) {
+            //return tuple;
         }
-        private List<string> insertMetadataOnReadAtLeast(string ID, List<string> toAdd) {
+        private void insertMetadataOnReadAtLeast(string ID, List<string> toAdd) {
             toAdd.Insert(0, ID);
             toAdd.Insert(0, "0");
             toAdd.Insert(0, "0.0.0.0");
-            return toAdd;
+            //return toAdd;
         }
-        private List<string> insertMetadataOnReadExactly(string ID, List<string> toAdd) {
+        private void insertMetadataOnReadExactly(string ID, List<string> toAdd) {
             toAdd.Insert(0, ID);
             toAdd.Insert(0, "0");
             toAdd.Insert(0, "0.0.0.0");
-            return toAdd;
+            //return toAdd;
         }
         private delegate void AssureSemanticsOnEmit(ConnectionPack previous, string oldID, IList<IList<string>> result);
         private AssureSemanticsOnEmit assureSemanticsOnEmit;
@@ -365,29 +366,72 @@ namespace DADStormProcess {
             assumeResponsability(previous, ID);
         }
         private void assureSemanticsOnEmitExactly(ConnectionPack previous, string ID, IList<IList<string>> result) {
-            System.Console.WriteLine(ID);
             doBackup(ID, result);
             assumeResponsability(previous, ID);
         }
 
+        private string getNewId(string baseID, int indexResult, int indexOperator) {
+            string newID = baseID;
+
+            if (indexResult > -1) {
+                newID += "_" + indexResult;
+            }
+            if (indexOperator > -1) {
+                newID += ":" + indexOperator;
+            }
+            return newID;
+        }
+
+        /// <summary>
+        /// Functions that creates a link between two tuples
+        /// allow for a tuple to generate more than 1 tuple and send to severall operators
+        /// </summary>
+        /// <param name="oldID"></param>
+        /// <param name="newID"></param>
+        private void createLink(string oldID, string newID, string opID) {
+            lock (responsabilityLinks) {
+                List<string> links;
+                if (!responsabilityLinks.TryGetValue(oldID, out links)) {
+                    links = new List<string>();
+                }
+                if (links.Contains(newID)) { ProcessError("Repeating IDS: " + newID); }
+                links.Add(newID);
+                idTranslation[newID] = opID;
+                //ProcessDebug("creating link between: " + oldID + " : " + newID);
+                responsabilityLinks[oldID] = links;
+            }
+        }
+
         public void receiveReplicaBackup(string oldID, IList<IList<string>> result) {
+
             processedIDs.Add(oldID, result); //Assure only once
-            int index = 0;
-            foreach (List<string> tuple in result) {
-                index++;
-                //Lets ignore empty tuples shall we
-                if (tuple.Count > 0) {
-                    string newID = oldID;
-                    if (result.Count > 1) {
-                        newID = oldID + index;
-                    }
-                    //tuple.Insert(0, newID);
-                    IList<IList<string>> toBeResponsible = new List<IList<string>>();
-                    toBeResponsible.Add(tuple);
-                    lock (responsability) {
-                        responsability.Add(newID, toBeResponsible);
+
+            if ((result.Count == 1 && result[0].Count == 0) //Nothing generated 
+                || downStreamNodes.Count == 0) { //No one to forward output
+                //this.loseReplicaResponsability(oldID);
+
+                ProcessDebug("terminal case: " + oldID);
+                //if(result.Count == 1 && result[0].Count == 0) { System.Console.WriteLine("empty result"); } 
+                //if (downStreamNodes.Count == 0) { System.Console.WriteLine("last operator"); }
+
+                return;
+            }
+
+            int indexResult   = -1;
+            foreach(List<string> tuple in result) {
+                if (tuple.Count > 0) { //ignoring empty tuples
+                    if (result.Count > 1) { indexResult++; }
+                    int indexOperator = -1;
+                    foreach (KeyValuePair<string, List<ConnectionPack>> entry in downStreamNodes) {
+                        string opID = entry.Key;
+                        if (downStreamNodes.Count > 1) { indexOperator++; }
+                        string newID = getNewId(oldID, indexResult, indexOperator);
+                        createLink(oldID, newID, opID);
                     }
                 }
+            }           
+            lock (responsability) {
+                responsability.Add(oldID, result);
             }
         }
 
@@ -403,21 +447,19 @@ namespace DADStormProcess {
         }
 
         private void assumeResponsability(ConnectionPack previous, string oldID) {
-            if(previous.Port != 0) {
+            if (previous.Port != 0) {
                 DADStormProcess.ClientProcess previousProcess = new DADStormProcess.ClientProcess(previous);
                 previousProcess.loseResponsability(oldID);
+                ProcessDebug("telling " + previous + " i am responsible now for " + oldID);
             }
         }
-
 
         /**
 		  * After processing tuple this method emits it to downStream and puppet master
 		  */
-        private void emitTuple(ConnectionPack previous, string oldID, IList<IList<string>> result){
-            assureSemanticsOnEmit(previous,oldID,result);
-            
+        private void emitTuple(ConnectionPack previous, string oldID, IList<IList<string>> result) {
+            assureSemanticsOnEmit(previous, oldID, result);
             int indexResult = -1;
-
             foreach (List<string> tuple in result) {
                 if (result.Count > 1) { indexResult++; }
 
@@ -428,39 +470,42 @@ namespace DADStormProcess {
                     int indexOperators = -1;
                     if (downStreamNodes.Count > 0) {
                         //Foreach operator
-                        foreach (List<ConnectionPack> receivingOperator in downStreamNodes) {
+                        foreach ( KeyValuePair<string, List<ConnectionPack>> entry in downStreamNodes) {
+                            List<ConnectionPack> receivingOperator = entry.Value;
+                            string opID = entry.Key;
+                            List<string> currentTuple = new List<string>(tuple); //Assure we are not always reediting the same
                             if (downStreamNodes.Count > 1) { indexOperators++; }
 
-                            List<string> tupleToSend = insertMetadata(oldID, tuple, indexResult, indexOperators);
-                            ConnectionPack nextOperatorCp = this.RoutTechnic.nextDestination(receivingOperator, tuple);
+                            insertMetadata(oldID, currentTuple, indexResult, indexOperators);
+                            ConnectionPack nextOperatorCp = this.RoutTechnic.nextDestination(receivingOperator, currentTuple);
                             //try {
-                            ProcessDebug("Another tuple generated: <" + String.Join(", ", tuple) + ">");
-                            sendTupleToOperator(nextOperatorCp, tupleToSend);
-                            ProcessDebug(receivingOperator + " received tuple on " + nextOperatorCp);
+                            ProcessDebug("Another tuple will be sent: <" + String.Join(", ", currentTuple) + ">");
+                            sendTupleToOperator(nextOperatorCp, currentTuple);
+                            ProcessDebug("operator " + opID + " replica " + nextOperatorCp + " received tuple on " + nextOperatorCp);
                             /*} catch () {
                                 socket exception maybe?
                             } */
                         }
-                        ProcessDebug(oldID + " send complete");
                     } else {
                         ProcessDebug("No one to send tuple to :(");
                         //Case where there is no one to receive..//probably its last operator
                     }
                 }
             }
-		}
+            ProcessDebug(oldID + " send complete");
+        }
 
-		/**
+        /**
 		  * In the full logging mode, all tuple emissions need to be reported to Puppetmaster
 		  */
-		private void logToPuppetMaster (IList<string> tuple) {
-			if(puppetRemote == null) {
-				puppetRemote = (DADStormRemoteTupleReceiver)Activator.GetObject(
-					typeof(DADStormRemoteTupleReceiver), "tcp://" + puppetMasterConPack.Ip  + ":" + puppetMasterConPack.Port + "/PuppetMasterRemoteServerObject");
-			}
-			puppetRemote.addTuple ("[ " + myConPack.Ip +":" +myConPack.Port+ " ]", tuple);
-			ProcessDebug("Puppet Master informed");
-		}
+        private void logToPuppetMaster(IList<string> tuple) {
+            if (puppetRemote == null) {
+                puppetRemote = (DADStormRemoteTupleReceiver)Activator.GetObject(
+                    typeof(DADStormRemoteTupleReceiver), "tcp://" + puppetMasterConPack.Ip + ":" + puppetMasterConPack.Port + "/PuppetMasterRemoteServerObject");
+            }
+            puppetRemote.addTuple("[ " + myConPack.Ip + ":" + myConPack.Port + " ]", tuple);
+            ProcessDebug("Puppet Master informed");
+        }
 
         /// <summary>
         /// method that sends a tuple to an endpoint
@@ -469,38 +514,18 @@ namespace DADStormProcess {
         /// <param name="tuple"></param>
         private void sendTupleToOperator(ConnectionPack endpoint, IList<string> tuple) {
             DADStormProcess.ClientProcess nextProcess = new DADStormProcess.ClientProcess(endpoint);
-            nextProcess.addTuple(tuple);
+            string status = nextProcess.addTuple(tuple);
+            if(status.Equals("our responsability")) {
+                this.loseResponsability(getID(tuple));
+            }
         }
-
-        /**
-		  * Method that sends a tuple to every downstream operator
-		  */
-        //private void sendToNextOperators (IList<string> tuple) {
-        //
-		//	if (downStreamNodes.Count > 0) {
-		//		//Foreach operator
-		//		foreach(List<ConnectionPack> receivingOperator in downStreamNodes){
-        //            ConnectionPack nextOperatorCp = this.RoutTechnic.nextDestination(receivingOperator, tuple);
-        //            //try {
-        //                sendTupleToOperator(nextOperatorCp, tuple);
-        //                ProcessDebug(nextOperatorCp + " received tuple");
-        //            /*} catch () {
-        //                socket exception maybe?
-        //            } */
-        //        }
-        //    } else {
-		//		ProcessDebug ("No one to send tuple to :(");
-		//		//Case where there is no one to receive..
-		//		//probably its last operator
-		//	}
-		//}
 
         private void removeResponsabilityFromOperator(string ID) {
             //Do not do remote call on ourselves FIXME TODO
             foreach (ConnectionPack replica in operatorReplicas) {
                 if (!replica.Equals(myConPack)) {
                     DADStormProcess.ClientProcess replicaProcess = new DADStormProcess.ClientProcess(replica);
-                    replicaProcess.loseResponsability(ID);
+                    replicaProcess.loseReplicaResponsability(ID);
                 }
             }
         }
@@ -555,190 +580,272 @@ namespace DADStormProcess {
                 insertMetadata = insertMetadataAtMost;
                 insertMetadataOnRead = insertMetadataOnReadAtMost;
                 assureSemanticsOnEmit = assureSemanticsOnEmitAtMost;
+                getID = getIDAtMost;
             } else if (semantics == 1) {
                 //at least once
                 getMetadata = getMetadataAtLeast;
                 insertMetadata = insertMetadataAtLeast;
                 insertMetadataOnRead = insertMetadataOnReadAtLeast;
                 assureSemanticsOnEmit = assureSemanticsOnEmitAtLeast;
+                getID = getIDAtLeast;
             } else if (semantics == 2) {
                 //exactly  once
                 getMetadata = getMetadataExactly;
                 insertMetadata = insertMetadataExactly;
                 insertMetadataOnRead = insertMetadataOnReadExactly;
                 assureSemanticsOnEmit = assureSemanticsOnEmitExactly;
+                getID = getIDExactly;
             }
         }
 
-        public void addDownStreamOperator(List<ConnectionPack> cp){
-			ProcessDebug ("Down Stream Op added: " + cp);
-			downStreamNodes.Add ( cp );
-		}
+        public void addDownStreamOperator(List<ConnectionPack> cp, string opID) {
+            ProcessDebug("Down Stream Op added: " + cp);
+            downStreamNodes[opID] = cp;
+        }
 
-		public void crash() {
+        public void crash() {
             new Thread(() => {
                 Thread.Sleep(100); //allow remote method to return
                 Environment.Exit(1);
             }).Start();
             return;
-		}
+        }
 
-		public void freeze() {
-			this.frozen = true;
-		}
+        public void freeze() {
+            this.frozen = true;
+        }
 
-		public void defreeze() {
-			this.frozen = false;
-			lock(dllArgs) {
-				Monitor.Pulse(dllArgs);
-			}
-		}
-
-		//Public that must be called by
-		public int getIndexFromPrimmary (string file) {
-			if (primmary) {
-				lock (filesIndex) {
-					int counter;
-					if (!filesIndex.TryGetValue (file, out counter)) {
-						counter = 0;
-						filesIndex.Add (file, counter);
-					}
-					filesIndex [file] = counter + 1;
-					return counter;
-				}
-			}
-			return -1;
-		}
-
-		//Method that adds a file that this replica will read
-		public void addFile(string file){
-			lock(filesLocation){
-				filesLocation.Add (file);
-			}
-			lock(dllArgs){
-				Monitor.Pulse (dllArgs);
-			}
-		}
-
-		/**
-		  * method that adds a tuple to be processed
-		  */
-		public void addTuple(IList<string> nextArg) {
-			lock (dllArgs) {
-				dllArgs.Enqueue( nextArg );
-				Monitor.Pulse(dllArgs);
-			}
-		}
-
-		/// <summary>
-		/// Method that will be in loop (passively) and will be processing input
-		/// </summary>
-		public void createAndProcess() {
-
-			TcpChannel channel = new TcpChannel(myConPack.Port);
-			ChannelServices.RegisterChannel(channel, false);
-			myServerObj = new ProcessRemoteServerObject();
-			RemotingServices.Marshal(myServerObj, "op",typeof(ProcessRemoteServerObject));
-
-			Console.ForegroundColor = ConsoleColor.Green;
-			System.Console.WriteLine("ProcessServer is ONLINE: port is: " + myConPack.Port);
-			Console.ResetColor();
-
-			executeProcess();
-		}
-
-		//CSF method
-		public MemoryStream reportBack(){
-			return this.generateStrategy.reportBack ();
-		}
-
-		//CSF method
-		public void reset(){
-			this.generateStrategy.reset ();
-		}
-
-        public void loseResponsability(string ID) {
-            lock(responsability) {
-                responsability.Remove(ID);
+        public void defreeze() {
+            this.frozen = false;
+            lock (dllArgs) {
+                Monitor.Pulse(dllArgs);
             }
         }
 
-        public string status ()	{
-			string status = "";
-			if(this.frozen) {
-				status += "FROZEN | ";
-			}
-			lock (dllArgs) {
-				status += "tuples waiting: " + dllArgs.Count;
-			}
-			lock (filesLocation) {
-                status += " | incomplete files: " + filesLocation.Count + " : " +lastRead+"%";
+        //Public that must be called by
+        public int getIndexFromPrimmary(string file) {
+            if (primmary) {
+                lock (filesIndex) {
+                    int counter;
+                    if (!filesIndex.TryGetValue(file, out counter)) {
+                        counter = 0;
+                        filesIndex.Add(file, counter);
+                    }
+                    filesIndex[file] = counter + 1;
+                    return counter;
+                }
             }
-            lock(responsability) {
+            return -1;
+        }
+
+        //Method that adds a file that this replica will read
+        public void addFile(string file) {
+            lock (filesLocation) {
+                filesLocation.Add(file);
+            }
+            lock (dllArgs) {
+                Monitor.Pulse(dllArgs);
+            }
+        }
+
+        private bool checkResponsability(string ID) {
+            return false;
+        }
+
+        private void printTuple(IList<string> tuple, string message) {
+            System.Console.WriteLine(message + " < " + String.Join(", ", tuple) + " > ");
+        }
+
+        /**
+		  * method that adds a tuple to be processed
+		  */
+        public string addTuple(IList<string> nextArg) {
+            printTuple(nextArg, "RECEIVED TUPLE: ");
+            string oldID = getID(nextArg);
+            if (checkResponsability(oldID)) {
+                return "our responsability";
+            }
+            lock (dllArgs) {
+                dllArgs.Enqueue(nextArg);
+                Monitor.Pulse(dllArgs);
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// Method that will be in loop (passively) and will be processing input
+        /// </summary>
+        public void createAndProcess() {
+
+            TcpChannel channel = new TcpChannel(myConPack.Port);
+            ChannelServices.RegisterChannel(channel, false);
+            myServerObj = new ProcessRemoteServerObject();
+            RemotingServices.Marshal(myServerObj, "op", typeof(ProcessRemoteServerObject));
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            System.Console.WriteLine("ProcessServer is ONLINE: port is: " + myConPack.Port);
+            Console.ResetColor();
+
+            executeProcess();
+        }
+
+        //CSF method
+        public MemoryStream reportBack() {
+            return this.generateStrategy.reportBack();
+        }
+
+        //CSF method
+        public void reset() {
+            this.generateStrategy.reset();
+        }
+
+        private string getIdKey(string ID) {
+            string key = "";
+            lock (responsabilityLinks) { // Doing a relock.. just to be sure
+                foreach (KeyValuePair<string, List<string>> entry in responsabilityLinks) {
+                    if (entry.Value.Contains(ID)) {
+                        if (!key.Equals("")) { ProcessError("ID: " + ID + " has more than one key: " + key + " : " + entry.Key); }
+                        key = entry.Key;
+                    }
+                }
+            }
+            return key;
+        }
+
+        public void loseReplicaResponsability(string ID) {
+            lock (responsabilityLinks) {
+                string key = getIdKey(ID);
+                ProcessDebug("Removing Responsability: " + ID);
+
+                if (key.Equals("")) {
+                    ProcessWarning("ID: " + ID + " not found in responsibles"); // Maybe i am getting this information twice..
+                } else {
+                    List<string> links;
+                    responsabilityLinks.TryGetValue(key, out links);
+                    links.Remove(ID);
+                    if (links.Count == 0) { //it was last dependence
+                        ProcessDebug("Last dependence of: " + key);
+                        responsabilityLinks.Remove(key);
+                        lock (responsability) {
+                            responsability.Remove(key);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void loseResponsability(string ID) {
+            removeResponsabilityFromOperator(ID);
+            loseReplicaResponsability(ID);
+        }
+        
+        private void printResponsibleTable() {
+            lock (responsabilityLinks) {
+                lock(responsability) {
+                    System.Console.WriteLine();
+                    foreach ( KeyValuePair<string, IList<IList<string>> > entry in responsability ) {
+                        string key = entry.Key;
+                        List<string> links;
+                        if (responsabilityLinks.TryGetValue(key, out links)) {
+                            string print = "the ID " + key + " has the links <";
+                            foreach(string link in links) {
+                                print += link + "[" + idTranslation[link] +"] ";
+                            }
+                            System.Console.WriteLine(print+">");
+                        } else {
+                            ProcessWarning("key without links.. "+key );
+                            IList<IList<string>> result = responsability[key];
+                            foreach(IList<string> tuple in result ) {
+                                ProcessWarning("Tuple: < " + String.Join(", ", tuple) + " > ");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public string status() {
+            string status = "";
+            if (this.frozen) {
+                status += "FROZEN | ";
+            }
+            lock (dllArgs) {
+                status += "tuples waiting: " + dllArgs.Count;
+            }
+            lock (filesLocation) {
+                status += " | incomplete files: " + filesLocation.Count + " : " + lastRead + "%";
+            }
+            lock (responsability) {
                 status += " still responsible for: " + responsability.Count;
             }
-			return status;
-		}
+            printResponsibleTable();
 
-		private void ProcessDebug(string msg) {
-			if(DEBUG.PROCESS){
-				System.Console.WriteLine("[ Process : " +myConPack.Port + " ] " + msg);
-			}
-		}
-		private void ProcessError(string msg) {
-			Console.ForegroundColor = ConsoleColor.Red;
-			System.Console.WriteLine("[ Process : " +myConPack.Port + " : ERROR ] " + msg);
-			Console.ResetColor();
-		}
-		public static void Main(string[] args) {
+            return status;
+        }
 
-			int argsSize = args.Length;
-			try {
-				int numberOfParameters = 9;
-				//Configuring Process
-				if (argsSize >= numberOfParameters) {
-					string strPort = args[0];
-					string dllNameInputMain    = args[1];
-					string classNameInputMain  = args[2];
-					string methodNameInputMain = args[3];
-					string semantics = args[4];
-                    string routingTechnic      = args[5];
-					//Bool that indicates whether full logging or not
-					bool   fullLogging         = Convert.ToBoolean(args[6]);
+        private void ProcessDebug(string msg) {
+            if (DEBUG.PROCESS) {
+                System.Console.WriteLine("[ Process : " + myConPack.Port + " ] " + msg);
+            }
+        }
+        private void ProcessError(string msg) {
+            Console.ForegroundColor = ConsoleColor.Red;
+            System.Console.WriteLine("[ Process : " + myConPack.Port + " : ERROR ] " + msg);
+            Console.ResetColor();
+        }
+        private void ProcessWarning(string msg) {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            System.Console.WriteLine("[ Process : " + myConPack.Port + " : Warning ] " + msg);
+            Console.ResetColor();
+        }
+        public static void Main(string[] args) {
+
+            int argsSize = args.Length;
+            try {
+                int numberOfParameters = 9;
+                //Configuring Process
+                if (argsSize >= numberOfParameters) {
+                    string strPort = args[0];
+                    string dllNameInputMain = args[1];
+                    string classNameInputMain = args[2];
+                    string methodNameInputMain = args[3];
+                    string semantics = args[4];
+                    string routingTechnic = args[5];
+                    //Bool that indicates whether full logging or not
+                    bool fullLogging = Convert.ToBoolean(args[6]);
                     string ip = args[7];
                     string operatorID = args[8];
-					string[] dllArgsInputMain = null;
-					if (argsSize > numberOfParameters) {
-						dllArgsInputMain = new string[argsSize - numberOfParameters];
-						Array.Copy(args, numberOfParameters, dllArgsInputMain, 0, argsSize - numberOfParameters );
-					}
+                    string[] dllArgsInputMain = null;
+                    if (argsSize > numberOfParameters) {
+                        dllArgsInputMain = new string[argsSize - numberOfParameters];
+                        Array.Copy(args, numberOfParameters, dllArgsInputMain, 0, argsSize - numberOfParameters);
+                    }
 
-					ServerProcess sp = ServerProcess.Instance;
-					int parsedPort = Int32.Parse(strPort);
-					if(parsedPort < 10002 || parsedPort > 65535) {
-						throw new FormatException("Port out of possible range");
-					}
+                    ServerProcess sp = ServerProcess.Instance;
+                    int parsedPort = Int32.Parse(strPort);
+                    if (parsedPort < 10002 || parsedPort > 65535) {
+                        throw new FormatException("Port out of possible range");
+                    }
                     int semanticsInt = Int32.Parse(semantics);
-                    if(semanticsInt < 0 || semanticsInt > 2)
-                    {
+                    if (semanticsInt < 0 || semanticsInt > 2) {
                         semanticsInt = 0;
                     }
-                    ConnectionPack myCp = new ConnectionPack(ip,parsedPort);
+                    ConnectionPack myCp = new ConnectionPack(ip, parsedPort);
 
-					sp.ProcessStaticArgs = dllArgsInputMain;
-					sp.buildServer(myCp, dllNameInputMain, classNameInputMain, methodNameInputMain, routingTechnic, fullLogging, semanticsInt, operatorID);
+                    sp.ProcessStaticArgs = dllArgsInputMain;
+                    sp.buildServer(myCp, dllNameInputMain, classNameInputMain, methodNameInputMain, routingTechnic, fullLogging, semanticsInt, operatorID);
 
-					sp.createAndProcess();
+                    sp.createAndProcess();
 
-					Console.ForegroundColor = ConsoleColor.Red;
-					System.Console.WriteLine("ProcessServer is going OFFLINE" );
-					Console.ResetColor();
-				} else {
-					System.Console.WriteLine("Not everything was specified.." );
-				}
-			} catch (FormatException e) {
-				Console.WriteLine(e.Message);
-			}
-		}
-	}
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    System.Console.WriteLine("ProcessServer is going OFFLINE");
+                    Console.ResetColor();
+                } else {
+                    System.Console.WriteLine("Not everything was specified..");
+                }
+            } catch (FormatException e) {
+                Console.WriteLine(e.Message);
+            }
+        }
+    }
 }

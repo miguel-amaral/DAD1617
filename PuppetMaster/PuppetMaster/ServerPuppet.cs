@@ -126,7 +126,7 @@ namespace PuppetMaster {
 									//for each replica in the receivingOperator
 									//foreach (ConnectionPack receivingPack in receivingReplicas) {
 									PuppetDebug ("Connection: Out: " + outPack + " In: " + receiving_operator);
-									outReplica.addDownStreamOperator (receivingReplicas);
+									outReplica.addDownStreamOperator (receivingReplicas, receiving_operator);
 									//}
 								}
 							}
@@ -317,125 +317,124 @@ namespace PuppetMaster {
 			file.Close();
 		}
 
-		private void createNewOperator (String[] splitStr)
-		{
-			//foreach(string str in splitStr){
-			//	System.Console.WriteLine (str);
-			//}
-			int counter = 0;
-			string current_operator_id = splitStr [0];
+        private void createNewOperator(String[] splitStr) {
+            //foreach(string str in splitStr){
+            //	System.Console.WriteLine (str);
+            //}
+            int counter = 0;
+            string current_operator_id = splitStr[0];
 
-			// ----------------- //
-			//  INput Operators  //
-			// ----------------- //
-			if (splitStr [1].Equals ("input", StringComparison.OrdinalIgnoreCase) && splitStr [2].Equals ("ops", StringComparison.OrdinalIgnoreCase)) {
-				counter = 3;
-				// then it must
-			} else if (splitStr [1].Equals ("input_ops", StringComparison.OrdinalIgnoreCase)) {
-				counter = 2;
-			}
+            // ----------------- //
+            //  INput Operators  //
+            // ----------------- //
+            if (splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase)) {
+                counter = 3;
+                // then it must
+            } else if (splitStr[1].Equals("input_ops", StringComparison.OrdinalIgnoreCase)) {
+                counter = 2;
+            }
 
-			while (!(splitStr [counter].Equals ("rep", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("fact", StringComparison.OrdinalIgnoreCase))
-			       && !splitStr [counter].Equals ("rep_fact", StringComparison.OrdinalIgnoreCase)) {
+            while (!(splitStr[counter].Equals("rep", StringComparison.OrdinalIgnoreCase) && splitStr[counter + 1].Equals("fact", StringComparison.OrdinalIgnoreCase))
+                   && !splitStr[counter].Equals("rep_fact", StringComparison.OrdinalIgnoreCase)) {
 
-				List<String> existingOperators;
-				String emitingOperator = splitStr [counter];
-				if (downStreamOperators.TryGetValue (emitingOperator, out existingOperators)) {
-					//found something
-					//Add current operator to downStreamOperators of inputOperator
-					existingOperators.Add (current_operator_id);
-				} else {
-					//was not initialized yet
-					existingOperators = new List<String> ();
-					downStreamOperators.Add (emitingOperator, existingOperators);
-					//Add current operator to downStreamOperators of inputOperator
-					existingOperators.Add (current_operator_id);
-				}
-				counter++;
-			}
+                List<String> existingOperators;
+                String emitingOperator = splitStr[counter];
+                if (downStreamOperators.TryGetValue(emitingOperator, out existingOperators)) {
+                    //found something
+                    //Add current operator to downStreamOperators of inputOperator
+                    existingOperators.Add(current_operator_id);
+                } else {
+                    //was not initialized yet
+                    existingOperators = new List<String>();
+                    downStreamOperators.Add(emitingOperator, existingOperators);
+                    //Add current operator to downStreamOperators of inputOperator
+                    existingOperators.Add(current_operator_id);
+                }
+                counter++;
+            }
 
-			// ------------------ //
-			// Replication Factor //
-			// ------------------ //
-			if (splitStr [counter].Equals ("rep", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("fact", StringComparison.OrdinalIgnoreCase)) {
-				counter++;
-				counter++;
-				// then it must
-			} else if (splitStr [counter].Equals ("rep_fact", StringComparison.OrdinalIgnoreCase)) {
-				counter++;
-			}
-			string rep_factor = splitStr [counter++];
+            // ------------------ //
+            // Replication Factor //
+            // ------------------ //
+            if (splitStr[counter].Equals("rep", StringComparison.OrdinalIgnoreCase) && splitStr[counter + 1].Equals("fact", StringComparison.OrdinalIgnoreCase)) {
+                counter++;
+                counter++;
+                // then it must
+            } else if (splitStr[counter].Equals("rep_fact", StringComparison.OrdinalIgnoreCase)) {
+                counter++;
+            }
+            string rep_factor = splitStr[counter++];
 
-			//ignoring word routing
-			counter++;
-			string routing = splitStr [counter++];
+            //ignoring word routing
+            counter++;
+            string routing = splitStr[counter++];
 
-			//ignoring word address
-			counter++;
-			List<ConnectionPack> currentConnectionPacks = new List<ConnectionPack> ();
-			while (!(splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase))
-			       && !splitStr [counter].Equals ("operator_spec", StringComparison.OrdinalIgnoreCase)) {
+            //ignoring word address
+            counter++;
+            List<ConnectionPack> currentConnectionPacks = new List<ConnectionPack>();
+            while (!(splitStr[counter].Equals("operator", StringComparison.OrdinalIgnoreCase) && splitStr[counter + 1].Equals("spec", StringComparison.OrdinalIgnoreCase))
+                   && !splitStr[counter].Equals("operator_spec", StringComparison.OrdinalIgnoreCase)) {
 
-				string url = splitStr [counter];
-				string[] parsedUrl = url.Split (new[] { '/', ':' }, StringSplitOptions.RemoveEmptyEntries);
+                string url = splitStr[counter];
+                string[] parsedUrl = url.Split(new[] { '/', ':' }, StringSplitOptions.RemoveEmptyEntries);
 
-				string ip = parsedUrl [1];
-				if (ip.Equals ("localhost", StringComparison.OrdinalIgnoreCase)) {
+                string ip = parsedUrl[1];
+                if (ip.Equals("localhost", StringComparison.OrdinalIgnoreCase)) {
                     ip = getMyIp();
                 }
-				ConnectionPack cp = new ConnectionPack (ip, Int32.Parse (parsedUrl [2]));
-				currentConnectionPacks.Add (cp);
-				counter++;
-			}
-			operatorsConPacks.Add (current_operator_id, currentConnectionPacks);
+                ConnectionPack cp = new ConnectionPack(ip, Int32.Parse(parsedUrl[2]));
+                currentConnectionPacks.Add(cp);
+                counter++;
+            }
+            operatorsConPacks.Add(current_operator_id, currentConnectionPacks);
 
-			if (splitStr [counter].Equals ("operator", StringComparison.OrdinalIgnoreCase) && splitStr [counter + 1].Equals ("spec", StringComparison.OrdinalIgnoreCase)) {
-				counter++;
-				counter++;
-				// then it must
-			} else if (splitStr [counter].Equals ("operator_spec", StringComparison.OrdinalIgnoreCase)) {
-				counter++;
-			}
+            if (splitStr[counter].Equals("operator", StringComparison.OrdinalIgnoreCase) && splitStr[counter + 1].Equals("spec", StringComparison.OrdinalIgnoreCase)) {
+                counter++;
+                counter++;
+                // then it must
+            } else if (splitStr[counter].Equals("operator_spec", StringComparison.OrdinalIgnoreCase)) {
+                counter++;
+            }
 
-			string operatorType = splitStr [counter++];
-			string dll       = "CommonTypes.dll";
+            string operatorType = splitStr[counter++];
+            string dll = "CommonTypes.dll";
             string className = "Default";
-			string methodName= null;
+            string methodName = null;
             string[] staticAsrguments = null;
 
 
-            if (operatorType.Equals ("CUSTOM", StringComparison.OrdinalIgnoreCase)) {
-				dll        = splitStr [counter++];
-				className  = splitStr [counter++];
-				methodName = splitStr [counter++];
-			} else if (operatorType.Equals ("UNIQ", StringComparison.OrdinalIgnoreCase)) {
+            if (operatorType.Equals("CUSTOM", StringComparison.OrdinalIgnoreCase)) {
+                dll = splitStr[counter++];
+                className = splitStr[counter++];
+                methodName = splitStr[counter++];
+            } else if (operatorType.Equals("UNIQ", StringComparison.OrdinalIgnoreCase)) {
                 methodName = "Uniq";
-                string[] args = { splitStr [counter++] };
+                string[] args = { splitStr[counter++] };
                 staticAsrguments = args;
                 //field_number;
-            } else if (operatorType.Equals ("COUNT", StringComparison.OrdinalIgnoreCase)) {
+            } else if (operatorType.Equals("COUNT", StringComparison.OrdinalIgnoreCase)) {
                 methodName = "Count";
-            } else if (operatorType.Equals ("DUP", StringComparison.OrdinalIgnoreCase)) {
-				methodName = "Dup";
+            } else if (operatorType.Equals("DUP", StringComparison.OrdinalIgnoreCase)) {
+                methodName = "Dup";
             } else if (operatorType.Equals("OUTPUT", StringComparison.OrdinalIgnoreCase)) {
                 methodName = "Output";
                 string[] args = { splitStr[counter++] }; //File to Output
                 staticAsrguments = args;
-            } else if (operatorType.Equals ("FILTER", StringComparison.OrdinalIgnoreCase)) {
+            } else if (operatorType.Equals("FILTER", StringComparison.OrdinalIgnoreCase)) {
                 methodName = "Filter";
-                string field_number  = splitStr [counter++]; // field_number;
-                string condition     = splitStr [counter++]; // condition;
-                string comparedValue = splitStr [counter++]; // value;
-				string[] args = { field_number, condition, comparedValue };
+                string field_number = splitStr[counter++]; // field_number;
+                string condition = splitStr[counter++]; // condition;
+                string comparedValue = splitStr[counter++]; // value;
+                string[] args = { field_number, condition, comparedValue };
                 staticAsrguments = args;
             }
 
-			//Create the Processes
-			foreach(ConnectionPack cp in currentConnectionPacks){
-				Daemon.ClientDaemon cd = new Daemon.ClientDaemon (new ConnectionPack (cp.Ip, daemonPort),fullLog);
-				cd.newThread (dll, className, methodName, cp.Port.ToString(), cp.Ip, semantics, routing, current_operator_id,staticAsrguments);
-			}
-			Thread.Sleep (100);  //Make sure everything is created before we try anything else
+            //Create the Processes
+            foreach (ConnectionPack cp in currentConnectionPacks) {
+                Daemon.ClientDaemon cd = new Daemon.ClientDaemon(new ConnectionPack(cp.Ip, daemonPort), fullLog);
+                cd.newThread(dll, className, methodName, cp.Port.ToString(), cp.Ip, semantics, routing, current_operator_id, staticAsrguments);
+            }
+            Thread.Sleep(100);  //Make sure everything is created before we try anything else
             PuppetDebug("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
         }
 

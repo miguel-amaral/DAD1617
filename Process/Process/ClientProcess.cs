@@ -20,8 +20,8 @@ namespace DADStormProcess {
 			//if (remoteProcess == null) throw new SocketException();
 		}
 
-		public void addDownStreamOperator(List<ConnectionPack> cp){
-			remoteProcess.addDownStreamOperator(cp);
+		public void addDownStreamOperator(List<ConnectionPack> cp, string opID) {
+			remoteProcess.addDownStreamOperator(cp,opID);
 		}
 
 		public string ping() {
@@ -67,8 +67,8 @@ namespace DADStormProcess {
         }
 
 
-        public void addTuple(IList<string> tuple){
-			remoteProcess.addTuple(tuple);
+        public string addTuple(IList<string> tuple){
+			return remoteProcess.addTuple(tuple);
 		}
 
 		public void addFile(string file) {
@@ -105,9 +105,12 @@ namespace DADStormProcess {
 
         public void loseResponsability(string id) {
             remoteProcess.loseResponsability(id);
-        } 
-
-        /**
+        }
+        public void loseReplicaResponsability(string id) {
+            remoteProcess.loseReplicaResponsability(id);
+        }
+        
+            /**
 		  * Debug method
 		  */
         /*

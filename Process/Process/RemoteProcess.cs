@@ -7,8 +7,8 @@ using System.Runtime.Serialization.Json;
 namespace DADStormProcess {
     public class ProcessRemoteServerObject : MarshalByRefObject {
 
-        public void addTuple(IList<string> tuple) {
-            ServerProcess.Instance.addTuple(tuple);
+        public string addTuple(IList<string> tuple) {
+            return ServerProcess.Instance.addTuple(tuple);
         }
 
         public string ping() {
@@ -16,8 +16,8 @@ namespace DADStormProcess {
             return "Pong";
         }
 
-        public void addDownStreamOperator(List<ConnectionPack> cp) {
-            ServerProcess.Instance.addDownStreamOperator(cp);
+        public void addDownStreamOperator(List<ConnectionPack> cp, string opID) {
+            ServerProcess.Instance.addDownStreamOperator(cp, opID);
         }
 
         public void crash() {
@@ -54,6 +54,10 @@ namespace DADStormProcess {
 
         public void loseResponsability(string ID) {
             ServerProcess.Instance.loseResponsability(ID);
+        }
+
+        public void loseReplicaResponsability(string ID) {
+            ServerProcess.Instance.loseReplicaResponsability(ID);
         }
         
         //CSF

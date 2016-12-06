@@ -2,10 +2,12 @@ logginglevel full
 semantics exactly-once
 %%
 %%
-OP1 input ops ..\..\tuples.txt ..\..\tuples2.txt  rep fact 1 routing hashing(1) address tcp://localhost:11111/op operator spec DUP
-OP2 input ops OP1 rep fact 1 routing random address tcp://localhost:13333/op operator spec UNIQ 0
+OP1 input ops O2.txt B2.txt  rep fact 1 routing random address tcp://localhost:11111/op operator spec DUP
+OP2 input ops OP1 rep fact 4 routing random address tcp://localhost:13333/op tcp://localhost:13334/op tcp://localhost:13335/op tcp://localhost:13336/op operator spec CUSTOM CommonTypes.dll Default doubleReturn
 OP3 input ops OP2 rep fact 1 routing random address tcp://localhost:14444/op operator spec FILTER 0 > "j"
-OP4 input ops OP3 rep fact 1 routing primmary address tcp://localhost:15555/op operator spec OUTPUT out.txt
+OP4 input ops OP2 rep fact 1 routing primmary address tcp://localhost:15555/op operator spec OUTPUT out.txt
+OP5 input ops OP2 rep fact 1 routing random address tcp://localhost:16666/op operator spec DUP
+OP6 input ops OP2 rep fact 1 routing random address tcp://localhost:17777/op operator spec DUP
 %
 start OP1
 status
@@ -18,4 +20,7 @@ status
 wait 3000
 status
 start OP4
+status
+start OP5
+start OP6
 status
