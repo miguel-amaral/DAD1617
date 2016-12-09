@@ -1,0 +1,13 @@
+%logginglevel full
+semantics exactly-once
+%%
+%%
+%OP1 input ops O2.txt B2.txt  rep fact 1 routing random address tcp://localhost:11111/op operator spec DUP
+OP1 input ops ..\..\CSF_PACKET.txt rep fact 1 routing random address tcp://localhost:11111/op operator spec DUP
+OP2 input ops OP1 rep fact 4 routing random address tcp://localhost:13333/op tcp://localhost:13334/op operator spec CUSTOM CommonTypes.dll Default doubleReturn
+%OP2 input ops OP1 rep fact 4 routing random address tcp://localhost:13333/op operator spec CUSTOM CommonTypes.dll Default doubleReturn
+OP7 input ops OP2 rep fact 1 routing random address tcp://localhost:18888/op operator spec DUP
+%
+start OP1
+start OP2
+start OP7

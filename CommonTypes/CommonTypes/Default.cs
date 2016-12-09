@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 public class Default {
     int innerCounter = 0;
+    int differentCounter = 0;
     List<string> seenTuples = new List<string>();
 
     public IList<IList<string>> Dup(IList<string> tuple) {
@@ -82,10 +83,12 @@ public class Default {
         tuple.RemoveAt(0);
 
         using (System.IO.StreamWriter file = new System.IO.StreamWriter(outputFile, true)) {
-            foreach (string line in tuple) {
-                // If the line doesn't contain the word 'Second', write the line to the file.
-                file.WriteLine(line);
-            }
+//            foreach (string line in tuple) {
+//                // If the line doesn't contain the word 'Second', write the line to the file.
+//                //file.WriteLine(line);
+//                file.WriteLine(line);
+//            }
+            file.WriteLine(String.Join(" ",tuple));
         }
         return Dup(tuple);
     }
@@ -93,6 +96,14 @@ public class Default {
     public IList<IList<string>> doubleReturn(IList<string> tuple) {
         List<IList<string>> newTuple = new List<IList<string>>();
         newTuple.Add(tuple);
+        newTuple.Add(tuple);
+        return newTuple;
+    }
+
+    public IList<IList<string>> addCounter(IList<string> tuple) {
+        int ctr = differentCounter++;
+        List<IList<string>> newTuple = new List<IList<string>>();
+        tuple.Insert(0, ctr.ToString());
         newTuple.Add(tuple);
         return newTuple;
     }

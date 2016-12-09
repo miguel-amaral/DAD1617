@@ -1,26 +1,28 @@
-logginglevel full
-semantics exactly-once
-%%
-%%
-OP1 input ops O2.txt B2.txt  rep fact 1 routing random address tcp://localhost:11111/op operator spec DUP
-OP2 input ops OP1 rep fact 4 routing random address tcp://localhost:13333/op tcp://localhost:13334/op tcp://localhost:13335/op tcp://localhost:13336/op operator spec CUSTOM CommonTypes.dll Default doubleReturn
-OP3 input ops OP2 rep fact 1 routing random address tcp://localhost:14444/op operator spec FILTER 0 > "j"
-OP4 input ops OP2 rep fact 1 routing primmary address tcp://localhost:15555/op operator spec OUTPUT out.txt
-OP5 input ops OP2 rep fact 1 routing random address tcp://localhost:16666/op operator spec DUP
-OP6 input ops OP2 rep fact 1 routing random address tcp://localhost:17777/op operator spec DUP
+%logginglevel full
+%semantics exactly-once
+
+
+OP0 input ops ..\..\20000.txt rep fact 1 routing random address tcp://localhost:10005/op operator spec DUP
+OPC input ops OP0 rep fact 1 routing random address tcp://localhost:11111/op  operator spec CUSTOM CommonTypes.dll Default addCounter
+OP1 input ops OPC rep fact 4 routing random address tcp://localhost:12221/op tcp://localhost:12222/op  operator spec CUSTOM CommonTypes.dll Default Dup
+OP2 input ops OP1 rep fact 4 routing random address tcp://localhost:13331/op tcp://localhost:13332/op tcp://localhost:13333/op tcp://localhost:13334/op operator spec CUSTOM CommonTypes.dll Default Dup
+OP3 input ops OP2 rep fact 1 routing random address tcp://localhost:14444/op operator spec OUTPUT ..\..\20000_done.txt
+
 %
+start OP0
 start OP1
-status
-wait 3000
+start OPC
 start OP2
-status
-wait 3000
 start OP3
 status
 wait 3000
+freeze OP2 0
+freeze OP1 0
+wait 2000
+wait 2000
 status
-start OP4
+unfreeze OP2 0
+unfreeze OP1 0
+wait 200
 status
-start OP5
-start OP6
-status
+%

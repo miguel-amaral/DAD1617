@@ -24,7 +24,6 @@ namespace Daemon {
 		  */
 		public void newThread(string dllName, string className , string methodName, string processPort, string proccessIp, int semantics, string routing, string operatorID, object[] args = null) {
 			remoteDaemon.newThread(dllName, className , methodName, processPort, proccessIp, semantics, routing, operatorID, args);
-
 		}
 
 

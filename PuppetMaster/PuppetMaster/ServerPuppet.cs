@@ -105,7 +105,7 @@ namespace PuppetMaster {
 		private void doFirstStartConnections ()	{
 			if (firstStart) {
 				System.Console.WriteLine ();
-				PuppetDebug ("Deploying Connections in network");
+                PuppetDebug("Deploying Connections in network");
 				System.Console.WriteLine ();
 				//Creating the network betwen all operators
 				foreach (KeyValuePair<string, List<string>> item in downStreamOperators) {
@@ -190,18 +190,22 @@ namespace PuppetMaster {
 
 				if(command.Equals("freeze", StringComparison.OrdinalIgnoreCase)){
 					cprocess.freeze();
-				} else if(command.Equals("unfreeze", StringComparison.OrdinalIgnoreCase)){
+                    logCommand("freezed: " + operator_id + " replica: " + conPack);
+                } else if(command.Equals("unfreeze", StringComparison.OrdinalIgnoreCase)){
 					cprocess.unfreeze();
-				} else if(command.Equals("crash", StringComparison.OrdinalIgnoreCase)){
+                    logCommand("unfreezed: " + operator_id + " replica: " + conPack);
+                } else if(command.Equals("crash", StringComparison.OrdinalIgnoreCase)){
 					cprocess.crash();
-				} else if(command.Equals("start", StringComparison.OrdinalIgnoreCase)){
+                    logCommand("crashed: " + operator_id + " replica: " + conPack);
+                } else if(command.Equals("start", StringComparison.OrdinalIgnoreCase)){
 					if(firstStart){
 						doFirstStartConnections ();
 					}
 					cprocess.start();
-				}
+                    logCommand("started: " + operator_id + " replica: " + conPack);
+                }
 
-			} else {
+            } else {
 				PuppetError("Operator: " + operator_id + " not in list");
 			}
 		}
@@ -212,7 +216,7 @@ namespace PuppetMaster {
 		private void operatorTargetOperations (string[] splitStr) {
 			string command     = splitStr[0];
 			string operator_id = splitStr[1];
-
+            bool firstTime = true;
 			//Must be an integer
 			List<ConnectionPack> operatorList;
 			if(operatorsConPacks.TryGetValue(operator_id,out operatorList)){
@@ -224,9 +228,13 @@ namespace PuppetMaster {
 							doFirstStartConnections ();
 						}
 						cprocess.start();
-					} else if(command.Equals("interval", StringComparison.OrdinalIgnoreCase)){
+                        logCommand("Started: " + operator_id, firstTime);
+                        firstTime = false;
+                    } else if(command.Equals("interval", StringComparison.OrdinalIgnoreCase)){
 						cprocess.interval(Int32.Parse(splitStr[2]));
-					} /*else if(command.Equals("crash", StringComparison.OrdinalIgnoreCase)){
+                        logCommand(operator_id + " Interval: " + splitStr[2],firstTime);
+                        firstTime = false;
+                    } /*else if(command.Equals("crash", StringComparison.OrdinalIgnoreCase)){
 						cprocess.crash();
 					}*/
 				}
@@ -234,6 +242,14 @@ namespace PuppetMaster {
 				System.Console.WriteLine("Operator: " + operator_id + " not in list");
 			}
 		}
+
+        private void logCommand(string msg, bool print = true) {
+            if (print) {
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                System.Console.WriteLine("[ Logging ] " + msg);
+                Console.ResetColor();
+            }
+        }
 
 		/// <summary>
 		/// From a line does a command, needs to be complete
@@ -250,6 +266,7 @@ namespace PuppetMaster {
 				return;
 			}
             else if (splitStr[0].Equals("status", StringComparison.OrdinalIgnoreCase)) {
+                logCommand("STATUS");
                 doStatus(splitStr);
             }
             else if (splitStr[0].Equals("read_file", StringComparison.OrdinalIgnoreCase)) {
@@ -262,20 +279,26 @@ namespace PuppetMaster {
 			} else if (splitStr [0].Equals ("interval", StringComparison.OrdinalIgnoreCase)) {
 				this.operatorTargetOperations (splitStr);
 			} else if (splitStr [0].Equals ("wait", StringComparison.OrdinalIgnoreCase)) {
-				Thread.Sleep (Int32.Parse (splitStr [1])); //wait sleep
+                logCommand("waiting: " + splitStr[1]);
+                Thread.Sleep (Int32.Parse (splitStr [1])); //wait sleep
 			} else if (splitStr[0].Equals("LoggingLevel", StringComparison.OrdinalIgnoreCase))            {
                 this.fullLog = splitStr[1].Equals("full", StringComparison.OrdinalIgnoreCase);
+                logCommand("Logging level is now full");
             } else if (splitStr [0].Equals ("Semantics", StringComparison.OrdinalIgnoreCase)) {
                 if(splitStr[1].Equals("at-most-once", StringComparison.OrdinalIgnoreCase)) {
                     semantics = 0;
+                    logCommand("semantics is now at-most-once");
                 } else if (splitStr[1].Equals("at-least-once", StringComparison.OrdinalIgnoreCase)) {
                     semantics = 1;
+                    logCommand("semantics is at-least-once");
                 } else if (splitStr[1].Equals("exactly-once", StringComparison.OrdinalIgnoreCase)) {
                     semantics = 2;
+                    logCommand("semantics is exactly-once");
                 }
             } else if (splitStr.Length > 1 && ((splitStr[1].Equals("input", StringComparison.OrdinalIgnoreCase) && splitStr[2].Equals("ops", StringComparison.OrdinalIgnoreCase))
                       || splitStr[1].Equals("input_ops", StringComparison.OrdinalIgnoreCase))) {
                 this.createNewOperator(splitStr);
+
                 //Process files TODO this.
             } else {
 				//nothing so far, maybe an extra command
@@ -435,7 +458,7 @@ namespace PuppetMaster {
                 cd.newThread(dll, className, methodName, cp.Port.ToString(), cp.Ip, semantics, routing, current_operator_id, staticAsrguments);
             }
             Thread.Sleep(100);  //Make sure everything is created before we try anything else
-            PuppetDebug("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
+            logCommand("Operator:" + current_operator_id + " has " + currentConnectionPacks.Count + " replicas, created");
         }
 
         private void killOperator(string opID) {
@@ -548,7 +571,7 @@ namespace PuppetMaster {
             System.Console.WriteLine("Puppet Server is going OFFLINE");
             Console.ResetColor();
             sp.killRemainingOperators();
-            Thread.Sleep(1000);//Ensuring everything is offline
+            Thread.Sleep(100);//Ensuring everything is offline
         }
 	}
 }

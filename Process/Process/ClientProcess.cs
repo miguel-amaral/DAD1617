@@ -24,19 +24,11 @@ namespace DADStormProcess {
 			remoteProcess.addDownStreamOperator(cp,opID);
 		}
 
-		public string ping() {
-			if (remoteProcess != null) {
-				string res;
-//				try {
-					res = remoteProcess.ping();
-//				} catch (SocketException e) {
-//					return "Error: " + e.Message;
-//				}
-				return res;
-			} else {
-				return "You did not connect to Process yet";
-			}
-		}
+        public string ping() {
+            string res;
+            res = remoteProcess.ping();
+            return res;
+        }
 
 		public void start() {
 			remoteProcess.start();
@@ -67,7 +59,7 @@ namespace DADStormProcess {
         }
 
 
-        public string addTuple(IList<string> tuple){
+        public string addTuple(IList<string> tuple) {
 			return remoteProcess.addTuple(tuple);
 		}
 
@@ -99,15 +91,81 @@ namespace DADStormProcess {
             remoteProcess.reset();
         }
 
-        public void receiveReplicaBackup(string oldID, IList<IList<string>> result) {
-            remoteProcess.receiveReplicaBackup(oldID, result);
+        public void receiveReplicaBackup(string oldID,ConnectionPack author, IList<IList<string>> result) {
+            try {
+                remoteProcess.receiveReplicaBackup(oldID, author, result);
+            } catch(SocketException) {
+                //Hoppefully someone will notice
+            }
+        }
+        public bool isAlive(ConnectionPack brother) {
+            try {
+                return remoteProcess.isAlive(brother);
+            } catch (SocketException) {
+                //If he is dead he does not count
+                return true;
+            }
+        }
+
+        public int SyncNumber() {
+            return remoteProcess.SyncNumber();
+        }
+
+        public void reborn(ConnectionPack deadGuy) {
+            remoteProcess.reborn(deadGuy);
+        }
+
+        public SnapShot getSnapShot() {
+            return remoteProcess.getSnapShot();
         }
 
         public void loseResponsability(string id) {
-            remoteProcess.loseResponsability(id);
+            try { 
+                remoteProcess.loseResponsability(id);
+            } catch (SocketException) {
+                //Hoppefully someone will notice
+            }
         }
         public void loseReplicaResponsability(string id) {
-            remoteProcess.loseReplicaResponsability(id);
+            try {
+                remoteProcess.loseReplicaResponsability(id);
+            } catch (SocketException) {
+                //Hoppefully someone will notice
+            }
+        }
+
+        public int currentClock() {
+            return remoteProcess.currentClock();
+        }
+        public int firstTupleInListClock() {
+            return remoteProcess.firstTupleInListClock();
+        }
+        public bool isItDoneYet(string tupleID) {
+            return remoteProcess.isItDoneYet(tupleID);
+        }
+
+        public List<string> getResponsabilityList() {
+            return remoteProcess.getResponsabilityList();
+        }
+
+        public ConnectionPack responsibleBrother(string tupleID) {
+            return remoteProcess.responsibleBrother(tupleID);
+        }
+
+        public IList<IList<string>> requestResultFromID(string tupleID) {
+            return remoteProcess.requestResultFromID(tupleID);
+        }
+
+        public string needsDivert(string tupleID, ConnectionPack nextOwner) {
+            return  remoteProcess.needsDivert(tupleID, nextOwner);
+        }
+
+        public void warnBrothersDead(List<ConnectionPack> deadBrothers) {
+            try {
+                remoteProcess.warnBrothersDead(deadBrothers);
+            } catch (SocketException) {
+                //We are warning about dead people, if another fails they will notice that during sync
+            }
         }
         
             /**

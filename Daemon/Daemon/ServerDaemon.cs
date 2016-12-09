@@ -35,7 +35,6 @@ namespace Daemon {
 			Process process = new Process ();
 			// Configure the process using the StartInfo properties.
 			process.StartInfo.FileName = "Process.exe";
-            process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
             string processArguments = processPort + " " + dllName + " " + className + " " + methodName + " " + semantics.ToString() + " "  + routing + " " + fullLog.ToString () + " " + proccessIp + " " + operatorID;
 			if (args != null) {
 				foreach (string str in args) {
@@ -49,8 +48,9 @@ namespace Daemon {
 			}
 			process.StartInfo.Arguments = processArguments;
 
-			//process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
-			process.Start();
+            //process.StartInfo.WindowStyle = ProcessWindowStyle.Minimized;
+            //process.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
+            process.Start();
 		}
 
 		static void Main(string[] args) {

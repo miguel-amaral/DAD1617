@@ -8,6 +8,7 @@
     <RootNamespace>Process</RootNamespace>
     <AssemblyName>Process</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -20,7 +21,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -34,6 +34,8 @@
     <WarningLevel>4</WarningLevel>
     <Commandlineparameters>13000 hello.dll Hello plusString False</Commandlineparameters>
     <ConsolePause>false</ConsolePause>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -43,8 +45,13 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
+    <Compile Include="QueueRequests.cs" />
     <Compile Include="ClientProcess.cs" />
     <Compile Include="CSF_baseClass.cs" />
     <Compile Include="CSF_HighDataDiffPeers.cs" />
@@ -54,10 +61,12 @@
     <Compile Include="CSF_LocalPeerDiscovery.cs" />
     <Compile Include="CSF_ProtocolUPnP.cs" />
     <Compile Include="RemoteProcess.cs" />
+    <Compile Include="ResponsabilityList.cs" />
     <Compile Include="ServerProcess.cs" />
     <Compile Include="RoutingTechics.cs" />
     <Compile Include="GenerateStrategy.cs" />
     <Compile Include="CSF_IpInName.cs" />
+    <Compile Include="SnapShot.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Net" />
