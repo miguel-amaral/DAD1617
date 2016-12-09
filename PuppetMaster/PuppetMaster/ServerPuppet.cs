@@ -117,21 +117,30 @@ namespace PuppetMaster {
 						//Then it is an operator
 						//foreach output replica in outputOPerator
 						foreach (ConnectionPack outPack in outputingReplicas) {
-							//create processClient
 							DADStormProcess.ClientProcess outReplica = new DADStormProcess.ClientProcess (outPack);
 							//foreach receivingOperator
 							foreach (string receiving_operator in item.Value) {
 								//Getting list of receiving replicas of operator
 								if (operatorsConPacks.TryGetValue (receiving_operator, out receivingReplicas)) {
 									//for each replica in the receivingOperator
-									//foreach (ConnectionPack receivingPack in receivingReplicas) {
-									PuppetDebug ("Connection: Out: " + outPack + " In: " + receiving_operator);
+									PuppetDebug ("Connection: " + outPack + " outputs to: " + receiving_operator);
 									outReplica.addDownStreamOperator (receivingReplicas, receiving_operator);
-									//}
-								}
+                                }
 							}
 						}
-					} else {
+                        foreach (string receiving_operator in item.Value) {
+                            //Getting list of receiving replicas of operator
+                            if (operatorsConPacks.TryGetValue(receiving_operator, out receivingReplicas)) {
+                                //for each replica in the receivingOperator
+                                //Adding the reversed 
+                                foreach (ConnectionPack receivingRep in receivingReplicas) {
+                                    PuppetDebug("Connection: receives " + receivingRep + " from: " + emitingOperator);
+                                    DADStormProcess.ClientProcess inReplica = new DADStormProcess.ClientProcess(receivingRep);
+                                    inReplica.addUpperStreamOperator(outputingReplicas, emitingOperator);
+                                }
+                            }
+                        }
+                    } else {
 						//else it must be a file
 						//foreach receivingOperator
 						foreach (string receiving_operator in item.Value) {

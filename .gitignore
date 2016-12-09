@@ -279,3 +279,4 @@ __pycache__/
 #*.mdb
 #*.csproj
 #*.cache
+/Daemon/Daemon

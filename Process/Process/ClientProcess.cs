@@ -23,6 +23,13 @@ namespace DADStormProcess {
 		public void addDownStreamOperator(List<ConnectionPack> cp, string opID) {
 			remoteProcess.addDownStreamOperator(cp,opID);
 		}
+        public void addUpperStreamOperator(List<ConnectionPack> cp, string opID) {
+            remoteProcess.addUpperStreamOperator(cp, opID);
+        }
+
+        public void IamAliveOnceAgain(ConnectionPack reborningGuy, string opID) {
+            remoteProcess.IamAliveOnceAgain(reborningGuy, opID);
+        }
 
         public string ping() {
             string res;

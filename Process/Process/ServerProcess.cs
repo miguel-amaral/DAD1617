@@ -51,6 +51,7 @@ namespace DADStormProcess {
 
         //Base List for order reference
         private Dictionary<string, List<ConnectionPack>> downStreamNodes = new Dictionary<string, List<ConnectionPack>>();
+        private Dictionary<string, List<ConnectionPack>> upperStreamNodes = new Dictionary<string, List<ConnectionPack>>();
         private Dictionary<string, List<ConnectionPack>> aliveDownStreamNodes = new Dictionary<string, List<ConnectionPack>>();
         private List<ConnectionPack> operatorReplicas; //Base List for order reference ??
         private List<ConnectionPack> aliveOperatorReplicas;
@@ -653,7 +654,9 @@ namespace DADStormProcess {
         }
 
         public bool isItDoneYet(string tupleID) {
-            return processedIDs.Contains(tupleID);
+            lock (processedIDs) {
+                return processedIDs.Contains(tupleID);
+            }
         }
 
         private void rebuildAndSend(string tupleID) {
@@ -897,10 +900,44 @@ namespace DADStormProcess {
         }
 
         public void addDownStreamOperator(List<ConnectionPack> cp, string opID) {
-            ProcessDebug("Down Stream Op added: " + cp);
+            ProcessDebug("Down Stream Op added: " + opID);
             downStreamNodes[opID] = cp;
             List<ConnectionPack> alives = new List<ConnectionPack>(cp); //Copying array by value
             aliveDownStreamNodes[opID] = alives;
+        }
+        public void addUpperStreamOperator(List<ConnectionPack> cp, string opID) {
+            ProcessError("Upstream Stream Op added: " + opID);
+            upperStreamNodes[opID] = cp;
+            //downStreamNodes[opID] = cp;
+            //List<ConnectionPack> alives = new List<ConnectionPack>(cp); //Copying array by value
+            //aliveDownStreamNodes[opID] = alives;
+        }
+
+        private void tellUpstreamIamAlive() {
+            var keys = new List<string>(upperStreamNodes.Keys);
+            foreach (string key in keys) {
+                List<ConnectionPack> operatorProccesses = upperStreamNodes[key];
+                foreach(ConnectionPack upperReplica in operatorProccesses) {
+                    DADStormProcess.ClientProcess replicaProcess = new DADStormProcess.ClientProcess(upperReplica);
+                    try {
+                       replicaProcess.IamAliveOnceAgain(MyConPack,operatorID);
+                    } catch (SocketException ) {
+                        //Well at least we tried, if they are dead there is nothing we can do..
+                    }
+                }
+            }
+        }
+
+        //AKA down stream replica becoming alive again
+        public void IamAliveOnceAgain(ConnectionPack gettingAlive, string opID) {
+            lock (aliveDownStreamNodes) {
+                List<ConnectionPack> alivePeople;
+                if (aliveDownStreamNodes.TryGetValue(opID, out alivePeople)) {
+                    if (!alivePeople.Contains(gettingAlive)) {
+                        alivePeople.Add(gettingAlive);
+                    }
+                }
+            }
         }
 
         public void crash() {
@@ -922,6 +959,7 @@ namespace DADStormProcess {
             if(semantics > 0) {
                 doReborn();
             }
+            tellUpstreamIamAlive();
             lock (dllArgs) {
                 Monitor.Pulse(dllArgs);
             }
@@ -958,8 +996,9 @@ namespace DADStormProcess {
             //if (processedIDs.Contains(ID)) {
             //    //There was error somewhere
             //}
-
-            return processedIDs.Contains(ID);
+            lock (processedIDs) {
+                return processedIDs.Contains(ID);
+            }
         }
 
         /// <summary>
@@ -1017,6 +1056,8 @@ namespace DADStormProcess {
             assureNextFailed(opID);
             ProcessDebug("recover complete");
         }
+
+
 
         private void brothersFailed(List<ConnectionPack> failed) {
             bool didIknow = false;
@@ -1224,11 +1265,13 @@ namespace DADStormProcess {
             return true;
         }
         public string needsDivert(string tupleID, ConnectionPack nextOwner) {
-            if (processedIDs.Contains(tupleID)) {
-                return "our responsability";
-            } else {
-                needsDivertList[tupleID] = nextOwner;
-                return "ack";
+            lock (processedIDs) {
+                if (processedIDs.Contains(tupleID)) {
+                    return "our responsability";
+                } else {
+                    needsDivertList[tupleID] = nextOwner;
+                    return "ack";
+                }
             }
         }
 
@@ -1350,6 +1393,7 @@ namespace DADStormProcess {
 
             //Creating list of alive people
             foreach (ConnectionPack brother in operatorReplicas) {
+                ProcessWarning(brother + " are you there");
                 if (!brother.Equals(MyConPack)) {
                     DADStormProcess.ClientProcess replicaProcess = new DADStormProcess.ClientProcess(brother);
                     try {
@@ -1358,6 +1402,7 @@ namespace DADStormProcess {
                             aliveOperatorReplicas.Add(brother);
                         }
                     } catch (SocketException) {
+                        ProcessError(brother + " is dead");
                         //this one is dead..
                     }
                 } else {
@@ -1490,12 +1535,16 @@ namespace DADStormProcess {
         }
 
         public void addToQueueOfBackup(string oldID, ConnectionPack author, IList<IList<string>> result) {
-            requests.Add(new QueueRequests(oldID, author, result));
+            lock(requests) {
+                requests.Add(new QueueRequests(oldID, author, result));
+            }
 
         }
 
         public void addToQueueLoseResponsability(string ID) {
-            requests.Add(new QueueRequests(ID));
+            lock (requests) {
+                requests.Add(new QueueRequests(ID));
+            }
         }
 
         private void launchForgottenTupleDetectionService() {
@@ -1549,21 +1598,22 @@ namespace DADStormProcess {
                 printUpperSpace(tableColumns);
                 printLine(tableColumns, messages);
                 messages = new List<string>();
-                messages.Add("self");
-                foreach (ConnectionPack brother in operatorReplicas) {
-                    if (brother.Equals(myConPack)) {
-                        messages.Add("current ");
-                    } else {
-                        if (aliveOperatorReplicas.Contains(brother)) {
-                            messages.Add("online ");
+                if (semantics > 0) {
+                    messages.Add("self");
+                    foreach (ConnectionPack brother in operatorReplicas) {
+                        if (brother.Equals(myConPack)) {
+                            messages.Add("current ");
                         } else {
-                            messages.Add("offline ");
+                            if (aliveOperatorReplicas.Contains(brother)) {
+                                messages.Add("online ");
+                            } else {
+                                messages.Add("offline ");
+                            }
                         }
                     }
+                    printCleanLine(tableColumns);
+                    printLine(tableColumns, messages);
                 }
-                printCleanLine(tableColumns);
-                printLine(tableColumns, messages);
-
 
 
                 foreach (KeyValuePair<string, List<ConnectionPack>> entry in downStreamNodesCOPY) {

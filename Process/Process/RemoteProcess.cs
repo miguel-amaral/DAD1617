@@ -33,7 +33,12 @@ namespace DADStormProcess {
         public void addDownStreamOperator(List<ConnectionPack> cp, string opID) {
             ServerProcess.Instance.addDownStreamOperator(cp, opID);
         }
-
+        public void addUpperStreamOperator(List<ConnectionPack> cp, string opID) {
+            ServerProcess.Instance.addUpperStreamOperator(cp, opID);
+        }
+        public void IamAliveOnceAgain(ConnectionPack reborningGuy, string opID) {
+            ServerProcess.Instance.IamAliveOnceAgain(reborningGuy, opID);
+        }
         public void crash() {
             ServerProcess.Instance.crash();
         }
