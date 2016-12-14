@@ -1,8 +1,25 @@
-% LoggingLevel full
-fileInterval 30 //How many seconds between creation of each file
-%%%PACKET_FILE operator fileLocationPrefix
+%%% Comments start with %
+semantics at-most-once
 
-%OP1 input ops ..\..\CSF_PACKET.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec   DUP
+fileInterval 30 //How many seconds between creation of each file if using live analysis
+%%%PACKET_FILE operator fileLocationPrefix   % every 30 seconds (value in previous line) will start reading a file with fileLocationPrefix concatenated with number CSF_PACKET1 (30s later) CSF_PACKET2 (30s later) ...
+%%% if file is not there at the moment it will be ignored and not analised
+
+
+%% The following lines define an operator. 
+%%  OPERATOR_ID input ops SOURCE_OP_ID1|FILEPATH1,. . ., SOURCE_OP_IDn|FILEPATHn
+%%  rep fact REPL_FACTOR routing primary|hashing|random
+%%  address URL1,. . .,URLn
+%%  operator spec OPERATOR_TYPE OPERATOR_PARAM1,. . ., OPERATOR_PARAMn
+%%
+%%  there cannot be an operator without input
+%%
+%% command:
+%%  Status: make all nodes in the system to print its current status.
+%%  Wait x ms : This command instructs the pupper master to sleep for x milliseconds before reading and executing the following command in the script file.  
+%%  Report    : report findings so far
+
+OP1 input ops ..\..\CSF_PACKET.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec   DUP
 %OP1 input ops ../../CSF_PACKET.txt rep fact 1 routing hashing(1) address tcp://localhost:11000/op operator spec  DUP
 
 OP2 input ops OP1            rep fact 1 routing primmary address tcp://localhost:11001/op operator spec CUSTOM CSF_HighDataDiffPeers CSF_HighDataDiffPeers CSF_HighDataDiffPeers
@@ -13,7 +30,6 @@ OP6 input ops OP5            rep fact 1 routing primmary address tcp://localhost
 OP7 input ops OP6            rep fact 1 routing primmary address tcp://localhost:11006/op operator spec CUSTOM CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery CSF_LocalPeerDiscovery
 OP8 input ops OP7            rep fact 1 routing primmary address tcp://localhost:11007/op operator spec CUSTOM CSF_KnownTrackers CSF_KnownTrackers CSF_KnownTrackers
 %%%%%%%%%%Second Replica%%%%%%%%%%
-PACKET_FILE OP1  CSF_PACKET
 start OP1
 start OP2
 start OP3
@@ -22,5 +38,6 @@ start OP5
 start OP6
 start OP7
 start OP8
-wait 8000
+
 report
+status

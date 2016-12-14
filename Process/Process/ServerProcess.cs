@@ -187,13 +187,19 @@ namespace DADStormProcess {
             string[] content;
             if (!filesContent.TryGetValue(fileLocation, out content)) {
                 //Not found -> File not yet read
-                content = File.ReadAllLines(fileLocation);
-                filesContent.Add(fileLocation, content);
+                try {
+                    content = File.ReadAllLines(fileLocation);
+                    filesContent.Add(fileLocation, content);
+                } catch (FileNotFoundException) {
+                    ProcessError("File: " + fileLocation + " not found ");
+                    filesContent.Add(fileLocation, new string[0] { });
+                }
+
             }
             //getIndex
             int index = this.nextIndex(fileLocation);
             if (index >= 0) {
-                if (index < content.Length) {
+                if (content != null && index < content.Length) {
                     string line = content[index];
                     String[] tuple = line.Split(new[] { ',', ' ', '"' }, StringSplitOptions.RemoveEmptyEntries);
 
@@ -449,7 +455,7 @@ namespace DADStormProcess {
                         string originalTupleID = getIdKey(tupleID);
 
                         if (originalTupleID != "") {
-                            ProcessWarning("Trying original: " + originalTupleID);
+                            ProcessDebug("Trying original: " + originalTupleID);
                             ConnectionPack responsible;
                             if (brotherIDsResponsible.TryGetValue(originalTupleID, out responsible)) {
                                 if (responsible.Equals(myConPack)) {
@@ -906,7 +912,7 @@ namespace DADStormProcess {
             aliveDownStreamNodes[opID] = alives;
         }
         public void addUpperStreamOperator(List<ConnectionPack> cp, string opID) {
-            ProcessError("Upstream Stream Op added: " + opID);
+            ProcessDebug("Upstream Stream Op added: " + opID);
             upperStreamNodes[opID] = cp;
             //downStreamNodes[opID] = cp;
             //List<ConnectionPack> alives = new List<ConnectionPack>(cp); //Copying array by value
@@ -932,9 +938,19 @@ namespace DADStormProcess {
         public void IamAliveOnceAgain(ConnectionPack gettingAlive, string opID) {
             lock (aliveDownStreamNodes) {
                 List<ConnectionPack> alivePeople;
+                List<ConnectionPack> people;
                 if (aliveDownStreamNodes.TryGetValue(opID, out alivePeople)) {
                     if (!alivePeople.Contains(gettingAlive)) {
-                        alivePeople.Add(gettingAlive);
+                        int index = 0;
+                        people = downStreamNodes[opID];
+                        foreach (ConnectionPack proccess in people) {
+                            if(proccess.Equals(gettingAlive)) {
+                                alivePeople.Insert(index,gettingAlive);
+                            } else if (alivePeople.Contains(proccess)) {
+                                index++;
+                            }
+                        }
+                        
                     }
                 }
             }
@@ -1080,7 +1096,7 @@ namespace DADStormProcess {
         }
 
         private void addTupleToForgottenList(string tupleID, string opID) {
-            ProcessWarning("Adding tuple to forgoten: " + tupleID);
+            ProcessWarning("Adding tuple to maybe forgoten: " + tupleID);
             Dictionary<string, List<ConnectionPack>> aliveDownStreamNodesCOPY = getAliveDownStreamNodesCOPY();
 
             List<int> operatorClock = new List<int>();
@@ -1119,7 +1135,7 @@ namespace DADStormProcess {
         /// </summary>
         /// <returns> true when successful fail if not</returns>
         private bool doSync() {
-            ProcessWarning("Attempting SYNC ");
+            ProcessDebug("Attempting SYNC ");
             if (!guarantieIamAlive()) { return true; /* even though it was not successful we are dead.. */}
             //Make sure everyone is in sync
             Dictionary<ConnectionPack, int> syncNumber = new Dictionary<ConnectionPack, int>();
@@ -1135,7 +1151,7 @@ namespace DADStormProcess {
                             proccessNumber = replicaProcess.SyncNumber();
                         }
                         if (proccessNumber != begginingNumber) {
-                            ProcessWarning("Sync Failed: different number ");
+                            ProcessDebug("Sync Failed: different number ");
                             return false;
                         }
                     } catch (SocketException) {
@@ -1209,7 +1225,7 @@ namespace DADStormProcess {
                         if (responsabilityLinks.ContainsKey(tupleID)) {
                             resultingTuples = responsabilityLinks[tupleID];
                         } else {
-                            ProcessWarning("needs divert not found in responsible: " + tupleID);
+                            ProcessDebug("needs divert not found in responsible: " + tupleID);
                         }
                         foreach (string forwardedTupleID in resultingTuples) {
 
@@ -1218,7 +1234,7 @@ namespace DADStormProcess {
                             if (!aliveDownStreamNodes.TryGetValue(nextOperator, out nextOperatorList)) {
                                 continue; // all operator is dead..
                             }
-                            ProcessWarning("Diverting: " + forwardedTupleID);
+                            ProcessDebug("Diverting: " + forwardedTupleID);
                             bool need = true;
 
                             foreach (ConnectionPack next in nextOperatorList) {
@@ -1232,7 +1248,7 @@ namespace DADStormProcess {
                                 removeResponsabilityFromOperator(forwardedTupleID);
                             } else {
                                 addTupleToForgottenList(forwardedTupleID, nextOperator);
-                                ProcessWarning("Diverted with success: " + forwardedTupleID);
+                                ProcessDebug("Diverted with success: " + forwardedTupleID);
                             }
                         }
                     }
@@ -1251,17 +1267,17 @@ namespace DADStormProcess {
                             proccessNumber = replicaProcess.SyncNumber();
                         }
                         if (proccessNumber != begginingNumber) {
-                            ProcessWarning("Sync Failed: different number ");
+                            ProcessDebug("Sync Failed: different number ");
                             return false;
                         }
                     } catch (SocketException) {
-                        ProcessWarning("Sync Failed: brother died ");
+                        ProcessDebug("Sync Failed: brother died ");
                         //looks like we got ourselves another brother dead.
                         return false; //Restart Proccess
                     }
                 }
             }
-            ProcessWarning("SYNC COMPLETE WITH SUCCESS");
+            ProcessDebug("SYNC COMPLETE WITH SUCCESS");
             return true;
         }
         public string needsDivert(string tupleID, ConnectionPack nextOwner) {
@@ -1393,7 +1409,7 @@ namespace DADStormProcess {
 
             //Creating list of alive people
             foreach (ConnectionPack brother in operatorReplicas) {
-                ProcessWarning(brother + " are you there");
+                ProcessDebug(brother + " are you there");
                 if (!brother.Equals(MyConPack)) {
                     DADStormProcess.ClientProcess replicaProcess = new DADStormProcess.ClientProcess(brother);
                     try {
@@ -1402,7 +1418,7 @@ namespace DADStormProcess {
                             aliveOperatorReplicas.Add(brother);
                         }
                     } catch (SocketException) {
-                        ProcessError(brother + " is dead");
+                        ProcessDebug(brother + " is dead");
                         //this one is dead..
                     }
                 } else {
@@ -1428,17 +1444,17 @@ namespace DADStormProcess {
                 }
             }
             if (snapshot != null) {
-                ProcessError("5 Locks remaining");
+                ProcessDebug("5 Locks remaining");
                 lock (processedIDs) {
-                    ProcessError("4 Locks remaining");
+                    ProcessDebug("4 Locks remaining");
                     lock (brotherIDsResponsible) {
-                        ProcessError("3 Locks remaining");
+                        ProcessDebug("3 Locks remaining");
                         lock (responsabilityLinks) {
-                            ProcessError("2 Locks remaining");
+                            ProcessDebug("2 Locks remaining");
                             lock (idTranslation) {
-                                ProcessError("1 Locks remaining");
+                                ProcessDebug("1 Locks remaining");
                                 lock (responsability) {
-                                    ProcessError("No mas locks");
+                                    ProcessDebug("No mas locks");
                                     this.brotherIDsResponsible = snapshot.brotherIDsResponsible.getDictionary();
                                     this.responsability = snapshot.responsability.getDictionary();
                                     this.responsabilityLinks = snapshot.responsabilityLinks.getDictionary();
@@ -1472,18 +1488,18 @@ namespace DADStormProcess {
         }
 
         public SnapShot getSnapShot() {
-            ProcessError("Doing snapshot");
-            ProcessError("5 Locks remaining");
+            ProcessDebug("Doing snapshot");
+            ProcessDebug("5 Locks remaining");
             lock (processedIDs) {
-                ProcessError("4 Locks remaining");
+                ProcessDebug("4 Locks remaining");
                 lock (brotherIDsResponsible) {
-                    ProcessError("3 Locks remaining");
+                    ProcessDebug("3 Locks remaining");
                     lock (responsabilityLinks) {
-                        ProcessError("2 Locks remaining");
+                        ProcessDebug("2 Locks remaining");
                         lock (idTranslation) {
-                            ProcessError("1 Locks remaining");
+                            ProcessDebug("1 Locks remaining");
                             lock (responsability) {
-                                ProcessError("No mas locks");
+                                ProcessDebug("No mas locks");
                                 return new SnapShot(responsability, idTranslation, responsabilityLinks, brotherIDsResponsible, processedIDs);
                             }
                         }
@@ -1499,39 +1515,46 @@ namespace DADStormProcess {
                 if(suiciding) { return; }
                 suiciding = true;
             }
-            ProcessWarning("trying to get lock of responsability");
+            ProcessDebug("trying to get lock of responsability");
             lock(responsability) {
-                ProcessWarning("responsability ok");
+                ProcessDebug("responsability ok");
                 responsability.Clear();
             }
-            ProcessWarning("trying to get lock of responsabilityLinks");
+            ProcessDebug("trying to get lock of responsabilityLinks");
             lock (responsabilityLinks) {
-                ProcessWarning("responsabilityLinks ok");
+                ProcessDebug("responsabilityLinks ok");
                 responsabilityLinks.Clear();
             }
-            ProcessWarning("trying to get lock of brotherIDsResponsible");
+            ProcessDebug("trying to get lock of brotherIDsResponsible");
             lock (brotherIDsResponsible) {
-                ProcessWarning("brotherIDsResponsible ok");
+                ProcessDebug("brotherIDsResponsible ok");
                 brotherIDsResponsible.Clear();
             }
-            ProcessWarning("trying to get lock of needsDivertList");
+            ProcessDebug("trying to get lock of needsDivertList");
             lock (needsDivertList) {
-                ProcessWarning("needsDivertList ok");
+                ProcessDebug("needsDivertList ok");
                 needsDivertList.Clear();
             }
-            ProcessWarning("trying to get lock of mightBeForgottenTuples");
+            ProcessDebug("trying to get lock of mightBeForgottenTuples");
             lock (mightBeForgottenTuples) {
-                ProcessWarning("mightBeForgottenTuples ok");
+                ProcessDebug("mightBeForgottenTuples ok");
                 mightBeForgottenTuples.Clear();
             }
+            ProcessDebug("trying to get lock of aliveOperatorReplicas");
             lock (aliveOperatorReplicas) {
+                ProcessDebug("aliveOperatorReplicas ok");
                 aliveOperatorReplicas.Clear();
+            }
+            ProcessDebug("trying to get lock of dllArgs");
+            lock (dllArgs) {
+                ProcessDebug("aliveOperatorReplicas ok");
+                dllArgs.Clear();
             }
 
 
 
-           
-            ProcessError("And now i feel so much more clean! DEAD..");
+
+            ProcessDebug("And now i feel so much more clean! DEAD..");
         }
 
         public void addToQueueOfBackup(string oldID, ConnectionPack author, IList<IList<string>> result) {
@@ -1784,6 +1807,7 @@ namespace DADStormProcess {
 
             Console.ForegroundColor = ConsoleColor.Green;
             System.Console.WriteLine("ProcessServer is ONLINE: port is: " + myConPack.Port);
+            System.Console.WriteLine("Operator: " + operatorID);
             Console.ResetColor();
 
             executeProcess();
@@ -1846,7 +1870,7 @@ namespace DADStormProcess {
                 ProcessDebug("Removing Responsability: " + ID);
 
                 if (key.Equals("")) {
-                    ProcessWarning("ID: " + ID + " not found in responsibles"); // Maybe i am getting this information twice..
+                    ProcessDebug("ID: " + ID + " not found in responsibles"); // Maybe i am getting this information twice..
                 } else {
                     List<string> links;
                     responsabilityLinks.TryGetValue(key, out links);
@@ -1932,11 +1956,13 @@ namespace DADStormProcess {
         }
 
         private void ProcessDebug(string msg) {
+            #if DEBUG
             if (DEBUG.PROCESS) {
                 lock (printing) {
                     System.Console.WriteLine("[ Process : " + myConPack.Port + " ] " + msg);
                 }
             }
+            #endif
         }
         private void ProcessError(string msg) {
             //            lock (printing) {

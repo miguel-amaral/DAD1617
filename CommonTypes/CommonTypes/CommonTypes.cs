@@ -5,10 +5,11 @@ using System.Runtime.Remoting;
 using System.Runtime.Serialization;
 
 public static class DEBUG{
-	public const bool DAEMON  = true;
+    //#define DEBUG_PROCESS 
+    public const bool DAEMON  = true;
 	public const bool PROCESS = false;
 	public const bool PUPPET  = true;
-    public const bool METRIC  = false;
+    public const bool METRIC  = true;
 }
 
 [Serializable]

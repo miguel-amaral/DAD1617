@@ -8,29 +8,29 @@ using System.Threading.Tasks;
 public class MetricCalculatorVisitor : MetricVisitor {
 
     //IpInName
-    private int minimumIpInName = 0;
-    private int maximumIpInName = 1;
+    private int minimumIpInName = 500;
+    private int maximumIpInName = 5000;
     //Upload
-    private int minimumHighUpload     = 0000000000 * 102 * 1024 * 1024; //100 MB
-    private int maximumHighUpload     = 0000000001 * 102 * 1024 * 1024; //100 MB
+    private int minimumHighUpload     = 0000000000 * 0128 * 1024 * 1024; //100 MB
+    private int maximumHighUpload     = 0000000001 * 1024 * 0124 * 1024; //100 MB
     //Download
-    private int minimumHighDownload   = 0000000000 * 102 * 1024 * 1024; //100 MB
-    private int maximumHighDownload   = 0000000001 * 102 * 1024 * 1024; //100 MB
+    private int minimumHighDownload   = 000000001 * 1024 * 1024 * 1024; //100 MB
+    private int maximumHighDownload   = 0000001 * 1024 * 1024 * 1024; //100 MB
     //SeveralPeersHighData
-    private int minimumDataConnection = 0000000000 * 100 * 1024 * 1024; //100MB
-    private int minimumNumberConnectionsHighData = 0;
-    private int maximumNumberConnectionsHighData = 1;
+    private int minimumDataConnection = 00000000001 * 100 * 1024 * 1024; //100MB
+    private int minimumNumberConnectionsHighData = 5;
+    private int maximumNumberConnectionsHighData = 50;
     //Trackers
-    private int minimumTrackers = 0;
-    private int maximumTrackers = 1;
+    private int minimumTrackers = 1;
+    private int maximumTrackers = 5;
     //LocalPeerDiscovery
-    private int minimumLocalPeerDiscovery = 0;
-    private int maximumLocalPeerDiscovery = 1;
+    private int minimumLocalPeerDiscovery = 1;
+    private int maximumLocalPeerDiscovery = 10;
     //UPnP
-    private int minimumUPnP = 0;
-    private int maximumUPnP = 1;
+    private int minimumUPnP = 1;
+    private int maximumUPnP = 10;
 
-    private double treshold = 0;
+    private double treshold = 0.5;//MAX 1
     private Dictionary<string, List<double>> metricTable = new Dictionary<string, List<double>>();
 
     public MetricCalculatorVisitor() { }
@@ -242,15 +242,21 @@ public class MetricCalculatorVisitor : MetricVisitor {
         for(int i = 0; i < (15 + 8*fields + fields*3 + 2); i++) {
             toPrint += "_";
         }
-        toPrint += String.Format("\r\n| {0,15} | {1,8} | {2,8} | {3,8} | {4,8} | {5,8} | {6,8} | {7,8} | {8,8} |\r\n", "Sinner's IP", "Sinner %","IpNam", "Up(GB)", "Down(GB)", "Peers", "Track", "Local", "UPnP");
+        toPrint += String.Format("\r\n| {0,15} | {1,8} | {2,8} | {3,8} | {4,8} | {5,8} | {6,8} | {7,8} | {8,8} |", "Sinner's IP", "Sinner %","IpNam", "Up   ", "Down  ", "Peers  ", "Track  ", "Local  ", "UPnP  ");
+        System.Console.WriteLine(toPrint);
+        toPrint = "";
         foreach (KeyValuePair<string, List<double>> pair in metricTable) {
             string ip = pair.Key;
             List<double> metricsValues = pair.Value;
             double totalValue = calculateHeuristic(metricsValues);
-            if(totalValue > treshold )
-                toPrint += String.Format("| {0,15} | {1,8:P1} | {2,8:N6} | {3,8:N6} | {4,8:N6} | {5,8:N6} | {6,8:N6} | {7,8:N6} | {8,8:N6} |\r\n", ip, totalValue,metricsValues[0], metricsValues[1], metricsValues[2], metricsValues[3], metricsValues[4], metricsValues[5], metricsValues[6]);
+            if (totalValue > treshold) {
+                Console.ForegroundColor = ConsoleColor.Red;
+            }
+            toPrint = String.Format("| {0,15} | {1,8:P1} | {2,8:N6} | {3,8:N6} | {4,8:N6} | {5,8:N6} | {6,8:N6} | {7,8:N6} | {8,8:N6} |", ip, totalValue, metricsValues[0], metricsValues[1], metricsValues[2], metricsValues[3], metricsValues[4], metricsValues[5], metricsValues[6]);
+            System.Console.WriteLine(toPrint);
+            Console.ResetColor();
         }
-        toPrint += "|";
+        toPrint = "|";
         for (int i = 0; i < (15 + 8 * fields + fields * 3 + 2); i++) {
                 toPrint += "_";
         }
@@ -259,14 +265,14 @@ public class MetricCalculatorVisitor : MetricVisitor {
     }
 
     private double calculateHeuristic(List<double> metricas) {
-        this.treshold = 0; //MAX 1
-        List<double> weight = new List<double>(new double[] { 0.142 //CSF_IpInName"             
-                                                            , 0.142 //CSF_HighUpload"           
-                                                            , 0.142 //CSF_HighDownload"         
-                                                            , 0.142 //CSF_HighDataDiffPeers"    
-                                                            , 0.142 //CSF_KnownTrackers"        
-                                                            , 0.142 //CSF_LocalPeerDiscovery"   
-                                                            , 0.142 //CSF_ProtocolUPnP"         
+
+        List<double> weight = new List<double>(new double[] { 0.100 //CSF_IpInName"             
+                                                            , 0.150 //CSF_HighUpload"           
+                                                            , 0.050 //CSF_HighDownload"         
+                                                            , 0.150 //CSF_HighDataDiffPeers"    
+                                                            , 0.300 //CSF_KnownTrackers"        
+                                                            , 0.200 //CSF_LocalPeerDiscovery"   
+                                                            , 0.050 //CSF_ProtocolUPnP"         
         });
 
         double final = 0;

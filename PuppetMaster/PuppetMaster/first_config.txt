@@ -1,8 +1,8 @@
 %logginglevel full
 semantics exactly-once
-OP0 input ops ..\..\20000.txt rep fact 1 routing random address tcp://localhost:10005/op operator spec DUP
+OP0 input ops ..\..\CSF_PACKET.txt rep fact 1 routing random address tcp://localhost:10005/op operator spec DUP
 OP1 input ops OP0 rep fact 1 routing random address tcp://localhost:11111/op  operator spec CUSTOM CommonTypes.dll Default addCounter
-OP2 input ops OP1 rep fact 2 routing random address tcp://localhost:12221/op tcp://localhost:12222/op  operator spec CUSTOM CommonTypes.dll Default Dup
+OP2 input ops OP1 rep fact 2 routing primary address tcp://localhost:12221/op tcp://localhost:12222/op  operator spec CUSTOM CommonTypes.dll Default Dup
 OP3 input ops OP2 rep fact 4 routing random address tcp://localhost:13331/op tcp://localhost:13332/op tcp://localhost:13333/op tcp://localhost:13334/op operator spec CUSTOM CommonTypes.dll Default Dup
 OP4 input ops OP3 rep fact 1 routing random address tcp://localhost:14444/op operator spec OUTPUT ..\..\20000_done.txt
 %
@@ -13,12 +13,12 @@ start OP3
 start OP4
 status
 wait 3000
-freeze OP2 0
 freeze OP3 0
+freeze OP3 1
 wait 2000
 wait 2000
 status
-unfreeze OP2 0
 unfreeze OP3 0
-wait 200
+wait 5000
+freeze OP3 2
 status

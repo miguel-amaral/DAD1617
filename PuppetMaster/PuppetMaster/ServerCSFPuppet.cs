@@ -20,6 +20,7 @@ namespace PuppetMaster {
         public override bool extraCommands(string[] command) {
             if (command[0].Equals("report", StringComparison.OrdinalIgnoreCase)) {
                 metrics = new List<CSF_metric>();
+                System.Console.WriteLine("gathering information..");
                 this.doOperation("report");
                 System.Console.WriteLine("merging..");
                 this.mergeMetrics();
